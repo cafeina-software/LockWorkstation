@@ -4,7 +4,7 @@ resource app_signature "application/x-vnd.LockWorkstation";
 resource app_flags B_SINGLE_LAUNCH | B_BACKGROUND_APP;
 
 resource app_version {
-	major  = 1,
+	major  = 2,
 	middle = 0,
 	minor  = 0,
 

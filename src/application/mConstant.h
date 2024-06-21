@@ -7,6 +7,9 @@
 #define BUTTON_LOGIN 'pre4'
 #define LOGIN_CHANGED 'pre7'
 #define THEME_TOGGLED 'pre2'
+#define M_LOGIN_FAILED       'fail'
+#define M_RESTART_REQUESTED  'rstr'
+#define M_SHUTDOWN_REQUESTED 'shut'
 
 #include <StorageKit.h>
 #include <KernelKit.h>

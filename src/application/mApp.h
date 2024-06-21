@@ -6,7 +6,6 @@
 #define ApplicationSignature "application/x-vnd.LockWorkstation"
 
 #include <Application.h>
-
 #include "mWindow.h"
 
 class mApp : public BApplication

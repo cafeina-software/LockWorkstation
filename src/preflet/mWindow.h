@@ -45,8 +45,17 @@
 #define LANG_4 'aan3'
 #define LANG_5 'aan4'
 #define LANG_6 'aan5'
-#define CHECK_BUTTONS 'ada2'
-#define CHECK_USERBUTTON 'wada'
+#define CHECK_BUTTONS           'ada2'
+#define CHECK_USERBUTTON        'wada'
+#define M_ITEM_SELECTED         'isel'
+#define M_SNOOZE_SLIDER_CHANGED 'snzs'
+#define M_BGMODE_RADIO_NONE     'rad0'
+#define M_BGMODE_RADIO_FOLDER   'rad1'
+#define M_BGMODE_RADIO_LIST     'rad2'
+#define M_BOOL_SESSION          'cbsb'
+#define M_BOOL_INFO             'cbsi'
+#define M_BOOL_KILLER           'cbks'
+#define M_BOOL_EVTLOG           'cbel'
 
 #include <StorageKit.h>
 #include <KernelKit.h>
@@ -54,106 +63,153 @@
 #include <InterfaceKit.h>
 #include <SupportKit.h>
 #include <TranslationKit.h>
+#include <Spinner.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #include "mBitmap.h"
+#include "../common/ThreadedClass.h"
 
 class mWindow
-		: public BWindow
+		: public BWindow, public ThreadedClass
 {
 public:
 						mWindow(const char *mWindowTitle);
 						~mWindow();
-	virtual void 		MessageReceived(BMessage* message);		
+	virtual void 		MessageReceived(BMessage* message);
 	virtual bool 		QuitRequested();
-	BView*				mView;
-	BView*				mListView;
-	BView*				mImageView;
-	BView*				mColorView;
-	BView*				mClockView;
-	BView*				mApplyView;
 private:
-	int					LanguageNumber;
+	//Thread
+	static int32 		CheckerThread_static(void *data);
+	void 				Checker_Thread();
+	static int32 		EnDButtonsThread_static(void *data);
+	void 				EnDButtons_Thread();
+	static int32 		EnDUserButtonThread_static(void *data);
+	void 				EnDUserButton_Thread();
+	static int32 		UpdateStringsThread_static(void *data);
+	void 				UpdateStrings_Thread();
+
+    void                InitUIControls();
+
+    void                InitUIData();
+    void                ArchiveData(BMessage* archive);
+
+    //UI
+	BView*              CreateCardView_User();
+	BView*              CreateCardView_Background();
+	BView*              CreateCardView_Clock();
+	BView*              CreateCardView_Options();
+
+	bool				UI_IsDefault(BMessage* archive);
+	bool				UI_IsBgColorDefault(BMessage* archive);
+	bool				UI_IsBgFolderDefault(BMessage* archive);
+	bool				UI_IsClockColorDefault(BMessage* archive);
+	bool				UI_IsClockPlaceDefault(BMessage* archive);
+private:
+	BView              *userCardView,
+	                   *bgCardView,
+                       *clockCardView,
+                       *extraCardView,
+                       *mApplyView;
+
+	BButton            *mButtonChangeLogin,
+                       *mButtonDefaultColors,
+                       *mButtonDefaultImagePath,
+                       *mButtonBrowseImagePath,
+                       *mButtonDefaultClockColors,
+                       *mButtonDefaultClockPlace,
+                       *mButtonApplyEverything,
+                       *mEraserButtonOfDoom;
+    BCardView          *fCardView;
+	BCheckBox          *mCheckBoxBoolClock,
+                       *mCheckBoxSessionBar,
+	                   *mCheckBoxSysInfo,
+	                   *mCheckBoxKillerShortcut,
+	                   *mCheckBoxEventLog;
+	BListView          *mListOfUsers,
+	                   *fPanelList;
+    BRadioButton       *mRadioBtUseBgImgNone,
+                       *mRadioBtUseBgImgFolder,
+                       *mRadioBtUseBgImgList;
+	BSlider            *mSliderFontSize,
+                       *mSliderBgSnooze;
+	BSpinner           *mSpinnerColorR,
+	                   *mSpinnerColorG,
+	                   *mSpinnerColorB,
+	                   *mSpinnerClockColorR,
+	                   *mSpinnerClockColorG,
+	                   *mSpinnerClockColorB;
+	BTextControl       *mAddUserName,
+	                   *mAddPassWord,
+	                   *mAddPassWordRetype,
+	                   *mTextControlmPathToImageFolder,
+	                   *mTextControlClockPlaceX,
+                       *mTextControlClockPlaceY;
+
+    thread_id           CheckerThread,
+                        EnDButtonsThread,
+                        EnDUserButtonThread,
+                        UpdateStringsThread;
+
+	BMessage 			savemessage;
+	BString				mStringUser1,
+                        mStringPassword1,
+                        mStringCurrentPathImages,
+                        mStringLanguage;
+    rgb_color           mColorBackground,
+                        mColorClock;
+    uint8               mUintBgMode;
+    uint32              mUintSnoozeMultiplier,
+                        mUintClockSize;
+    BPoint              mPointClockPlace;
+    bool                mBoolClockShown,
+                        mBoolSessionBarOn,
+                        mBoolSysInfoPanelOn,
+                        mBoolKillerShortcutOn,
+                        mBoolLoggingOn;
+
+    int					LanguageNumber;
 	int32				temp, tempHack;
 	char 				charer[1024];
-	BString				mStringUser1;
-	BString				mStringCurrentPathImages;
-	BString				mStringRed;
-	BString				mStringGreen;
-	BString				mStringBlue;
 	BString 			PathToBG;
 	BString 			PathToUI;
 	BString 			PathToNOUI;
-	BString				mStringBoolClock;
-	BString				mStringClockCCR;
-	BString				mStringClockCCG;
-	BString				mStringClockCCB;
-	BString				mStringClockPlaceX;
-	BString				mStringClockPlaceY;
 	BString				mStringClockFontSize;
-	BString				mStringLanguage;
 	BString				mStringInstallDir;
 	BString				mDefaultImagePathText;
-	BString mDefaultImagepathTextHack, mDefaultColorRHack, mDefaultColorGHack, mDefaultColorBHack, mDefaultClockColorRHack, mDefaultClockColorGHack, mDefaultClockColorBHack, mDefaultClockPlaceXHack, mDefaultClockPlaceYHack, mDefaultBoolClockHack, mPasswordHack, mPasswordRetypeHack, mPasswordDisableButtonHack;
+	BString             mDefaultImagepathTextHack,
+                        mDefaultColorRHack,
+                        mDefaultColorGHack,
+                        mDefaultColorBHack,
+                        mDefaultClockColorRHack,
+                        mDefaultClockColorGHack,
+                        mDefaultClockColorBHack,
+                        mDefaultClockPlaceXHack,
+                        mDefaultClockPlaceYHack,
+                        mDefaultBoolClockHack,
+                        mPasswordHack,
+                        mPasswordRetypeHack,
+                        mPasswordDisableButtonHack;
+
 	BStringItem*		mStringItemUser1;
-	BSlider*			mSliderFontSize;
-	BListView*			mListOfUsers;
-	BTextControl*		mAddUserName;
-	BTextControl*		mAddPassWord;
-	BTextControl*		mAddPassWordRetype;
-	BTextControl*		mTextControlmPathToImageFolder;
-	BTextControl*		mTextControlmColorControlR;
-	BTextControl*		mTextControlmColorControlG;
-	BTextControl*		mTextControlmColorControlB;
-	BTextControl*		mTextControlClockColorR;
-	BTextControl*		mTextControlClockColorG;
-	BTextControl*		mTextControlClockColorB;
-	BTextControl*		mTextControlClockPlaceX;
-	BTextControl*		mTextControlClockPlaceY;
-	BCheckBox*			mCheckBoxBoolClock;
+
+	//BBitmap*			BitmapBounds;
+	//BBitmap*			BitmapBounds2;
+	//BBitmap*			BitmapBounds3;
+
 	BMenu*				mMenuLanguage;
 	BMenuField*			mMenuFieldLanguage;
 	BPopUpMenu*			mPopUpMenuLanguage;
 	BMenuItem*			mMenuItem;
-	BButton*			mButtonDefaultImagePath;
-	BButton*			mButtonBrowseImagePath;
-	BButton*			mEraserButtonOfDoom;
-	BButton*			mButtonApplyEverything;
-	BButton*			mButtonDefaultColors;
-	BButton*			mButtonDefaultClockColors;
-	BButton*			mButtonDefaultClockPlace;
-	BButton*			mButtonChangeLogin;
 	BFilePanel*			mFilePanelFolderBrowse;
-	BBox*				mBoxAroundAddUserName;
-	BBox*				mBoxAroundListUsers;
-	BBox*				mBoxAroundImagePath;
-	BBox*				mBoxAroundColorControl;
-	BBox*				mBoxAroundClockConfig;
 	entry_ref 			mEntryRef;
 	BPath 				path;
 	status_t			status;
 	BFile				file;
-	BMessage 			savemessage;
-	
-	//BBitmap*			BitmapBounds;
-	//BBitmap*			BitmapBounds2;
-	//BBitmap*			BitmapBounds3;
-	//Thread
-	thread_id			CheckerThread;
-	static int32 		CheckerThread_static(void *data);
-	void 				Checker_Thread();
-	thread_id			EnDButtonsThread;
-	static int32 		EnDButtonsThread_static(void *data);
-	void 				EnDButtons_Thread();
-	thread_id			EnDUserButtonThread;
-	static int32 		EnDUserButtonThread_static(void *data);
-	void 				EnDUserButton_Thread();
-	thread_id			UpdateStringsThread;
-	static int32 		UpdateStringsThread_static(void *data);
-	void 				UpdateStrings_Thread();
+
+    BString pwd;
 };
 
 #endif

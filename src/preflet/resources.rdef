@@ -2,18 +2,18 @@
 resource app_signature "application/x-vnd.LockWorkstation-Pref";
 
 resource app_version {
-	major  = 0,
-	middle = 9,
-	minor  = 9,
+	major  = 1,
+	middle = 0,
+	minor  = 0,
 
 	variety = B_APPV_DEVELOPMENT,
 	internal = 0,
 
-	short_info = "Preferences",
+	short_info = "LockWorkstation Preferences",
 	long_info = "Preferences application for LockWorkstation"
 };
 
-resource app_flags B_SINGLE_LAUNCH | B_BACKGROUND_APP;
+resource app_flags B_SINGLE_LAUNCH;
 
 
 resource vector_icon array {

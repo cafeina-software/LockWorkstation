@@ -3,64 +3,59 @@
 #ifndef _mWindow_h_
 #define _mWindow_h_
 
+#include <SupportKit.h>
+
+#include "mBackgroundView.h"
 #include "mBitmap.h"
 #include "mConstant.h"
 #include "mClockView.h"
+#include "mLogger.h"
+#include "mLoginBox.h"
+#include "mSessionBar.h"
+#include "mSystemInfo.h"
 
-class mWindow
-		: public BWindow
+class mWindow : public BWindow
 {
 public:
-						mWindow(const char *mWindowTitle);
-						~mWindow();
-	virtual void 		MessageReceived(BMessage* message);		
-	virtual bool 		QuitRequested();
-			
+    					mWindow(const char* mWindowTitle);
+    virtual  			~mWindow();
+    virtual void 		MessageReceived(BMessage* message);
+    virtual bool        QuitRequested();
+    void                ResizeToScreen();
 private:
-	int					mAvoidFlickering;
-	BView* 				mView;
-	BBitmap*			BitmapBounds;
-	BBitmap*			UserImageBounds;
-	BBitmap*			UserNoImageBounds;
-	BitmapView*			mViewBitmap;
-	BitmapView*			mViewUserImage;
-	BitmapView*			mViewUserNoImage;
-	BButton*			mButtonLogin;
-	BTextControl*		mTextUser;
-	BTextControl*		mTextPass;
-	BString				Pass;
-	BString				User;
-	BString 			mStringLoginButtonLabelAs;
-	BString				mStringLoginButtonLabelUnlock;
-	BString 			mTheRightUserName; 
-	BString 			mTheRightPassword;
-	BString				mStringPathToBG;
+    void                InitUIData();
+    // status_t            LoadSettings();
+    // status_t            SaveSettings();
+    void                SystemShutdown(bool restart, bool confirm, bool sync);
+private:
+    mBackgroundView     *mView;
+    mLoginBox           *loginbox;
+    mSystemInfo         *infoview;
+    mSessionBar         *sessionbar;
+
+    BMessage            savemessage;
+
+    BString             mTheRightUserName;
+    BString             mTheRightPassword;
+    rgb_color           mBackgroundColor;
+    uint8               mBackgroundImageMode;
+    BString             mBackgroundImageFolderPath;
+    uint32              mBackgroundListSnooze;
+    rgb_color           mClockColor;
+    BPoint              mClockLocation;
+    uint32              mClockSize;
+    bool                mClockShown;
+    BString             mStringLanguage;
+    bool                mSessionBarShown;
+    bool                mSysInfoPanelShown;
+    bool                mKillerShortcutEnabled;
+    bool                mLoggingEnabled;
+
+    BString				mStringPathToBG;
 	BString				mStringPathToCU;
 	BString				mStringPathToNOCU;
-	BString				mStringPathToImageFolder;
-	BString				mStringR;
-	BString				mStringG;
-	BString				mStringB;
-	BString				mStringLanguage;
-	int 				mColorR;
-	int 				mColorG;
-	int 				mColorB;
-	int 				mLanguage;
-	BPath				path;
-	BFile				file;
-	status_t			status;
-	BMessage			savemessage;
-	mClockView* 		mclockview;
-	//Threads
-	thread_id			UserThread;
-	static int32 		UserThreadChange_static(void *data);
-	void 				UserThreadChangeImage();
-	thread_id			UserThreadUndo;
-	static int32 		UserThreadChange_staticUndo(void *data);
-	void 				UserThreadChangeImageUndo();
-	thread_id			InvalidateThread;
-	static int32 		InvalidateThread_static(void *data);
-	void 				InvalidatemClockViewThread();
+
+    mLogger*            logger;
 };
 
 #endif

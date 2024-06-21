@@ -1,22 +1,20 @@
 // mApp.cpp
-#include <iostream>
-#include <stdio.h>
+#include <cstdio>
 #include <Application.h>
 #include "mApp.h"
 
-
-int main()
+int main(int argc, char** argv)
 {
-new mApp();
-be_app->Run();
-
-return(0);
+    mApp *app = new mApp();
+    app->Run();
+    delete app;
+    return 0;
 }
 
-
 mApp::mApp()
-		: BApplication(ApplicationSignature)
+: BApplication(ApplicationSignature)
 {
+    MainWindow = new mWindow("Main Window");
 }
 
 mApp::~mApp()
@@ -25,16 +23,10 @@ mApp::~mApp()
 
 void mApp::ReadyToRun()
 {
-MainWindow = new mWindow("Main Window");
-if (MainWindow != NULL)
-	{
-	/*
-	MainWindow->SetFeel(B_MODAL_APP_WINDOW_FEEL);
-	*/
-	MainWindow->Show();
-	}
-else
-	{
+    if (MainWindow != NULL)
+        MainWindow->Show();
+    else {
+        fprintf(stderr, "Something went wrong, closing app...\n");
 		be_app->PostMessage(B_QUIT_REQUESTED);
-	}
+    }
 }

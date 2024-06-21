@@ -1,431 +1,268 @@
-// mWindow.cpp
-//0 = English
-//1 = Spanish
-//2 = Norwegian
-//3 = Swedish
-//4 = Portugees
-//5 = French
-//6 = Deutsch
+#include <Catalog.h>
+#include <LayoutBuilder.h>
+#include <private/app/RosterPrivate.h>
 #include "mWindow.h"
-const char* mDefaultPathToBG =				"login_gfx";
-const char* mDefaultPathToUI =				"UserImage";
-const char* mDefaultPathToNUI =				"NoUserImage";
+#include "mBackgroundView.h"
+#include "mSessionBar.h"
+#include "../common/LockWorkstationConfig.h"
+
 const char* mDefaultPathToSelBG =			"/login_gfx";
 const char* mDefaultPathToSelUI =			"/UserImage";
 const char* mDefaultPathToSelNUI =			"/NoUserImage";
-const char* mDefaultUsername =				"baron";
-const char* mDefaultPassword =				"haikubox";
-const char* mDefaultColorR =				"0";
-const char* mDefaultColorG =				"0";
-const char* mDefaultColorB =				"0";
-const char* mPathToConfigFile =				"LockWorkstationSettings";
-const char* mNameConfigExecDir =			"execDir";
-const char* mNameConfigUser =				"username";
-const char* mNameConfigPass =				"password";
-const char* mNameConfigImagePath =			"imagePath";
-const char* mNameConfigRed =				"red";
-const char* mNameConfigGreen =				"green";
-const char* mNameConfigBlue =				"blue";
-const char* mNameConfigClockFontSize =		"fontSize";
-const char* mNameConfigLanguage =			"language";
-const char* mBAlertTextSelectedINF[7] =		{/*E*/"Selected image not found, using default\n(may look wrong)", /*S*/"Selected image not found, using default\n(may look wrong)", /*N*/"Fant ikke bildene du hadde spesifisert,\nbruker standardbildene(kan se tsarva ut)", /*S*/"Selected image not found, using default\n(may look wrong)", /*P*/"Selected image not found, using default\n(may look wrong)", /*F*/"Image sélectionnée non trouvée, utilisation de valeur par defaut (peut aparaître dérangée)", /*D*/"Selected image not found, using default\n(may look wrong)"};
-const char* mBAlertTextSelectedINFButton[7] ={"Nooooooo!", "Nooooooo!", "Nei!!!!", "Nooooooo!", "Nooooooo!", "Noooonnn!", "Nooooooo!"};
-const char* mBAlertTextUserConfigNF[7] =	{/*E*/"Username config file not found!\nPlease run the Preferences application\nUsername set to \"baron\"", /*S*/"Username config file not found!\nPlease run the Preferences application\nUsername set to \"baron\"", /*N*/"Finner ikke brukernavnkonfigurasjonsfila!\nVennligs kjør Preferences programmet\nBrukernavnet satt til \"baron\"", /*S*/"Username config file not found!\nPlease run the Preferences application\nUsername set to \"baron\"", /*p*/"Username config file not found!\nPlease run the Preferences application\nUsername set to    \"baron\"", /*F*/"Fichier de configuration du nom d'usagé non trouvé! Svp allez dans les péférences et utilisé \"baron\" comme nom d'usagé", /*D*/"Username config file not found!\nPlease run the Preferences application\nUsername set to \"baron\""};
-const char* mBAlertTextUserConfigNFB[7] =	{"Doh!", "Doh!", "Doh!", "Doh!", "Doh!", "Doh!", "Doh!"};
-const char* mBAlertTextUserConfigPNF[7] =	{/*E*/"The default password is <haikubox>. Is strongly recommended to change the default password!", /*S*/"Password config file not found!\nPlease run the Preferences application\nPassword set to <nothing>", /*N*/"Finner ikke passordkonfigurasjonsfila!\nVennligs kjør Preferences programmet\npassordet satt til <ingenting>", /*P*/"Password config file not found!\nPlease run the Preferences application\nPassword set to <nothing>", /*F*/"Fichier de configuration du mot de passe non trouvé! Svp allez dans les péférences et utilisé <rien> comme mot de passe", /*D*/"Password config file not found!\nPlease run the Preferences application\nPassword set to <nothing>"};
-const char* mBAlertTextUserConfigPNFB[7] =	{"Ouch", "Ouch", "Doh!", "Ouch", "Ouch", "Aie", "Ouch"};
-const char* mNameButtonThemeToggle[7] = 	{"Themes", "Themes", "Themes", "Themes", "Themes", "Thèmes", "Themes"};
-const char* mWindowTitle = 					"Lock Workstation";
-const char* mStringUnlock[7] = 				{"Unlock", "Unlock", "Lås opp", "Unlock", "Unlock", "Déverrouilé", "Unlock"}; 
-const BRect UIRect 							(110, 160, 480, 300);
-const BRect mFrameButtonLogin 				(320, 390, 445, 410);
-const BRect mFrameTextUser 					(0, 330, 450, 350);
-const BRect mFrameTextPass 					(0, 356, 450, 376);
-const BRect mFrameTextViewUser 				(120, 330, 170, 350);
-const BRect mFrameTextViewPass 				(120, 356, 170, 376);
-const BRect mFrameEntireScreen 				(0, 0, 1920, 1200);
-const char* mInputUserName;
-const char* mInputPassWord;
-const char* mDefaultLanguage =				"0";
+
+#undef B_TRANSLATION_CONTEXT
+#define B_TRANSLATION_CONTEXT "Main window"
 
 /**********************************************************/
-mWindow::mWindow(const char *mWindowTitle)
-			: BWindow(BRect(200, 200, 2000, 2000), mWindowTitle , B_NO_BORDER_WINDOW_LOOK, B_MODAL_ALL_WINDOW_FEEL,
-			B_WILL_ACCEPT_FIRST_CLICK | B_FLOATING_SUBSET_WINDOW_FEEL | B_NOT_CLOSABLE | B_NOT_ZOOMABLE | B_NOT_RESIZABLE,
-			B_ALL_WORKSPACES)
+mWindow::mWindow(const char* mWindowTitle)
+: BWindow(BRect(200, 200, 2000, 2000), mWindowTitle, B_NO_BORDER_WINDOW_LOOK,
+    B_MODAL_ALL_WINDOW_FEEL, B_WILL_ACCEPT_FIRST_CLICK |
+    B_FLOATING_SUBSET_WINDOW_FEEL | B_NOT_CLOSABLE | B_NOT_ZOOMABLE |
+    B_NOT_RESIZABLE, B_ALL_WORKSPACES)
 {
-mView = new BView(BRect(0, 0, 2000, 2000), NULL, B_FOLLOW_ALL, B_WILL_DRAW);
-	if (mView != NULL)
-	{
-		BWindow::AddChild(mView);
-	}
-	else
-	{
-				be_app->PostMessage(B_QUIT_REQUESTED);
-	}
-mclockview = new mClockView(BRect(0, 0, 200, 100), "mCLockViewaeasdsad", B_FOLLOW_TOP | B_FOLLOW_LEFT,
-								 B_WILL_DRAW | B_PULSE_NEEDED);
-AddChild(mclockview);
-mWindow::SetPulseRate(5000000);
-/******************/
-/**** Fileread ****/
-/******************/
-//shortcut
+    BPath path;
+    find_directory(B_SYSTEM_LOG_DIRECTORY, &path);
+    path.Append("LockWorkstation.log");
+    logger = new mLogger(mNameConfigEvtLoggingOn, path.Path());
 
-AddShortcut(B_SPACE, B_COMMAND_KEY | B_CONTROL_KEY,
- 		new BMessage(B_QUIT_REQUESTED));
+    SetPulseRate(1000000);
 
-//FILEREAD
-find_directory(B_USER_SETTINGS_DIRECTORY, &path);
-path.Append(mPathToConfigFile);
-status = file.SetTo(path.Path(), B_READ_ONLY);
-	if (status == B_OK) 
-	{
-	status = savemessage.Unflatten(&file);
-	}
-//IMAGES
-	if (savemessage.HasString(mNameConfigImagePath) == 0)
-	{
-	savemessage.AddString(mNameConfigImagePath, "/system/apps/LockWorkstation/images/default");
-	}
-savemessage.FindString(mNameConfigImagePath, &mStringPathToImageFolder);
-mStringPathToBG << mStringPathToImageFolder << mDefaultPathToSelBG;
-mStringPathToCU << mStringPathToImageFolder << mDefaultPathToSelUI;
-mStringPathToNOCU << mStringPathToImageFolder << mDefaultPathToSelNUI;
-//BG COLOR
-//R
-	if (savemessage.HasString(mNameConfigRed) == 0)
-	{
-	savemessage.AddString(mNameConfigRed, mDefaultColorR);
-	}
-savemessage.FindString(mNameConfigRed, &mStringR);
-//G
-	if (savemessage.HasString(mNameConfigGreen) == 0)
-	{
-	savemessage.AddString(mNameConfigGreen, mDefaultColorG);
-	}
-savemessage.FindString(mNameConfigGreen, &mStringG);
-//B
-	if (savemessage.HasString(mNameConfigBlue) == 0)
-	{
-	savemessage.AddString(mNameConfigBlue, mDefaultColorB);
-	}
-savemessage.FindString(mNameConfigBlue, &mStringB);
-//LANGUAGE
-	if (savemessage.HasString(mNameConfigLanguage) == 0)
-	{
-	savemessage.AddString(mNameConfigLanguage, mDefaultLanguage);
-	}
-savemessage.FindString(mNameConfigLanguage, &mStringLanguage);
-//USER
-	if (savemessage.HasString(mNameConfigUser) == 0)
-	{
-	savemessage.AddString(mNameConfigUser, mDefaultUsername);
-	BAlert *mAbout = new BAlert("Usernamenotfound",
-		mBAlertTextUserConfigNF[mLanguage], mBAlertTextUserConfigNFB[mLanguage]);
-		mAbout->Go();
-	}
-savemessage.FindString(mNameConfigUser, &mTheRightUserName);
+    // Initialize app data from settings file
+    InitUIData();
+    const rgb_color mWhite = {255, 255, 255};
+    const rgb_color mBlack = {0, 0, 0};
 
-//PASS
-	if (savemessage.HasString(mNameConfigPass) == 0)
-	{
-	savemessage.AddString(mNameConfigPass, mDefaultPassword);
-	BAlert *mAbout = new BAlert("Passwordnotfound",
-	mBAlertTextUserConfigPNF[mLanguage], mBAlertTextUserConfigNFB[mLanguage]);
-	mAbout->Go();
-	}
-savemessage.FindString(mNameConfigPass, &mTheRightPassword);
-if (file.SetTo(path.Path(), B_WRITE_ONLY | B_CREATE_FILE) == B_OK) 
-	{
-	savemessage.Flatten(&file);
-	}
+    // Child boxes
+    loginbox = new mLoginBox(BRect(0, 0, 400, 400));
+    infoview = new mSystemInfo(BRect(0, 0, 500, 500));
+    if(!mSysInfoPanelShown)
+        infoview->Hide();
+    sessionbar = new mSessionBar(B_HORIZONTAL, this);
+    if(!mSessionBarShown)
+        sessionbar->Hide();
 
-/*******************************************/
-/****************** Main code **************/
-/*******************************************/
-mColorR = atoi(mStringR.String());
-mColorG = atoi(mStringG.String());
-mColorB = atoi(mStringB.String());
-mLanguage = atoi(mStringLanguage.String());
+    // Background view
+    mView = new mBackgroundView(BRect(0, 0, 2000, 2000), NULL, B_FOLLOW_NONE,
+        B_WILL_DRAW, mBackgroundColor, mBackgroundImageMode,
+        mBackgroundImageFolderPath, mBackgroundListSnooze);
 
-const rgb_color mBack = {mColorR, mColorG, mColorB};
-const rgb_color mWhite = {255, 255, 255};
-const rgb_color mBlack = {0, 0, 0};
-mView->SetViewColor(mBack);
+    BLayoutBuilder::Group<>(mView, B_HORIZONTAL, 0)
+        .SetInsets(B_USE_WINDOW_INSETS)
+        .AddGlue()
+        .AddGroup(B_VERTICAL)
+            .AddGlue()
+            .Add(loginbox)
+            .AddStrut(12.0f)
+            .Add(sessionbar)
+            .AddGlue()
+        .End()
+        .AddGlue()
+        .AddGroup(B_VERTICAL)
+            .AddGlue()
+            .Add(infoview)
+            .AddGlue()
+        .End()
+        .AddGlue()
+    .End();
 
-mStringLoginButtonLabelUnlock << mStringUnlock[mLanguage];
+    AddChild(mView);
 
-mButtonLogin = new BButton(mFrameButtonLogin, mStringUnlock[mLanguage], mStringUnlock[mLanguage], 
-				new BMessage(BUTTON_LOGIN));		
+    // Quick key combinations
+    if(mKillerShortcutEnabled)
+        AddShortcut(B_SPACE, B_COMMAND_KEY | B_CONTROL_KEY,
+            new BMessage(B_QUIT_REQUESTED));
 
-mTextUser = new BTextControl(mFrameTextUser, "mInputUserName", "", mInputUserName, new BMessage(LOGIN_CHANGED));
-mTextPass = new BTextControl(mFrameTextPass, "mInputPassWord", "", mInputPassWord, new BMessage(LOGIN_CHANGED));
-mTextPass->TextView()->HideTyping(true);
-mTextUser->SetViewColor(mWhite);
-mTextUser->SetLowColor(mWhite);
-mTextUser->SetHighColor(mBlack);
-mTextPass->SetViewColor(mWhite);
-mTextPass->SetLowColor(mWhite);
-mTextPass->SetHighColor(mBlack);
-mView->SetDrawingMode(B_OP_OVER);
-mButtonLogin->SetLabel(mStringLoginButtonLabelUnlock.String());
-mTextUser->SetModificationMessage(new BMessage(LOGIN_CHANGED));
-mTextPass->SetModificationMessage(new BMessage(LOGIN_CHANGED));
-//BITMAP 1
-BitmapBounds = BTranslationUtils::GetBitmap(mStringPathToBG.String());
-if (!BitmapBounds)
-{
-BitmapBounds = BTranslationUtils::GetBitmap(mDefaultPathToBG);
-if (!BitmapBounds)
-	{
-	mWindow::QuitRequested();
-	be_app->PostMessage(B_QUIT_REQUESTED);
-	}
-	else 
-	{
-	BAlert *mAbout = new BAlert("BitmapAlerter",
-	mBAlertTextSelectedINF[mLanguage], mBAlertTextSelectedINFButton[mLanguage]);
-	mAbout->Go();
-	BRect bRect = BitmapBounds->Bounds();
-	bRect.Set(0, 0, 1920, 1200);
-	mViewBitmap = new BitmapView(BitmapBounds, bRect, "BitmapView");
-	mView->AddChild(mViewBitmap);
-	}
-}
-else 
-{
-BRect bRect = BitmapBounds->Bounds();
-bRect.Set(0, 0, 1920, 1200);
-mViewBitmap = new BitmapView(BitmapBounds, bRect, "BitmapView");
-mView->AddChild(mViewBitmap);
-}
-/* Are they there? */
-UserImageBounds = BTranslationUtils::GetBitmap(mStringPathToCU.String());
-	if (!UserImageBounds)
-	{
-	UserImageBounds = BTranslationUtils::GetBitmap(mDefaultPathToUI);
-		if (!UserImageBounds)
-		{
-		mWindow::QuitRequested();
-		be_app->PostMessage(B_QUIT_REQUESTED);
-		}
-		else
-		{
-		BAlert *mAbout = new BAlert("BitmapAlerter",
-		mBAlertTextSelectedINF[mLanguage], mBAlertTextSelectedINFButton[mLanguage]);
-		mAbout->Go();
-		}
-	}
-	else
-	{
-	}
-UserNoImageBounds = BTranslationUtils::GetBitmap(mStringPathToNOCU.String());
-	if (!UserNoImageBounds)
-	{
-	UserNoImageBounds = BTranslationUtils::GetBitmap(mDefaultPathToNUI);
-		if (!UserNoImageBounds)
-		{
-		mWindow::QuitRequested();
-		be_app->PostMessage(B_QUIT_REQUESTED);
-		}
-		else
-		{
-		BAlert *mAbout = new BAlert("BitmapAlerter",
-		mBAlertTextSelectedINF[mLanguage], mBAlertTextSelectedINFButton[mLanguage]);
-		mAbout->Go();
-		}
-	}
-	else
-	{
-	}
-delete UserImageBounds;
-delete UserNoImageBounds;
-/*BITMAP END */
-mView->AddChild(mTextUser);
-mView->AddChild(mTextPass);
-mView->AddChild(mButtonLogin);
-mButtonLogin->MakeDefault(true);
-MoveTo (0, 0);
-BMessenger msgr(this);
-be_roster->StartWatching(msgr, B_SOME_APP_ACTIVATED);
-mTextUser->SetTarget(this);
-mTextUser->MakeFocus(true);
-mView->LockLooper();
-mButtonLogin->SetEnabled(false);
-mView->UnlockLooper();
+    // Fit to screen, otherwise parts of the running environment will be shown
+    //   if using high definitions resolutions
+    MoveTo(0, 0);
+    ResizeToScreen();
+    mView->ResizeTo(Frame().Width(), Frame().Height());
 }
 
 /**********************************************************/
 mWindow::~mWindow()
 {
+    delete logger;
 }
 
 /**********************************************************/
 /* da controllare */
-void mWindow::MessageReceived(BMessage *message)
+void mWindow::MessageReceived(BMessage* message)
 {
-	switch(message->what)
+    switch(message->what)
 	{
-	case LOGIN_CHANGED:
-	User = mTextUser->Text();
-	Pass = mTextPass->Text();
-	if (User == mTheRightUserName)
-	{
-		if(Pass == mTheRightPassword)
-		{
-		mView->LockLooper();
-		mButtonLogin->SetEnabled(true);
-		mView->UnlockLooper();
-			if (mAvoidFlickering != 2)
-			{
-			UserThread = spawn_thread(UserThreadChange_static, "Change Image Thread",
-										B_NORMAL_PRIORITY, this);
-			resume_thread(UserThread);
-			mAvoidFlickering = 2;
-			}
-		}
-		else
-		{
-		mView->LockLooper();
-		mButtonLogin->SetEnabled(false);
-		mView->UnlockLooper();
-			if (mAvoidFlickering != 2)
-			{
-			UserThread = spawn_thread(UserThreadChange_static, "Change Image Thread",
-										B_NORMAL_PRIORITY, this);
-			resume_thread(UserThread);
-			mAvoidFlickering = 2;
-			}
-		}
-	}
-	else
-	{
-	mView->LockLooper();
-	mButtonLogin->SetEnabled(false);
-	mView->UnlockLooper();
-	if (mAvoidFlickering != 1)
-		{
-		UserThreadUndo = spawn_thread(UserThreadChange_staticUndo, "Undo Image Thread",
-										B_NORMAL_PRIORITY, this);
-		resume_thread(UserThreadUndo);
-		mAvoidFlickering = 1;
-		}
-	}
-	break;
-	case THEME_TOGGLED:
-	
-	break;
-	case BUTTON_LOGIN: 
-	User = mTextUser->Text();
-	mInputUserName = mTextUser->Text();
-	Pass = mTextPass->Text();
-	mInputPassWord = mTextPass->Text();
-	if (User == mTheRightUserName)
-	{
-		if (Pass == mTheRightPassword)
-		{
-			be_app->PostMessage(B_QUIT_REQUESTED);
-		}
-		else
-		{
-		
-		}
-	}
-	else
-	{
-	
-	}
-	break;
-	//Kill the Team manager
-	case B_SOME_APP_ACTIVATED:
-	{
-		/* THIS PIECE OF CODE HAS BEEN "BORROWED" FROM BeLogin, I HAVE NOT TALKED WITH THEM,
-		BUT I JUST WANT TO MAKE SURE THAT THEY GET SOME OF THE CREDIT 
-		And my program doesnt use it at all BTW :-) */
-		BString strSignature;
-		message->FindString("be:signature", &strSignature);
-		if (strSignature.ICompare ("application/x-vnd.Be-input_server") == 0)
-		{
-			app_info info;
-			be_roster->GetAppInfo (strSignature.String(), &info);
-			
-			BMessage msgGetProperty, msgSetProperty, msgReply;
-			status_t result;
-			msgGetProperty.what = B_GET_PROPERTY;
-			msgGetProperty.AddSpecifier("Messenger");
-			msgGetProperty.AddSpecifier("Window", "Team monitor");
-			result = BMessenger(info.signature, info.team).SendMessage(&msgGetProperty, &msgReply);
-			
-			if (result == B_OK)
-			{
-				BMessenger msng;
-				if (msgReply.FindMessenger("result", &msng) == B_OK)
-				{
-					//msng.SendMessage(QUIT_TEAM_MONITOR);
-					new BMessage(B_QUIT_REQUESTED);
-					app_info mwinfo;
-					be_app->GetAppInfo(&mwinfo);
-					be_roster->ActivateApp(mwinfo.team);
-					Activate(true);
-				}			
-			}		
-		}
-	break;
-	}
-	default:
-	BWindow::MessageReceived(message);
-	break;
+        case LOGIN_CHANGED:
+            break;
+        case BUTTON_LOGIN:
+        {
+            const char* user, *pass;
+            if(message->FindString("username", &user) == B_OK &&
+            message->FindString("password", &pass) == B_OK) {
+                bool userMatch = strcmp(user, mTheRightUserName.String()) == 0;
+                bool passMatch = strcmp(pass, mTheRightPassword.String()) == 0;
+
+                if(userMatch && passMatch) {
+                    BString desc;
+                    desc.SetToFormat("Login successful for username: %s", user);
+                    logger->AddEvent(desc.String());
+                    be_app->PostMessage(B_QUIT_REQUESTED);
+                }
+                else {
+                    BString desc;
+                    desc.SetToFormat("Login failed for username: %s", user);
+                    logger->AddEvent(EVT_ERROR, desc.String());
+                    BMessage reply(M_LOGIN_FAILED);
+                    reply.AddBool("emptyFields", false);
+                    reply.AddBool("wrongUsername", !userMatch);
+                    reply.AddBool("wrongPassword", !passMatch);
+                    message->SendReply(&reply);
+                }
+            }
+            else {
+                logger->AddEvent(EVT_ERROR, "Login failed: missing user or password.");
+                BMessage reply(M_LOGIN_FAILED);
+                reply.AddBool("emptyFields", true);
+                message->SendReply(&reply);
+            }
+            break;
+        }
+        case M_RESTART_REQUESTED:
+            logger->AddEvent("Restart requested.");
+            SystemShutdown(true, false, false);
+            break;
+        case M_SHUTDOWN_REQUESTED:
+            logger->AddEvent("Shut down requested.");
+            SystemShutdown(false, false, false);
+            break;
+        case B_QUIT_REQUESTED:
+            QuitRequested();
+            break;
+        //Kill the Team manager
+        case B_SOME_APP_ACTIVATED:
+        {
+            /* THIS PIECE OF CODE HAS BEEN "BORROWED" FROM BeLogin, I HAVE NOT
+            TALKED WITH THEM, BUT I JUST WANT TO MAKE SURE THAT THEY GET SOME
+            OF THE CREDIT
+            And my program doesnt use it at all BTW :-) */
+            BString strSignature;
+            message->FindString("be:signature", &strSignature);
+            if (strSignature.ICompare ("application/x-vnd.Be-input_server") == 0)
+            {
+                app_info info;
+                be_roster->GetAppInfo (strSignature.String(), &info);
+
+                BMessage msgGetProperty, msgSetProperty, msgReply;
+                status_t result;
+                msgGetProperty.what = B_GET_PROPERTY;
+                msgGetProperty.AddSpecifier("Messenger");
+                msgGetProperty.AddSpecifier("Window", "Team monitor");
+                result = BMessenger(info.signature, info.team).SendMessage(&msgGetProperty, &msgReply);
+
+                if (result == B_OK)
+                {
+                    BMessenger msng;
+                    if (msgReply.FindMessenger("result", &msng) == B_OK)
+                    {
+                        // msng.SendMessage(QUIT_TEAM_MONITOR);
+                        new BMessage(B_QUIT_REQUESTED);
+                        app_info mwinfo;
+                        be_app->GetAppInfo(&mwinfo);
+                        be_roster->ActivateApp(mwinfo.team);
+                        Activate(true);
+                    }
+                }
+            }
+            break;
+        }
+        default:
+            BWindow::MessageReceived(message);
+            break;
 	}
 }
 
 /**********************************************************/
 bool mWindow::QuitRequested()
 {
-	be_app->PostMessage(B_QUIT_REQUESTED);
-	return BWindow::QuitRequested();
+    be_app->PostMessage(B_QUIT_REQUESTED);
+    return BWindow::QuitRequested();
 }
 
-/**********************************************************/
-//Change image to the user image
-int32
-mWindow::UserThreadChange_static(void *data)
+void mWindow::ResizeToScreen()
 {
-	mWindow *changeimage = (mWindow *)data;
-	changeimage->UserThreadChangeImage();
-	return 0;
+    BScreen screen(B_MAIN_SCREEN_ID);
+    display_mode dmode;
+    screen.GetMode(&dmode);
+    ResizeTo(dmode.virtual_width, dmode.virtual_height);
 }
 
-/**********************************************************/
-void mWindow::UserThreadChangeImage()
+void mWindow::InitUIData()
 {
-UserImageBounds = BTranslationUtils::GetBitmap(mStringPathToCU.String());
-if (!UserImageBounds)
-{
-UserImageBounds = BTranslationUtils::GetBitmap(mDefaultPathToUI);
-}
-mViewUserImage = new BitmapView(UserImageBounds, UIRect, "UserImage");
-AddChild(mViewUserImage);
+    LoadSettings(&savemessage);
+    BMessage* defaults = new BMessage;
+	DefaultSettings(defaults); // To be used when only some of the fields are missing
+
+	/* User */
+    mTheRightUserName = savemessage.GetString(mNameConfigUser,
+		defaults->GetString(mNameConfigUser));
+    mTheRightPassword = savemessage.GetString(mNameConfigPass,
+		defaults->GetString(mNameConfigPass));
+
+    mBackgroundImageMode = savemessage.GetUInt8(mNameConfigBgMode,
+        defaults->GetUInt8(mNameConfigBgMode, 1));
+
+	/* Background color */
+	mBackgroundColor = savemessage.GetColor(mNameConfigBgColor,
+        defaults->GetColor(mNameConfigBgColor, rgb_color()));
+
+	/* Background images path */
+    mBackgroundImageFolderPath = savemessage.GetString(mNameConfigImagePath,
+        defaults->GetString(mNameConfigImagePath));
+	mStringPathToBG << mBackgroundImageFolderPath << mDefaultPathToSelBG;
+	mStringPathToCU << mBackgroundImageFolderPath << mDefaultPathToSelUI;
+	mStringPathToNOCU << mBackgroundImageFolderPath << mDefaultPathToSelNUI;
+
+    /* Background list snooze */
+    mBackgroundListSnooze = savemessage.GetUInt32(mNameConfigBgSnooze,
+        defaults->GetUInt32(mNameConfigBgSnooze, 10));
+
+    /* Clock color */
+    mClockColor = savemessage.GetColor(mNameConfigClockColor,
+        defaults->GetColor(mNameConfigClockColor, rgb_color()));
+
+    /* Clock placement */
+    mClockLocation = savemessage.GetPoint(mNameConfigClockPlace,
+        defaults->GetPoint(mNameConfigClockPlace, BPoint()));
+
+    /* Clock visibility */
+    mClockShown = savemessage.GetBool(mNameConfigBoolClock,
+        defaults->GetBool(mNameConfigBoolClock));
+
+    /* Clock size */
+    mClockSize = savemessage.GetUInt32(mNameConfigClockFontSize,
+        defaults->GetUInt32(mNameConfigClockFontSize, 8));
+
+	/* Language (unused) */
+	mStringLanguage = savemessage.GetString(mNameConfigLanguage,
+		defaults->GetString(mNameConfigLanguage));
+
+    /* Additional panels */
+    mSessionBarShown = savemessage.GetBool(mNameConfigSessionBarOn,
+        defaults->GetBool(mNameConfigSessionBarOn));
+    mSysInfoPanelShown = savemessage.GetBool(mNameConfigSysInfoPanelOn,
+        defaults->GetBool(mNameConfigSysInfoPanelOn));
+
+    /* Other configs */
+    mKillerShortcutEnabled = savemessage.GetBool(mNameConfigKillerShortcutOn,
+        defaults->GetBool(mNameConfigKillerShortcutOn));
+    mLoggingEnabled = savemessage.GetBool(mNameConfigEvtLoggingOn,
+        defaults->GetBool(mNameConfigEvtLoggingOn));
+
+	delete defaults;
 }
 
-/**********************************************************/
-//And back again
-int32
-mWindow::UserThreadChange_staticUndo(void *data)
+void mWindow::SystemShutdown(bool restart, bool confirm, bool sync)
 {
-	mWindow *changeimageundo = (mWindow *)data;
-	changeimageundo->UserThreadChangeImageUndo();
-	return 0;
-}
-
-/**********************************************************/
-void mWindow::UserThreadChangeImageUndo()
-{
-UserNoImageBounds = BTranslationUtils::GetBitmap(mStringPathToNOCU.String());
-if (!UserNoImageBounds)
-{
-UserNoImageBounds = BTranslationUtils::GetBitmap(mDefaultPathToNUI);
-}
-mViewUserNoImage = new BitmapView(UserNoImageBounds, UIRect, "NoUserImage");
-AddChild(mViewUserNoImage);
+    BRoster roster;
+    BRoster::Private privroster(roster);
+    privroster.ShutDown(restart, confirm, sync);
 }
