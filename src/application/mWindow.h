@@ -13,6 +13,7 @@
 #include "mLoginBox.h"
 #include "mSessionBar.h"
 #include "mSystemInfo.h"
+#include "../common/LockWorkstationConfig.h"
 
 class mWindow : public BWindow
 {
@@ -22,40 +23,18 @@ public:
     virtual void 		MessageReceived(BMessage* message);
     virtual bool        QuitRequested();
     void                ResizeToScreen();
+    status_t            Login(AuthMethod mthd, const char* usr, const char* pwd);
 private:
     void                InitUIData();
-    // status_t            LoadSettings();
-    // status_t            SaveSettings();
     void                SystemShutdown(bool restart, bool confirm, bool sync);
 private:
-    mBackgroundView     *mView;
-    mLoginBox           *loginbox;
-    mSystemInfo         *infoview;
-    mSessionBar         *sessionbar;
+    mBackgroundView    *mView;
+    mLoginBox          *loginbox;
+    mSystemInfo        *infoview;
+    mSessionBar        *sessionbar;
 
-    BMessage            savemessage;
-
-    BString             mTheRightUserName;
-    BString             mTheRightPassword;
-    rgb_color           mBackgroundColor;
-    uint8               mBackgroundImageMode;
-    BString             mBackgroundImageFolderPath;
-    uint32              mBackgroundListSnooze;
-    rgb_color           mClockColor;
-    BPoint              mClockLocation;
-    uint32              mClockSize;
-    bool                mClockShown;
-    BString             mStringLanguage;
-    bool                mSessionBarShown;
-    bool                mSysInfoPanelShown;
-    bool                mKillerShortcutEnabled;
-    bool                mLoggingEnabled;
-
-    BString				mStringPathToBG;
-	BString				mStringPathToCU;
-	BString				mStringPathToNOCU;
-
-    mLogger*            logger;
+    LWSettings         *settings;
+    mLogger            *logger;
 };
 
 #endif

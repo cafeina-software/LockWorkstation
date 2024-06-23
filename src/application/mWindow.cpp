@@ -5,6 +5,7 @@
 #include "mBackgroundView.h"
 #include "mSessionBar.h"
 #include "../common/LockWorkstationConfig.h"
+#include "mSysLogin.h"
 
 const char* mDefaultPathToSelBG =			"/login_gfx";
 const char* mDefaultPathToSelUI =			"/UserImage";
@@ -35,16 +36,16 @@ mWindow::mWindow(const char* mWindowTitle)
     // Child boxes
     loginbox = new mLoginBox(BRect(0, 0, 400, 400));
     infoview = new mSystemInfo(BRect(0, 0, 500, 500));
-    if(!mSysInfoPanelShown)
+    if(!settings->SystemInfoPanelIsEnabled())
         infoview->Hide();
     sessionbar = new mSessionBar(B_HORIZONTAL, this);
-    if(!mSessionBarShown)
+    if(!settings->SessionBarIsEnabled())
         sessionbar->Hide();
 
     // Background view
     mView = new mBackgroundView(BRect(0, 0, 2000, 2000), NULL, B_FOLLOW_NONE,
-        B_WILL_DRAW, mBackgroundColor, mBackgroundImageMode,
-        mBackgroundImageFolderPath, mBackgroundListSnooze);
+        B_WILL_DRAW, settings->BackgroundColor(), settings->BackgroundMode(),
+        settings->BackgroundImageFolderPath(), settings->BackgroundImageSnooze());
 
     BLayoutBuilder::Group<>(mView, B_HORIZONTAL, 0)
         .SetInsets(B_USE_WINDOW_INSETS)
@@ -68,7 +69,7 @@ mWindow::mWindow(const char* mWindowTitle)
     AddChild(mView);
 
     // Quick key combinations
-    if(mKillerShortcutEnabled)
+    if(settings->KillerShortcutIsEnabled())
         AddShortcut(B_SPACE, B_COMMAND_KEY | B_CONTROL_KEY,
             new BMessage(B_QUIT_REQUESTED));
 
@@ -83,6 +84,7 @@ mWindow::mWindow(const char* mWindowTitle)
 mWindow::~mWindow()
 {
     delete logger;
+    delete settings;
 }
 
 /**********************************************************/
@@ -98,10 +100,7 @@ void mWindow::MessageReceived(BMessage* message)
             const char* user, *pass;
             if(message->FindString("username", &user) == B_OK &&
             message->FindString("password", &pass) == B_OK) {
-                bool userMatch = strcmp(user, mTheRightUserName.String()) == 0;
-                bool passMatch = strcmp(pass, mTheRightPassword.String()) == 0;
-
-                if(userMatch && passMatch) {
+                if(Login(settings->AuthenticationMethod(), user, pass) == B_OK) {
                     BString desc;
                     desc.SetToFormat("Login successful for username: %s", user);
                     logger->AddEvent(desc.String());
@@ -113,8 +112,8 @@ void mWindow::MessageReceived(BMessage* message)
                     logger->AddEvent(EVT_ERROR, desc.String());
                     BMessage reply(M_LOGIN_FAILED);
                     reply.AddBool("emptyFields", false);
-                    reply.AddBool("wrongUsername", !userMatch);
-                    reply.AddBool("wrongPassword", !passMatch);
+                    // reply.AddBool("wrongUsername", !userMatch);
+                    // reply.AddBool("wrongPassword", !passMatch);
                     message->SendReply(&reply);
                 }
             }
@@ -195,69 +194,59 @@ void mWindow::ResizeToScreen()
     ResizeTo(dmode.virtual_width, dmode.virtual_height);
 }
 
+status_t mWindow::Login(AuthMethod mthd, const char* usr, const char* pwd)
+{
+    status_t status = B_ERROR;
+    fprintf(stderr, "Proposed user: %s. Proposed pass: %s.\n", usr, pwd);
+
+    switch(mthd)
+    {
+        case AUTH_SYSTEM_ACCOUNT:
+        {
+            status = try_login(usr, pwd);
+            break;
+        }
+        case AUTH_KEYSTORE:
+        {
+            status = B_NOT_SUPPORTED;
+            break;
+        }
+        case AUTH_APP_ACCOUNT:
+        default:
+        {
+            bool userMatch = strcmp(usr, settings->DefaultUser()) == 0;
+            bool passMatch = strcmp(pwd, settings->DefaultUserPassword()) == 0;
+            status = userMatch && passMatch ? B_OK : B_ERROR;
+
+            // if(settings->HasAppUser(usr)) {
+                // if(strcmp(pwd, settings->AppPasswordOf(usr)) == 0) {
+                    // fprintf(stderr, "Login successful.\n");
+                    // status = B_OK;
+                // }
+                // else {
+                    // fprintf(stderr, "Login failed.\n");
+                    // status = B_ERROR;
+                // }
+            // }
+            // else {
+                // fprintf(stderr, "User name not found.\n");
+                // status = B_ENTRY_NOT_FOUND;
+            // }
+
+            break;
+        }
+    }
+
+    return status;
+}
+
 void mWindow::InitUIData()
 {
-    LoadSettings(&savemessage);
-    BMessage* defaults = new BMessage;
-	DefaultSettings(defaults); // To be used when only some of the fields are missing
+    BPath path;
+    find_directory(B_USER_SETTINGS_DIRECTORY, &path);
+	path.Append(mPathToConfigFile);
 
-	/* User */
-    mTheRightUserName = savemessage.GetString(mNameConfigUser,
-		defaults->GetString(mNameConfigUser));
-    mTheRightPassword = savemessage.GetString(mNameConfigPass,
-		defaults->GetString(mNameConfigPass));
-
-    mBackgroundImageMode = savemessage.GetUInt8(mNameConfigBgMode,
-        defaults->GetUInt8(mNameConfigBgMode, 1));
-
-	/* Background color */
-	mBackgroundColor = savemessage.GetColor(mNameConfigBgColor,
-        defaults->GetColor(mNameConfigBgColor, rgb_color()));
-
-	/* Background images path */
-    mBackgroundImageFolderPath = savemessage.GetString(mNameConfigImagePath,
-        defaults->GetString(mNameConfigImagePath));
-	mStringPathToBG << mBackgroundImageFolderPath << mDefaultPathToSelBG;
-	mStringPathToCU << mBackgroundImageFolderPath << mDefaultPathToSelUI;
-	mStringPathToNOCU << mBackgroundImageFolderPath << mDefaultPathToSelNUI;
-
-    /* Background list snooze */
-    mBackgroundListSnooze = savemessage.GetUInt32(mNameConfigBgSnooze,
-        defaults->GetUInt32(mNameConfigBgSnooze, 10));
-
-    /* Clock color */
-    mClockColor = savemessage.GetColor(mNameConfigClockColor,
-        defaults->GetColor(mNameConfigClockColor, rgb_color()));
-
-    /* Clock placement */
-    mClockLocation = savemessage.GetPoint(mNameConfigClockPlace,
-        defaults->GetPoint(mNameConfigClockPlace, BPoint()));
-
-    /* Clock visibility */
-    mClockShown = savemessage.GetBool(mNameConfigBoolClock,
-        defaults->GetBool(mNameConfigBoolClock));
-
-    /* Clock size */
-    mClockSize = savemessage.GetUInt32(mNameConfigClockFontSize,
-        defaults->GetUInt32(mNameConfigClockFontSize, 8));
-
-	/* Language (unused) */
-	mStringLanguage = savemessage.GetString(mNameConfigLanguage,
-		defaults->GetString(mNameConfigLanguage));
-
-    /* Additional panels */
-    mSessionBarShown = savemessage.GetBool(mNameConfigSessionBarOn,
-        defaults->GetBool(mNameConfigSessionBarOn));
-    mSysInfoPanelShown = savemessage.GetBool(mNameConfigSysInfoPanelOn,
-        defaults->GetBool(mNameConfigSysInfoPanelOn));
-
-    /* Other configs */
-    mKillerShortcutEnabled = savemessage.GetBool(mNameConfigKillerShortcutOn,
-        defaults->GetBool(mNameConfigKillerShortcutOn));
-    mLoggingEnabled = savemessage.GetBool(mNameConfigEvtLoggingOn,
-        defaults->GetBool(mNameConfigEvtLoggingOn));
-
-	delete defaults;
+    settings = new LWSettings(path.Path());
 }
 
 void mWindow::SystemShutdown(bool restart, bool confirm, bool sync)

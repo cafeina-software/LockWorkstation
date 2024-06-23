@@ -37,6 +37,7 @@ SRCS = mApp.cpp \
         mBackgroundView.cpp \
         mSessionBar.cpp \
         mLogger.cpp \
+        mSysLogin.cpp \
         ../common/ThreadedClass.cpp \
         ../common/LockWorkstationConfig.cpp
 

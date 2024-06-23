@@ -31,6 +31,7 @@ mWindow::mWindow(const char *mWindowTitle)
 {
     InitUIData(); // Load data from config file
 
+    amthdCardView = CreateCardView_AccountMethod();
     userCardView  = CreateCardView_User();
 	bgCardView    = CreateCardView_Background();
 	clockCardView = CreateCardView_Clock();
@@ -56,7 +57,8 @@ mWindow::mWindow(const char *mWindowTitle)
     // Main view
     fPanelList = new BListView(B_SINGLE_SELECTION_LIST);
     fPanelList->SetSelectionMessage(new BMessage(M_ITEM_SELECTED));
-    fPanelList->AddItem(new BStringItem(B_TRANSLATE("User")));
+    fPanelList->AddItem(new BStringItem(B_TRANSLATE("Authentication method")));
+    fPanelList->AddItem(new BStringItem(B_TRANSLATE("Application user")));
     fPanelList->AddItem(new BStringItem(B_TRANSLATE("Background")));
     fPanelList->AddItem(new BStringItem(B_TRANSLATE("Clock")));
     fPanelList->AddItem(new BStringItem(B_TRANSLATE("Options")));
@@ -67,6 +69,7 @@ mWindow::mWindow(const char *mWindowTitle)
         B_SIZE_UNSET));
 
     fCardView = new BCardView();
+    fCardView->AddChild(amthdCardView);
     fCardView->AddChild(userCardView);
     fCardView->AddChild(bgCardView);
     fCardView->AddChild(clockCardView);
@@ -101,7 +104,10 @@ mWindow::mWindow(const char *mWindowTitle)
     CenterOnScreen();
 }
 
-mWindow::~mWindow() {}
+mWindow::~mWindow()
+{
+    delete settings;
+}
 
 void mWindow::MessageReceived(BMessage* message)
 {
@@ -114,12 +120,39 @@ void mWindow::MessageReceived(BMessage* message)
 				fCardView->CardLayout()->SetVisibleItem(index);
             break;
         }
+        case M_AUTHMTHD_SYSTEM:
+        {
+            settings->SetAuthenticationMethod(AUTH_SYSTEM_ACCOUNT);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
+                "Enable and disable user button", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_AUTHMTHD_KEYSTR:
+        {
+            settings->SetAuthenticationMethod(AUTH_KEYSTORE);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
+                "Enable and disable user button", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_AUTHMTHD_APPACC:
+        {
+            settings->SetAuthenticationMethod(AUTH_APP_ACCOUNT);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
+                "Enable and disable user button", B_LOW_PRIORITY, this);
+            break;
+        }
         case BUTTON_DEFAULTPATH:
         {
             BMessage* temp = new BMessage;
-            DefaultSettings(temp);
-            mStringCurrentPathImages = temp->GetString("imagePath");
-            mTextControlmPathToImageFolder->SetText(mStringCurrentPathImages.String());
+            LWSettings::DefaultSettings(temp);
+            settings->SetBackgroundImageFolderPath(temp->GetString(mNameConfigImagePath));
+            mTextControlmPathToImageFolder->SetText(settings->BackgroundImageFolderPath());
             delete temp;
 
             //Check if there are any images there!
@@ -140,8 +173,8 @@ void mWindow::MessageReceived(BMessage* message)
         /*****************************************************************************/
         case ERASER_FROM_DOOM:
         {
-            DefaultSettings(&savemessage);
-            ArchiveData(&savemessage);
+            settings->Reset();
+            settings->SaveSettings();
             InitUIControls();
 
             //Check if images are there
@@ -167,8 +200,8 @@ void mWindow::MessageReceived(BMessage* message)
         /********************************************************************/
         case APPLY_EVERYTHING:
         {
-            ArchiveData(&savemessage);
-            SaveSettings(&savemessage);
+            settings->Commit();
+            settings->SaveSettings();
 
             //Check if there are any images there!
             ThreadedCall(CheckerThread, CheckerThread_static,
@@ -180,32 +213,40 @@ void mWindow::MessageReceived(BMessage* message)
             break;
         }
         case BOOL_CLOCK:
-            mBoolClockShown = mCheckBoxBoolClock->Value() == B_CONTROL_ON;
+        {
+            settings->SetClockEnabled(mCheckBoxBoolClock->Value() == B_CONTROL_ON);
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
+        }
         case M_BOOL_SESSION:
-            mBoolSessionBarOn = mCheckBoxSessionBar->Value() == B_CONTROL_ON;
+        {
+            settings->SetSessionBarEnabled(mCheckBoxSessionBar->Value() == B_CONTROL_ON);
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
+        }
         case M_BOOL_INFO:
-            mBoolSysInfoPanelOn = mCheckBoxSysInfo->Value() == B_CONTROL_ON;
+        {
+            settings->SetSystemInfoPanelEnabled(mCheckBoxSysInfo->Value() == B_CONTROL_ON);
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
+        }
         case M_BOOL_KILLER:
-            mBoolKillerShortcutOn = mCheckBoxKillerShortcut->Value() == B_CONTROL_ON;
+        {
+            settings->SetKillerShortcutEnabled(mCheckBoxKillerShortcut->Value() == B_CONTROL_ON);
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
+        }
         case M_BOOL_EVTLOG:
         {
-            mBoolLoggingOn = mCheckBoxEventLog->Value() == B_CONTROL_ON;
+            settings->SetEventLogEnabled(mCheckBoxEventLog->Value() == B_CONTROL_ON);
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
@@ -215,8 +256,11 @@ void mWindow::MessageReceived(BMessage* message)
         case COLOR_CHANGED_G:
         case COLOR_CHANGED_B:
         {
-            mColorBackground.set_to(mSpinnerColorR->Value(),
-                mSpinnerColorG->Value(), mSpinnerColorB->Value());
+            settings->SetBackgroundColor({
+                static_cast<uint8>(mSpinnerColorR->Value()),
+                static_cast<uint8>(mSpinnerColorG->Value()),
+                static_cast<uint8>(mSpinnerColorB->Value())
+            });
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
@@ -226,8 +270,11 @@ void mWindow::MessageReceived(BMessage* message)
         case CLOCKCOLOR_CHANGED_G:
         case CLOCKCOLOR_CHANGED_B:
         {
-            mColorClock.set_to(mSpinnerClockColorR->Value(),
-                mSpinnerClockColorG->Value(), mSpinnerClockColorB->Value());
+            settings->SetClockColor({
+                static_cast<uint8>(mSpinnerClockColorR->Value()),
+                static_cast<uint8>(mSpinnerClockColorG->Value()),
+                static_cast<uint8>(mSpinnerClockColorB->Value())
+            });
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
@@ -236,12 +283,12 @@ void mWindow::MessageReceived(BMessage* message)
         case DEFAULT_COLORS:
         {
             BMessage* temp = new BMessage;
-            DefaultSettings(temp);
+            LWSettings::DefaultSettings(temp);
 
-            mColorBackground = temp->GetColor(mNameConfigBgColor, {});
-            mSpinnerColorR->SetValue(mColorBackground.red);
-            mSpinnerColorG->SetValue(mColorBackground.green);
-            mSpinnerColorB->SetValue(mColorBackground.blue);
+            settings->SetBackgroundColor(temp->GetColor(mNameConfigBgColor, {}));
+            mSpinnerColorR->SetValue(settings->BackgroundColor().red);
+            mSpinnerColorG->SetValue(settings->BackgroundColor().green);
+            mSpinnerColorB->SetValue(settings->BackgroundColor().blue);
 
             //Update Strings
             ThreadedCall(UpdateStringsThread, UpdateStringsThread_static,
@@ -256,12 +303,12 @@ void mWindow::MessageReceived(BMessage* message)
         case DEFAULT_CLOCK_COLORS:
         {
             BMessage* temp = new BMessage;
-            DefaultSettings(temp);
+            LWSettings::DefaultSettings(temp);
 
-            mColorClock = temp->GetColor(mNameConfigClockColor, {});
-            mSpinnerClockColorR->SetValue(mColorClock.red);
-            mSpinnerClockColorG->SetValue(mColorClock.green);
-            mSpinnerClockColorB->SetValue(mColorClock.blue);
+            settings->SetClockColor(temp->GetColor(mNameConfigClockColor, {}));
+            mSpinnerClockColorR->SetValue(settings->ClockColor().red);
+            mSpinnerClockColorG->SetValue(settings->ClockColor().green);
+            mSpinnerClockColorB->SetValue(settings->ClockColor().blue);
 
             //Update Strings
             ThreadedCall(UpdateStringsThread, UpdateStringsThread_static,
@@ -279,9 +326,9 @@ void mWindow::MessageReceived(BMessage* message)
             float x = atof(mTextControlClockPlaceX->Text());
 
             if(x >= 0 && x < screen.Frame().Width())
-                mPointClockPlace.x = x;
+                settings->SetClockLocation(BPoint(x, settings->ClockLocation().y));
             else
-                x = 0;
+                settings->SetClockLocation(BPoint(0, settings->ClockLocation().y));
 
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
@@ -294,9 +341,9 @@ void mWindow::MessageReceived(BMessage* message)
             float y = atof(mTextControlClockPlaceY->Text());
 
             if(y >= 0 && y < screen.Frame().Height())
-                mPointClockPlace.y = y;
+                settings->SetClockLocation(BPoint(settings->ClockLocation().x, y));
             else
-                y = 0;
+                settings->SetClockLocation(BPoint(settings->ClockLocation().x, 0));
 
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
@@ -306,14 +353,14 @@ void mWindow::MessageReceived(BMessage* message)
         case DEFAULT_PLACE:
         {
             BMessage* temp = new BMessage;
-            DefaultSettings(temp);
+            LWSettings::DefaultSettings(temp);
 
-            mPointClockPlace = temp->GetPoint(mNameConfigClockPlace, BPoint());
-            mTextControlClockPlaceX->SetText(std::to_string(mPointClockPlace.x).c_str());
-            mTextControlClockPlaceY->SetText(std::to_string(mPointClockPlace.y).c_str());
+            settings->SetClockLocation(temp->GetPoint(mNameConfigClockPlace, BPoint()));
+            mTextControlClockPlaceX->SetText(std::to_string(settings->ClockLocation().x).c_str());
+            mTextControlClockPlaceY->SetText(std::to_string(settings->ClockLocation().y).c_str());
 
             //Bool clock
-            mCheckBoxBoolClock->SetValue(mBoolClockShown ? B_CONTROL_ON : B_CONTROL_OFF);
+            mCheckBoxBoolClock->SetValue(settings->ClockIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
             //Update Strings
             ThreadedCall(UpdateStringsThread, UpdateStringsThread_static,
                 "Update Strings", B_NORMAL_PRIORITY, this);
@@ -326,7 +373,7 @@ void mWindow::MessageReceived(BMessage* message)
         }
         case SIZE_SLIDER_CHANGED:
         {
-            mUintClockSize = mSliderFontSize->Value();
+            settings->SetClockSize(mSliderFontSize->Value());
 
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
@@ -335,7 +382,7 @@ void mWindow::MessageReceived(BMessage* message)
         }
         case M_SNOOZE_SLIDER_CHANGED:
         {
-            mUintSnoozeMultiplier = mSliderBgSnooze->Value();
+            settings->SetBackgroundImageSnooze(mSliderBgSnooze->Value());
 
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
@@ -343,18 +390,56 @@ void mWindow::MessageReceived(BMessage* message)
             break;
         }
         case CHANGE_LOGIN:
-        	mStringUser1.SetTo(mAddUserName->Text());
-        	mStringPassword1.SetTo(mAddPassWord->Text());
+        {
+            settings->SetDefaultUser(mAddUserName->Text());
+        	settings->SetDefaultUserPassword(mAddPassWord->Text());
 
-        	//This option allows direct saving
-        	savemessage.SetString(mNameConfigUser, mStringUser1.String());
-            savemessage.SetString(mNameConfigPass, mStringPassword1.String());
-            SaveSettings(&savemessage);
+            // AppUserMod(mAddUserName->Text(), mAddPassWord->Text(), NULL);
 
         	//Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
+        }
+        case M_APPUSER_SEL:
+        {
+            // mButtonUserMod->SetEnabled(true);
+            // mButtonUserRem->SetEnabled(true);
+            break;
+        }
+        case M_APPUSER_IVK:
+        {
+            // mButtonUserMod->SetEnabled(true);
+            // mButtonUserRem->SetEnabled(true);
+
+            // int32 pos = mListOfUsers->CurrentSelection();
+            // mAddUserName->SetText(((BStringItem*)mListOfUsers->ItemAt(pos))->Text());
+            break;
+        }
+        case M_APPUSER_MODIFY:
+        {
+            // int32 pos = mListOfUsers->CurrentSelection();
+            // mAddUserName->SetText(((BStringItem*)mListOfUsers->ItemAt(pos))->Text());
+            break;
+        }
+        case M_APPUSER_REMOVE:
+        {
+            // int32 pos = mListOfUsers->CurrentSelection();
+            // BStringItem* targetitem = (BStringItem*)mListOfUsers->ItemAt(pos);
+//
+            // if(targetitem != NULL) {
+                // const char* del = targetitem->Text();
+                // if(settings->RemoveAppUser(del) == B_OK) {
+                    // mListOfUsers->RemoveItem(targetitem);
+                    // mButtonUserMod->SetEnabled(false);
+                    // mButtonUserRem->SetEnabled(false);
+                // }
+                // else
+                    // fprintf(stderr, "User could not be deleted. Either it did not"
+                    // " exist or it was not allowed to delete it.\n");
+            // }
+            break;
+        }
         case BROWSE_FOLDER:
             mFilePanelFolderBrowse->Show();
 
@@ -368,8 +453,8 @@ void mWindow::MessageReceived(BMessage* message)
                 BEntry entry(&mEntryRef);
                 BPath path;
                 entry.GetPath(&path);
-                mStringCurrentPathImages = path.Path();
-                mTextControlmPathToImageFolder->SetText(mStringCurrentPathImages.String());
+                settings->SetBackgroundImageFolderPath(path.Path());
+                mTextControlmPathToImageFolder->SetText(settings->BackgroundImageFolderPath());
             }
 
             ThreadedCall(CheckerThread, CheckerThread_static,
@@ -386,21 +471,21 @@ void mWindow::MessageReceived(BMessage* message)
                 "Enable and disable user button", B_LOW_PRIORITY, this);
             break;
         case M_BGMODE_RADIO_NONE:
-            mUintBgMode = 0;
+            settings->SetBackgroundMode(BGM_NONE);
 
             //Enable and disable buttons
             ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
                 "Enable and disable user button", B_LOW_PRIORITY, this);
             break;
         case M_BGMODE_RADIO_FOLDER:
-            mUintBgMode = 1;
+            settings->SetBackgroundMode(BGM_FOLDER);
 
             //Enable and disable buttons
             ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
                 "Enable and disable user button", B_LOW_PRIORITY, this);
             break;
         case M_BGMODE_RADIO_LIST:
-            mUintBgMode = 2;
+            settings->SetBackgroundMode(BGM_LISTFILE);
 
             //Enable and disable buttons
             ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
@@ -422,6 +507,27 @@ bool mWindow::QuitRequested()
 {
     be_app->PostMessage(B_QUIT_REQUESTED);
 	return BWindow::QuitRequested();
+}
+
+void mWindow::AppUserMod(const char* n, const char* p, const char* nn)
+{
+    // bool found = false;
+    // int i = 0;
+
+    // while(!found && i < settings->AppUserList().CountStrings()) {
+        // if(strcmp(settings->AppUserList().StringAt(i).String(), n) == 0)
+            // found = true;
+        // else
+            // i++;
+    // }
+
+    // if(found) { // User exists, we must modify it
+        // settings->ChangeAppUserPassword(n, p);
+    // }
+    // else {  // User does not exist, we have to create it
+        // if(settings->AddAppUser(n, p) != B_OK)
+            // fprintf(stderr, "could not be added\n");
+    // } // Currently we won't deal with the cases of username change
 }
 
 // #pragma mark -
@@ -450,7 +556,7 @@ void mWindow::EnDButtons_Thread()
     snooze(10000);
 
     BMessage* defaults = new BMessage;
-    DefaultSettings(defaults);
+    LWSettings::DefaultSettings(defaults);
 
     bgCardView->LockLooper();
     mButtonDefaultColors->SetEnabled(!UI_IsBgColorDefault(defaults));
@@ -482,21 +588,13 @@ mWindow::EnDUserButtonThread_static(void *data)
 /*************************************************/
 void mWindow::EnDUserButton_Thread()
 {
-    mPasswordHack = mAddPassWord->Text();
-    mPasswordRetypeHack = mAddPassWordRetype->Text();
-    mPasswordDisableButtonHack.SetTo("");
-	if (mPasswordRetypeHack == mPasswordHack && mPasswordHack != mPasswordDisableButtonHack)
-	{
-        userCardView->LockLooper();
-        mButtonChangeLogin->SetEnabled(true);
-        userCardView->UnlockLooper();
-	}
-	else
-	{
-        userCardView->LockLooper();
-        mButtonChangeLogin->SetEnabled(false);
-        userCardView->UnlockLooper();
-	}
+    bool validUser = strcmp(mAddUserName->Text(), "") != 0;
+    bool verifiedPwd = strcmp(mAddPassWord->Text(), mAddPassWordRetype->Text()) == 0 &&
+                       strcmp(mAddPassWord->Text(), "") != 0;
+
+    userCardView->LockLooper();
+    mButtonChangeLogin->SetEnabled(validUser && verifiedPwd);
+    userCardView->UnlockLooper();
 }
 
 int32
@@ -511,31 +609,32 @@ void mWindow::UpdateStrings_Thread()
 {
     LockLooper();
 
-    mAddUserName->SetText(mStringUser1.String());
+    mAddUserName->SetText(settings->DefaultUser());
+    ((BStringView*)mListOfUsers->ItemAt(0))->SetText(settings->DefaultUser());
 
-    mColorBackground.set_to(
+    settings->BackgroundColor().set_to(
         static_cast<uint8>(mSpinnerColorR->Value()),
         static_cast<uint8>(mSpinnerColorG->Value()),
         static_cast<uint8>(mSpinnerColorB->Value())
     );
-	mStringCurrentPathImages.SetTo(mTextControlmPathToImageFolder->Text());
+	settings->SetBackgroundImageFolderPath(mTextControlmPathToImageFolder->Text());
 
-    mBoolClockShown = mCheckBoxBoolClock->Value() == B_CONTROL_ON;
-    mUintClockSize = mSliderFontSize->Value();
-    mColorClock.set_to(
+    settings->SetClockEnabled(mCheckBoxBoolClock->Value() == B_CONTROL_ON);
+    settings->SetClockSize((uint32)mSliderFontSize->Value());
+    settings->ClockColor().set_to(
         static_cast<uint8>(mSpinnerClockColorR->Value()),
         static_cast<uint8>(mSpinnerClockColorG->Value()),
         static_cast<uint8>(mSpinnerClockColorB->Value())
     );
-    mPointClockPlace.Set(
-        static_cast<float>(atoi(mTextControlClockPlaceX->Text())),
-        static_cast<float>(atoi(mTextControlClockPlaceY->Text()))
+    settings->ClockLocation().Set(
+        static_cast<float>(atof(mTextControlClockPlaceX->Text())),
+        static_cast<float>(atof(mTextControlClockPlaceY->Text()))
     );
 
-    mBoolSessionBarOn = mCheckBoxSessionBar->Value() == B_CONTROL_ON;
-    mBoolSysInfoPanelOn = mCheckBoxSysInfo->Value() == B_CONTROL_ON;
-    mBoolKillerShortcutOn = mCheckBoxKillerShortcut->Value() == B_CONTROL_ON;
-    mBoolLoggingOn = mCheckBoxEventLog->Value() == B_CONTROL_ON;
+    settings->SetSessionBarEnabled(mCheckBoxSessionBar->Value() == B_CONTROL_ON);
+    settings->SetSystemInfoPanelEnabled(mCheckBoxSysInfo->Value() == B_CONTROL_ON);
+    settings->SetKillerShortcutEnabled(mCheckBoxKillerShortcut->Value() == B_CONTROL_ON);
+    settings->SetEventLogEnabled(mCheckBoxEventLog->Value() == B_CONTROL_ON);
 
     UnlockLooper();
 }
@@ -544,24 +643,47 @@ void mWindow::InitUIControls()
 {
     LockLooper();
 
-    mAddUserName->SetText(mStringUser1.String());
-    mSpinnerColorR->SetValue(mColorBackground.red);
-    mSpinnerColorG->SetValue(mColorBackground.green);
-    mSpinnerColorB->SetValue(mColorBackground.blue);
-    mTextControlmPathToImageFolder->SetText(mStringCurrentPathImages.String());
-    mSliderBgSnooze->SetValue(mUintSnoozeMultiplier);
-    mCheckBoxBoolClock->SetValue(mBoolClockShown ? B_CONTROL_ON : B_CONTROL_OFF);
-    mSliderFontSize->SetValue(mUintClockSize);
-    mSpinnerClockColorR->SetValue(mColorClock.red);
-    mSpinnerClockColorG->SetValue(mColorClock.green);
-    mSpinnerClockColorB->SetValue(mColorClock.blue);
-    mTextControlClockPlaceX->SetText(std::to_string(mPointClockPlace.x).c_str());
-    mTextControlClockPlaceY->SetText(std::to_string(mPointClockPlace.y).c_str());
-    mCheckBoxSessionBar->SetValue(mBoolSessionBarOn ? B_CONTROL_ON : B_CONTROL_OFF);
-    mCheckBoxSysInfo->SetValue(mBoolSysInfoPanelOn ? B_CONTROL_ON : B_CONTROL_OFF);
-    mCheckBoxKillerShortcut->SetValue(mBoolKillerShortcutOn ? B_CONTROL_ON : B_CONTROL_OFF);
-    mCheckBoxEventLog->SetValue(mBoolLoggingOn ? B_CONTROL_ON : B_CONTROL_OFF);
-    switch(mUintBgMode) {
+    switch(settings->AuthenticationMethod()) {
+        case 0:
+            mRadioBtAuthSysaccount->SetValue(B_CONTROL_ON);
+            mRadioBtAuthSyskeystore->SetValue(B_CONTROL_OFF);
+            mRadioBtAuthAppaccount->SetValue(B_CONTROL_OFF);
+            break;
+        case 2:
+            mRadioBtAuthSysaccount->SetValue(B_CONTROL_OFF);
+            mRadioBtAuthSyskeystore->SetValue(B_CONTROL_OFF);
+            mRadioBtAuthAppaccount->SetValue(B_CONTROL_ON);
+            break;
+        case 1:
+        default:
+            mRadioBtAuthSysaccount->SetValue(B_CONTROL_OFF);
+            mRadioBtAuthSyskeystore->SetValue(B_CONTROL_ON);
+            mRadioBtAuthAppaccount->SetValue(B_CONTROL_OFF);
+            break;
+    }
+    mAddUserName->SetText(settings->DefaultUser());
+    mListOfUsers->AddItem(new BStringItem(settings->DefaultUser()));
+    // for(int i = 0; i < settings->AppUserList().CountStrings(); i++) {
+        // fprintf(stderr, "Found: %s\n", settings->AppUserList().StringAt(i).String());
+        // mListOfUsers->AddItem(new BStringItem(settings->AppUserList().StringAt(i).String()));
+    // }
+    mSpinnerColorR->SetValue(settings->BackgroundColor().red);
+    mSpinnerColorG->SetValue(settings->BackgroundColor().green);
+    mSpinnerColorB->SetValue(settings->BackgroundColor().blue);
+    mTextControlmPathToImageFolder->SetText(settings->BackgroundImageFolderPath());
+    mSliderBgSnooze->SetValue(settings->BackgroundImageSnooze());
+    mCheckBoxBoolClock->SetValue(settings->ClockIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
+    mSliderFontSize->SetValue(settings->ClockSize());
+    mSpinnerClockColorR->SetValue(settings->ClockColor().red);
+    mSpinnerClockColorG->SetValue(settings->ClockColor().green);
+    mSpinnerClockColorB->SetValue(settings->ClockColor().blue);
+    mTextControlClockPlaceX->SetText(std::to_string(settings->ClockLocation().x).c_str());
+    mTextControlClockPlaceY->SetText(std::to_string(settings->ClockLocation().y).c_str());
+    mCheckBoxSessionBar->SetValue(settings->SessionBarIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
+    mCheckBoxSysInfo->SetValue(settings->SystemInfoPanelIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
+    mCheckBoxKillerShortcut->SetValue(settings->KillerShortcutIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
+    mCheckBoxEventLog->SetValue(settings->EventLogIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
+    switch(settings->BackgroundMode()) {
         case 0:
             mRadioBtUseBgImgNone->SetValue(B_CONTROL_ON);
             mRadioBtUseBgImgFolder->SetValue(B_CONTROL_OFF);
@@ -585,75 +707,79 @@ void mWindow::InitUIControls()
 
 void mWindow::InitUIData()
 {
-    LoadSettings(&savemessage);
-    BMessage* defaults = new BMessage;
-	DefaultSettings(defaults); // To be used when only some of the fields are missing
+    BPath path;
+    find_directory(B_USER_SETTINGS_DIRECTORY, &path);
+	path.Append(mPathToConfigFile);
 
-	mStringUser1 = savemessage.GetString(mNameConfigUser,
-		defaults->GetString(mNameConfigUser));
-	mStringPassword1 = savemessage.GetString(mNameConfigPass,
-		defaults->GetString(mNameConfigPass));
-	mColorBackground = savemessage.GetColor(mNameConfigBgColor,
-        defaults->GetColor(mNameConfigBgColor, rgb_color()));
-	mStringCurrentPathImages = savemessage.GetString(mNameConfigImagePath,
-		defaults->GetString(mNameConfigImagePath, ""));
-    mUintBgMode = savemessage.GetUInt8(mNameConfigBgMode,
-        defaults->GetUInt8(mNameConfigBgMode, 1));
-    mColorClock = savemessage.GetColor(mNameConfigClockColor,
-        defaults->GetColor(mNameConfigClockColor, rgb_color()));
-    mPointClockPlace = savemessage.GetPoint(mNameConfigClockPlace,
-        defaults->GetPoint(mNameConfigClockPlace, BPoint()));
-    mBoolClockShown = savemessage.GetBool(mNameConfigBoolClock,
-        defaults->GetBool(mNameConfigBoolClock));
-    mUintClockSize = savemessage.GetUInt32(mNameConfigClockFontSize,
-        defaults->GetUInt32(mNameConfigClockFontSize, 8));
-    mUintSnoozeMultiplier = savemessage.GetUInt32(mNameConfigBgSnooze,
-        defaults->GetUInt32(mNameConfigBgSnooze, 10));
-    mBoolSessionBarOn = savemessage.GetBool(mNameConfigSessionBarOn,
-        defaults->GetBool(mNameConfigSessionBarOn));
-    mBoolSysInfoPanelOn = savemessage.GetBool(mNameConfigSysInfoPanelOn,
-        defaults->GetBool(mNameConfigSysInfoPanelOn));
-    mBoolKillerShortcutOn = savemessage.GetBool(mNameConfigKillerShortcutOn,
-        defaults->GetBool(mNameConfigKillerShortcutOn));
-    mBoolLoggingOn = savemessage.GetBool(mNameConfigEvtLoggingOn,
-        defaults->GetBool(mNameConfigEvtLoggingOn));
-
-    delete defaults;
-}
-
-void mWindow::ArchiveData(BMessage* archive)
-{
-    /* User */
-    if(archive->ReplaceString(mNameConfigUser, mStringUser1) != B_OK)
-        archive->AddString(mNameConfigUser, mStringUser1);
-    if(archive->ReplaceString(mNameConfigPass, mStringPassword1) != B_OK)
-        archive->AddString(mNameConfigPass, mStringPassword1);
-
-    /* Background */
-    archive->SetColor(mNameConfigBgColor, mColorBackground);
-    archive->SetString(mNameConfigImagePath, mStringCurrentPathImages);
-    archive->SetUInt32(mNameConfigBgSnooze, mUintSnoozeMultiplier);
-    archive->SetUInt8(mNameConfigBgMode, mUintBgMode);
-
-    /* Clock */
-    archive->SetColor(mNameConfigClockColor, mColorClock);
-    archive->SetPoint(mNameConfigClockPlace, mPointClockPlace);
-    archive->SetBool(mNameConfigBoolClock, mBoolClockShown);
-    archive->SetUInt32(mNameConfigClockFontSize, mUintClockSize);
-
-	/* Language (unused) */
-    archive->SetString(mNameConfigLanguage, mStringLanguage);
-
-    /* Additional panels */
-    archive->SetBool(mNameConfigSessionBarOn, mBoolSessionBarOn);
-    archive->SetBool(mNameConfigSysInfoPanelOn, mBoolSysInfoPanelOn);
-
-    /* Other configs */
-    archive->SetBool(mNameConfigKillerShortcutOn, mBoolKillerShortcutOn);
-    archive->SetBool(mNameConfigEvtLoggingOn, mBoolLoggingOn);
+    settings = new LWSettings(path.Path());
 }
 
 // #pragma mark - UI Building
+
+BView* mWindow::CreateCardView_AccountMethod()
+{
+    mRadioBtAuthSysaccount = new BRadioButton("rb_sysacc",
+        B_TRANSLATE("Authenticate using a system account"),
+        new BMessage(M_AUTHMTHD_SYSTEM));
+    mRadioBtAuthSysaccount->SetFont(be_bold_font);
+    BStringView* sysaccountDesc = new BStringView(NULL,
+        B_TRANSLATE_COMMENT(
+            "This authentication method requires an existing user account\n"
+            "in the system to work. The user account must not be a \n"
+            "service account. This application allows to login with accounts \n"
+            "having an empty password.", "Please place the new line characters"
+            "accordingly to accomodate the string, in order to not stretch "
+            "the window too much")
+    );
+
+    mRadioBtAuthSyskeystore = new BRadioButton("rb_syskey",
+        B_TRANSLATE("Authenticate using a key from the Keystore"),
+        new BMessage(M_AUTHMTHD_KEYSTR));
+    mRadioBtAuthSyskeystore->SetFont(be_bold_font);
+    BStringView* keyaccountDesc = new BStringView(NULL,
+        B_TRANSLATE_COMMENT(
+            "This authentication method makes use of the keystore server, \n"
+            "from where it retrieves the username-password pair, stored in \n"
+            "this application's keyring (LockWorkstation) in the system. The \n"
+            "first time this option is enabled from this preflet, it will ask\n"
+            "the system to create such keyring in the keystore, and later it\n"
+            "will also ask for permission to add a key containing a pair of \n"
+            "username-password.", "Please place the new line characters"
+            "accordingly to accomodate the string, in order to not stretch "
+            "the window too much")
+    );
+
+    mRadioBtAuthAppaccount = new BRadioButton("rb_appacc",
+        B_TRANSLATE("Authenticate using an application based account (default)"),
+        new BMessage(M_AUTHMTHD_APPACC));
+    mRadioBtAuthAppaccount->SetFont(be_bold_font);
+    BStringView* appaccountDesc = new BStringView(NULL,
+        B_TRANSLATE_COMMENT(
+            "This authentication method will make use of the username-password\n"
+            "pairs saved in this application's settings file. To manage the \n"
+            "application accounts, please make use of this application's view\n"
+            "\"Application user\". Please consider that deleting or restoring \n"
+            "the default values may delete such application-based accounts.",
+            "Please place the new line characters accordingly to accomodate the"
+            " string, in order to not stretch the window too much")
+    );
+
+    BView* thisview = new BView("v_acc_mthd", B_SUPPORTS_LAYOUT, NULL);
+    BLayoutBuilder::Group<>(thisview, B_VERTICAL)
+        .SetInsets(B_USE_SMALL_INSETS)
+        .Add(mRadioBtAuthSysaccount)
+        .Add(sysaccountDesc)
+        // .Add(mRadioBtAuthSyskeystore)
+        // .Add(keyaccountDesc)
+        .Add(mRadioBtAuthAppaccount)
+        .Add(appaccountDesc)
+        .AddGlue()
+    .End();
+
+    mRadioBtAuthSyskeystore->SetEnabled(false);
+
+    return thisview;
+}
 
 BView* mWindow::CreateCardView_User()
 {
@@ -694,16 +820,31 @@ BView* mWindow::CreateCardView_User()
 
     /* UserList */
     mListOfUsers = new BListView("UserList", B_SINGLE_SELECTION_LIST);
-    BScrollView* userlistScroll = new BScrollView("scv_usrlst", mListOfUsers,
-        B_FOLLOW_LEFT_TOP, 0, false, true, B_FANCY_BORDER);
+    mListOfUsers->SetSelectionMessage(new BMessage(M_APPUSER_SEL));
+    mListOfUsers->SetInvocationMessage(new BMessage(M_APPUSER_IVK));
+    // BScrollView* userlistScroll = new BScrollView("scv_usrlst", mListOfUsers,
+        // B_FOLLOW_LEFT_TOP, 0, false, true, B_FANCY_BORDER);
 
     BView* mListView = new BView("ListView", B_SUPPORTS_LAYOUT, NULL);
+        // new BView(BRect(0, 0, 100, 100), "ListView", 0, 0);
     mListView->SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
     mListView->SetHighUIColor(B_PANEL_TEXT_COLOR);
 
+    mButtonUserMod = new BButton("bt_usrmod", B_TRANSLATE("Modify"),
+        new BMessage(M_APPUSER_MODIFY));
+    mButtonUserMod->SetEnabled(false);
+    mButtonUserRem = new BButton("bt_usrrem", B_TRANSLATE("Remove"),
+        new BMessage(M_APPUSER_REMOVE));
+    mButtonUserRem->SetEnabled(false);
+
     BLayoutBuilder::Group<>(mListView, B_VERTICAL)
         .SetInsets(B_USE_SMALL_INSETS)
-        .Add(userlistScroll)
+        // .Add(userlistScroll)
+        .Add(mListOfUsers)
+        .AddGroup(B_HORIZONTAL)
+            .Add(mButtonUserMod)
+            .Add(mButtonUserRem)
+        .End()
     .End();
 
     BBox* mBoxAroundListUsers = new BBox("box_lstusr",
@@ -757,7 +898,8 @@ BView* mWindow::CreateCardView_Background()
     /* ImagePath */
 
     mTextControlmPathToImageFolder = new BTextControl("TextPathToImages",
-        B_TRANSLATE("Path to image folder"), mStringCurrentPathImages.String(),
+        B_TRANSLATE("Path to image folder"),
+        settings->BackgroundImageFolderPath(),
         new BMessage(TEXT_IMAGEPATH));
     mTextControlmPathToImageFolder->SetModificationMessage(new BMessage(CHECK_BUTTONS));
     mButtonDefaultImagePath = new BButton("mFrameButtonDefaultImagePath",
@@ -954,7 +1096,7 @@ BView* mWindow::CreateCardView_Options()
 bool mWindow::UI_IsDefault(BMessage* defaults)
 {
     /* background */
-    bool isBgModeDefault = mUintBgMode == defaults->GetUInt8(mNameConfigBgMode, 1);
+    bool isBgModeDefault = mRadioBtUseBgImgFolder->Value() == defaults->GetUInt8(mNameConfigBgMode, 1);
     bool isBgColorDefault = UI_IsBgColorDefault(defaults);
     bool isImgFolderPathDefault = UI_IsBgFolderDefault(defaults);
     bool isBgSnoozeDefault = mSliderBgSnooze->Value() == defaults->GetUInt32(mNameConfigBgSnooze, 10);

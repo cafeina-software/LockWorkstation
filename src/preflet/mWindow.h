@@ -56,6 +56,13 @@
 #define M_BOOL_INFO             'cbsi'
 #define M_BOOL_KILLER           'cbks'
 #define M_BOOL_EVTLOG           'cbel'
+#define M_AUTHMTHD_SYSTEM       'aths'
+#define M_AUTHMTHD_KEYSTR       'athk'
+#define M_AUTHMTHD_APPACC       'atha'
+#define M_APPUSER_MODIFY        'usmd'
+#define M_APPUSER_REMOVE        'usrm'
+#define M_APPUSER_SEL           'usel'
+#define M_APPUSER_IVK           'uivk'
 
 #include <StorageKit.h>
 #include <KernelKit.h>
@@ -70,6 +77,7 @@
 #include <unistd.h>
 
 #include "mBitmap.h"
+#include "../common/LockWorkstationConfig.h"
 #include "../common/ThreadedClass.h"
 
 class mWindow
@@ -80,6 +88,7 @@ public:
 						~mWindow();
 	virtual void 		MessageReceived(BMessage* message);
 	virtual bool 		QuitRequested();
+    void                AppUserMod(const char* n, const char* p, const char* nn = NULL);
 private:
 	//Thread
 	static int32 		CheckerThread_static(void *data);
@@ -92,11 +101,10 @@ private:
 	void 				UpdateStrings_Thread();
 
     void                InitUIControls();
-
     void                InitUIData();
-    void                ArchiveData(BMessage* archive);
 
     //UI
+    BView*              CreateCardView_AccountMethod();
 	BView*              CreateCardView_User();
 	BView*              CreateCardView_Background();
 	BView*              CreateCardView_Clock();
@@ -108,13 +116,16 @@ private:
 	bool				UI_IsClockColorDefault(BMessage* archive);
 	bool				UI_IsClockPlaceDefault(BMessage* archive);
 private:
-	BView              *userCardView,
+	BView              *amthdCardView,
+                       *userCardView,
 	                   *bgCardView,
                        *clockCardView,
                        *extraCardView,
                        *mApplyView;
 
 	BButton            *mButtonChangeLogin,
+                       *mButtonUserMod,
+                       *mButtonUserRem,
                        *mButtonDefaultColors,
                        *mButtonDefaultImagePath,
                        *mButtonBrowseImagePath,
@@ -130,7 +141,10 @@ private:
 	                   *mCheckBoxEventLog;
 	BListView          *mListOfUsers,
 	                   *fPanelList;
-    BRadioButton       *mRadioBtUseBgImgNone,
+    BRadioButton       *mRadioBtAuthSysaccount,
+                       *mRadioBtAuthSyskeystore,
+                       *mRadioBtAuthAppaccount,
+                       *mRadioBtUseBgImgNone,
                        *mRadioBtUseBgImgFolder,
                        *mRadioBtUseBgImgList;
 	BSlider            *mSliderFontSize,
@@ -153,63 +167,14 @@ private:
                         EnDUserButtonThread,
                         UpdateStringsThread;
 
-	BMessage 			savemessage;
-	BString				mStringUser1,
-                        mStringPassword1,
-                        mStringCurrentPathImages,
-                        mStringLanguage;
-    rgb_color           mColorBackground,
-                        mColorClock;
-    uint8               mUintBgMode;
-    uint32              mUintSnoozeMultiplier,
-                        mUintClockSize;
-    BPoint              mPointClockPlace;
-    bool                mBoolClockShown,
-                        mBoolSessionBarOn,
-                        mBoolSysInfoPanelOn,
-                        mBoolKillerShortcutOn,
-                        mBoolLoggingOn;
-
-    int					LanguageNumber;
-	int32				temp, tempHack;
-	char 				charer[1024];
-	BString 			PathToBG;
-	BString 			PathToUI;
-	BString 			PathToNOUI;
-	BString				mStringClockFontSize;
-	BString				mStringInstallDir;
-	BString				mDefaultImagePathText;
-	BString             mDefaultImagepathTextHack,
-                        mDefaultColorRHack,
-                        mDefaultColorGHack,
-                        mDefaultColorBHack,
-                        mDefaultClockColorRHack,
-                        mDefaultClockColorGHack,
-                        mDefaultClockColorBHack,
-                        mDefaultClockPlaceXHack,
-                        mDefaultClockPlaceYHack,
-                        mDefaultBoolClockHack,
-                        mPasswordHack,
-                        mPasswordRetypeHack,
-                        mPasswordDisableButtonHack;
-
-	BStringItem*		mStringItemUser1;
+    LWSettings         *settings;
 
 	//BBitmap*			BitmapBounds;
 	//BBitmap*			BitmapBounds2;
 	//BBitmap*			BitmapBounds3;
 
-	BMenu*				mMenuLanguage;
-	BMenuField*			mMenuFieldLanguage;
-	BPopUpMenu*			mPopUpMenuLanguage;
-	BMenuItem*			mMenuItem;
 	BFilePanel*			mFilePanelFolderBrowse;
 	entry_ref 			mEntryRef;
-	BPath 				path;
-	status_t			status;
-	BFile				file;
-
-    BString pwd;
 };
 
 #endif
