@@ -14,13 +14,13 @@
 
 #define mNameConfigExecDir               "execDir"
 #define mNameConfigAuthMode              "authMode"
-#define mNameConfigUserPassword          "userpass"
 #define mNameConfigUser                  "username"
 #define mNameConfigPass                  "password"
 #define mNameConfigBgMode                "bgMode"
 #define mNameConfigBgColor               "bgColor"
 #define mNameConfigImagePath             "imagePath"
 #define mNameConfigImageList             "imageList"
+#define mNameConfigImageFile             "imageStatic"
 #define mNameConfigBoolClock 		     "clockShown"
 #define mNameConfigClockColor            "clockColor"
 #define mNameConfigClockFontSize 	     "fontSize"
@@ -38,6 +38,7 @@ status_t    SaveSettings(BMessage* archive);
 
 enum BgMode {
     BGM_NONE = 0,
+    BGM_STATIC,
     BGM_FOLDER,
     BGM_LISTFILE
 };
@@ -60,13 +61,11 @@ public:
     AuthMethod  AuthenticationMethod();
     const char* DefaultUser();
     const char* DefaultUserPassword();
-    BStringList AppUserList();
-    bool        HasAppUser(const char* username);
-    const char* AppPasswordOf(const char* username);
     BgMode      BackgroundMode();
     rgb_color   BackgroundColor();
     const char* BackgroundImageFolderPath();
     const char* BackgroundImageListPath();
+    const char* BackgroundImageStaticPath();
     uint32      BackgroundImageSnooze();
     bool        ClockIsEnabled();
     rgb_color   ClockColor();
@@ -80,14 +79,11 @@ public:
     status_t    SetAuthenticationMethod(AuthMethod method);
     status_t    SetDefaultUser(const char* newname);
     status_t    SetDefaultUserPassword(const char* newpass);
-    status_t    AddAppUser(const char* username, const char* password);
-    status_t    RenameAppUser(const char* username, const char* newname);
-    status_t    ChangeAppUserPassword(const char* username, const char* newpass);
-    status_t    RemoveAppUser(const char* username);
     status_t    SetBackgroundMode(BgMode mode);
     status_t    SetBackgroundColor(rgb_color color);
     status_t    SetBackgroundImageFolderPath(BString path);
     status_t    SetBackgroundImageListPath(BString path);
+    status_t    SetBackgroundImageStatic(BString path);
     status_t    SetBackgroundImageSnooze(uint32 multiplier);
     status_t    SetClockEnabled(bool status);
     status_t    SetClockColor(rgb_color color);
@@ -100,21 +96,17 @@ public:
 private:
 	status_t	LoadSettings();
 	void		InitData();
-    void        InitUserPasswords();
-    std::pair<const char*,const char*>*
-                FindUser(const char* name);
 private:
 	BString     filepath;
 	BMessage	savemessage;
     AuthMethod  fAuthMethod;
-    BObjectList<std::pair<const char*,const char*>>
-                fUserPasswordDB;
     BString		mStringUser1;
     BString		mStringPassword1;
     BgMode      fBackgroundMode;
     rgb_color   fBackgroundColor;
     BString     fBackgroundImageFolder;
     BString     fBackgroundImageListFile;
+    BString     fBackgroundImageStatic;
     uint32      fBackgroundImageSnooze;
     bool        fClockEnabled;
     rgb_color   fClockColor;

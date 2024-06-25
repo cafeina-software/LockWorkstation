@@ -10,14 +10,15 @@
 #undef B_TRANSLATION_CONTEXT
 #define B_TRANSLATION_CONTEXT "Login box"
 
+static BString strLoginFailed = B_TRANSLATE("Login failed.");
+static BString strPassExpired = B_TRANSLATE("The password is expired.");
+static BString strNoError = "";
+
 mLoginBox::mLoginBox(BRect frame)
 : BView(frame, "v_loginbox", B_FOLLOW_LEFT, B_WILL_DRAW | B_NAVIGABLE |
     B_NAVIGABLE_JUMP | B_INPUT_METHOD_AWARE | B_DRAW_ON_CHILDREN)
 {
     SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
-
-    fStrError = B_TRANSLATE("Login failed");
-    fStrNoError = "";
 
     BFont font1(be_plain_font);
     font1.SetSize(be_plain_font->Size() * 2);
@@ -53,7 +54,7 @@ mLoginBox::mLoginBox(BRect frame)
     BFont errorFont(be_bold_font);
     errorFont.SetSize(be_bold_font->Size() * 1.5);
 
-    errorView = new BStringView("sv_error", fStrNoError);
+    errorView = new BStringView("sv_error", strNoError);
     errorView->SetFont(&errorFont);
     errorView->SetHighColor(ui_color(B_FAILURE_COLOR));
 
@@ -94,10 +95,12 @@ void mLoginBox::MessageReceived(BMessage* message)
 {
     switch(message->what)
     {
+        case 'user':
         case loginBoxMsgs::LBM_USERNAME_CHANGED:
             ThreadedCall(thUpdateUIForm, CallUpdateUIForm,
                 "Update error message", B_NORMAL_PRIORITY, this);
             break;
+        case 'pass':
         case loginBoxMsgs::LBM_PASSWORD_CHANGED:
             ThreadedCall(thUpdateUIForm, CallUpdateUIForm,
                 "Update error message", B_NORMAL_PRIORITY, this);
@@ -109,6 +112,11 @@ void mLoginBox::MessageReceived(BMessage* message)
         case M_LOGIN_FAILED:
             fprintf(stderr, "Login failed.\n");
             ThreadedCall(thUpdateUIErrorMsg, CallUpdateUIErrorMsg,
+                "Update error message", B_NORMAL_PRIORITY, this);
+            break;
+        case M_PASSWORD_EXPIRED:
+            fprintf(stderr, "Password is expired.\n");
+            ThreadedCall(thUpdateUIErrorMsg, CallUpdateUIExpiredMsg,
                 "Update error message", B_NORMAL_PRIORITY, this);
             break;
         default:
@@ -148,7 +156,14 @@ int mLoginBox::CallUpdateUIForm(void* data)
 int mLoginBox::CallUpdateUIErrorMsg(void* data)
 {
     mLoginBox* box = (mLoginBox*)data;
-    box->UpdateUIErrorMsg();
+    box->UpdateUIErrorMsg(strLoginFailed);
+    return 0;
+}
+
+int mLoginBox::CallUpdateUIExpiredMsg(void *data)
+{
+    mLoginBox* box = (mLoginBox*)data;
+    box->UpdateUIErrorMsg(strPassExpired);
     return 0;
 }
 
@@ -161,9 +176,9 @@ void mLoginBox::UpdateUIForm()
     UnlockLooper();
 }
 
-void mLoginBox::UpdateUIErrorMsg()
+void mLoginBox::UpdateUIErrorMsg(BString whatstr)
 {
     LockLooper();
-    errorView->SetText(fStrError);
+    errorView->SetText(whatstr);
     UnlockLooper();
 }

@@ -29,16 +29,14 @@ private:
 
     static int      CallUpdateUIForm(void* data);
     static int      CallUpdateUIErrorMsg(void* data);
+    static int      CallUpdateUIExpiredMsg(void *data);
     void            UpdateUIForm();
-    void            UpdateUIErrorMsg();
+    void            UpdateUIErrorMsg(BString str);
 private:
     BStringView     *errorView;
     BTextControl    *tcUserName,
                     *tcPassword;
     BButton         *btLogin;
-
-    BString         fStrError,
-                    fStrNoError;
 
     thread_id       thUpdateUIForm,
                     thUpdateUIErrorMsg;

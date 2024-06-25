@@ -12,12 +12,12 @@
 #include <Catalog.h>
 #include <LayoutBuilder.h>
 #include <Spinner.h>
-#include <iostream>
 #include <stdio.h>
+#include <string>
 //Local
 #include "mWindow.h"
-#include "mApp.h"
 #include "../common/LockWorkstationConfig.h"
+#include "../common/AuthenticationUtils.h"
 
 const BRect mWindowRect 					(64, 64, 504, 424);
 
@@ -58,14 +58,14 @@ mWindow::mWindow(const char *mWindowTitle)
     fPanelList = new BListView(B_SINGLE_SELECTION_LIST);
     fPanelList->SetSelectionMessage(new BMessage(M_ITEM_SELECTED));
     fPanelList->AddItem(new BStringItem(B_TRANSLATE("Authentication method")));
-    fPanelList->AddItem(new BStringItem(B_TRANSLATE("Application user")));
+    fPanelList->AddItem(new BStringItem(B_TRANSLATE("Accounts")));
     fPanelList->AddItem(new BStringItem(B_TRANSLATE("Background")));
     fPanelList->AddItem(new BStringItem(B_TRANSLATE("Clock")));
     fPanelList->AddItem(new BStringItem(B_TRANSLATE("Options")));
     BScrollView *listScrollView = new BScrollView("sc_cont", fPanelList,
         0, false, true, B_FANCY_BORDER);
     fPanelList->SetExplicitMinSize(
-        BSize(fPanelList->StringWidth(B_TRANSLATE("Background")) * 1.5,
+        BSize(fPanelList->StringWidth(B_TRANSLATE("Authentication method")) * 1.1,
         B_SIZE_UNSET));
 
     fCardView = new BCardView();
@@ -90,7 +90,7 @@ mWindow::mWindow(const char *mWindowTitle)
     be_roster->StartWatching(msgr, B_SOME_APP_ACTIVATED);
 
     mFilePanelFolderBrowse = new BFilePanel(B_OPEN_PANEL, &msgr, &mEntryRef,
-        B_DIRECTORY_NODE, false, new BMessage(FOLDER_CHANGED), NULL, true, true);
+        -1, false, NULL, NULL, true, true);
 
     AddShortcut('A', B_COMMAND_KEY, new BMessage(B_ABOUT_REQUESTED));
     AddShortcut('S', B_COMMAND_KEY, new BMessage(APPLY_EVERYTHING));
@@ -106,6 +106,7 @@ mWindow::mWindow(const char *mWindowTitle)
 
 mWindow::~mWindow()
 {
+    delete mFilePanelFolderBrowse;
     delete settings;
 }
 
@@ -185,11 +186,7 @@ void mWindow::MessageReceived(BMessage* message)
             mButtonApplyEverything->SetEnabled(false);
             mEraserButtonOfDoom->SetEnabled(false);
             mApplyView->UnlockLooper();
-            //Bool clock
-            // mCheckBoxBoolClock->SetValue(atoi(mDefaultBoolClock));
-            //slider
-            // mStringClockFontSize.SetTo("");
-            // mStringClockFontSize << mSliderFontSize->Value();
+
             //Update Strings
             ThreadedCall(UpdateStringsThread, UpdateStringsThread_static,
                 "Update Strings", B_NORMAL_PRIORITY, this);
@@ -380,10 +377,9 @@ void mWindow::MessageReceived(BMessage* message)
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
-        case M_SNOOZE_SLIDER_CHANGED:
+        case M_BGIMG_SNOOZE_CHANGED:
         {
             settings->SetBackgroundImageSnooze(mSliderBgSnooze->Value());
-
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
@@ -393,60 +389,48 @@ void mWindow::MessageReceived(BMessage* message)
         {
             settings->SetDefaultUser(mAddUserName->Text());
         	settings->SetDefaultUserPassword(mAddPassWord->Text());
-
-            // AppUserMod(mAddUserName->Text(), mAddPassWord->Text(), NULL);
-
         	//Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
-        case M_APPUSER_SEL:
+        case M_BGIMG_BROWSE_SINGLE:
         {
-            // mButtonUserMod->SetEnabled(true);
-            // mButtonUserRem->SetEnabled(true);
-            break;
-        }
-        case M_APPUSER_IVK:
-        {
-            // mButtonUserMod->SetEnabled(true);
-            // mButtonUserRem->SetEnabled(true);
-
-            // int32 pos = mListOfUsers->CurrentSelection();
-            // mAddUserName->SetText(((BStringItem*)mListOfUsers->ItemAt(pos))->Text());
-            break;
-        }
-        case M_APPUSER_MODIFY:
-        {
-            // int32 pos = mListOfUsers->CurrentSelection();
-            // mAddUserName->SetText(((BStringItem*)mListOfUsers->ItemAt(pos))->Text());
-            break;
-        }
-        case M_APPUSER_REMOVE:
-        {
-            // int32 pos = mListOfUsers->CurrentSelection();
-            // BStringItem* targetitem = (BStringItem*)mListOfUsers->ItemAt(pos);
-//
-            // if(targetitem != NULL) {
-                // const char* del = targetitem->Text();
-                // if(settings->RemoveAppUser(del) == B_OK) {
-                    // mListOfUsers->RemoveItem(targetitem);
-                    // mButtonUserMod->SetEnabled(false);
-                    // mButtonUserRem->SetEnabled(false);
-                // }
-                // else
-                    // fprintf(stderr, "User could not be deleted. Either it did not"
-                    // " exist or it was not allowed to delete it.\n");
-            // }
-            break;
-        }
-        case BROWSE_FOLDER:
-            mFilePanelFolderBrowse->Show();
-
+            ImageFilter* filter = new ImageFilter;
+            CallBgImgFilePanel(STATIC_CHANGED, B_FILE_NODE, filter);
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
+        }
+        case M_BGIMG_BROWSE_FOLDER:
+        {
+            CallBgImgFilePanel(FOLDER_CHANGED, B_DIRECTORY_NODE, NULL);
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_BGIMG_BROWSE_LIST:
+        {
+            ListFilter* filter = new ListFilter;
+            CallBgImgFilePanel(LIST_CHANGED, B_FILE_NODE, filter);
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case STATIC_CHANGED:
+        {
+            if(message->FindRef("refs", &mEntryRef) == B_OK) {
+                BEntry entry(&mEntryRef);
+                BPath path;
+                entry.GetPath(&path);
+                settings->SetBackgroundImageStatic(path.Path());
+                mTextControlmPathToImage->SetText(settings->BackgroundImageStaticPath());
+            }
+            break;
+        }
         case FOLDER_CHANGED:
         {
             if(message->FindRef("refs", &mEntryRef) == B_OK) {
@@ -461,6 +445,17 @@ void mWindow::MessageReceived(BMessage* message)
                 "Check if images are there thread", B_NORMAL_PRIORITY, this);
             break;
         }
+        case LIST_CHANGED:
+        {
+            if(message->FindRef("refs", &mEntryRef) == B_OK) {
+                BEntry entry(&mEntryRef);
+                BPath path;
+                entry.GetPath(&path);
+                settings->SetBackgroundImageListPath(path.Path());
+                mTextControlmPathToImageList->SetText(settings->BackgroundImageListPath());
+            }
+            break;
+        }
         case CHECK_BUTTONS:
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
@@ -470,21 +465,28 @@ void mWindow::MessageReceived(BMessage* message)
             ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
                 "Enable and disable user button", B_LOW_PRIORITY, this);
             break;
-        case M_BGMODE_RADIO_NONE:
+        case M_BGMODE_NONE:
             settings->SetBackgroundMode(BGM_NONE);
 
             //Enable and disable buttons
             ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
                 "Enable and disable user button", B_LOW_PRIORITY, this);
             break;
-        case M_BGMODE_RADIO_FOLDER:
+        case M_BGMODE_SINGLE:
+            settings->SetBackgroundMode(BGM_STATIC);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
+                "Enable and disable user button", B_LOW_PRIORITY, this);
+            break;
+        case M_BGMODE_FOLDER:
             settings->SetBackgroundMode(BGM_FOLDER);
 
             //Enable and disable buttons
             ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
                 "Enable and disable user button", B_LOW_PRIORITY, this);
             break;
-        case M_BGMODE_RADIO_LIST:
+        case M_BGMODE_LIST:
             settings->SetBackgroundMode(BGM_LISTFILE);
 
             //Enable and disable buttons
@@ -507,27 +509,6 @@ bool mWindow::QuitRequested()
 {
     be_app->PostMessage(B_QUIT_REQUESTED);
 	return BWindow::QuitRequested();
-}
-
-void mWindow::AppUserMod(const char* n, const char* p, const char* nn)
-{
-    // bool found = false;
-    // int i = 0;
-
-    // while(!found && i < settings->AppUserList().CountStrings()) {
-        // if(strcmp(settings->AppUserList().StringAt(i).String(), n) == 0)
-            // found = true;
-        // else
-            // i++;
-    // }
-
-    // if(found) { // User exists, we must modify it
-        // settings->ChangeAppUserPassword(n, p);
-    // }
-    // else {  // User does not exist, we have to create it
-        // if(settings->AddAppUser(n, p) != B_OK)
-            // fprintf(stderr, "could not be added\n");
-    // } // Currently we won't deal with the cases of username change
 }
 
 // #pragma mark -
@@ -560,7 +541,7 @@ void mWindow::EnDButtons_Thread()
 
     bgCardView->LockLooper();
     mButtonDefaultColors->SetEnabled(!UI_IsBgColorDefault(defaults));
-    mButtonDefaultImagePath->SetEnabled(!UI_IsBgFolderDefault(defaults));
+    // mButtonDefaultImagePath->SetEnabled(!UI_IsBgFolderDefault(defaults));
     bgCardView->UnlockLooper();
 
     clockCardView->LockLooper();
@@ -661,46 +642,49 @@ void mWindow::InitUIControls()
             mRadioBtAuthAppaccount->SetValue(B_CONTROL_OFF);
             break;
     }
+
     mAddUserName->SetText(settings->DefaultUser());
-    mListOfUsers->AddItem(new BStringItem(settings->DefaultUser()));
-    // for(int i = 0; i < settings->AppUserList().CountStrings(); i++) {
-        // fprintf(stderr, "Found: %s\n", settings->AppUserList().StringAt(i).String());
-        // mListOfUsers->AddItem(new BStringItem(settings->AppUserList().StringAt(i).String()));
-    // }
-    mSpinnerColorR->SetValue(settings->BackgroundColor().red);
-    mSpinnerColorG->SetValue(settings->BackgroundColor().green);
-    mSpinnerColorB->SetValue(settings->BackgroundColor().blue);
+    mAddPassWord->SetText(settings->DefaultUserPassword());
+    mAddPassWordRetype->SetText(settings->DefaultUserPassword());
+    BStringList users = get_system_users();
+    for(int i = 0; i < users.CountStrings(); i++)
+        mListOfUsers->AddItem(new BStringItem(users.StringAt(i).String()));
+
+    mSpinnerColorR->SetValue(static_cast<int32>(settings->BackgroundColor().red));
+    mSpinnerColorG->SetValue(static_cast<int32>(settings->BackgroundColor().green));
+    mSpinnerColorB->SetValue(static_cast<int32>(settings->BackgroundColor().blue));
+    switch(settings->BackgroundMode()) {
+        case BGM_STATIC:
+            mMfBgImageOption->Menu()->ItemAt(2)->SetMarked(true);
+            break;
+        case BGM_FOLDER:
+            mMfBgImageOption->Menu()->ItemAt(3)->SetMarked(true);
+            break;
+        case BGM_LISTFILE:
+            mMfBgImageOption->Menu()->ItemAt(4)->SetMarked(true);
+            break;
+        case BGM_NONE:
+        default:
+            mMfBgImageOption->Menu()->ItemAt(0)->SetMarked(true);
+            break;
+    }
+    mTextControlmPathToImage->SetText(settings->BackgroundImageStaticPath());
     mTextControlmPathToImageFolder->SetText(settings->BackgroundImageFolderPath());
+    mTextControlmPathToImageList->SetText(settings->BackgroundImageListPath());
     mSliderBgSnooze->SetValue(settings->BackgroundImageSnooze());
+
     mCheckBoxBoolClock->SetValue(settings->ClockIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mSliderFontSize->SetValue(settings->ClockSize());
-    mSpinnerClockColorR->SetValue(settings->ClockColor().red);
-    mSpinnerClockColorG->SetValue(settings->ClockColor().green);
-    mSpinnerClockColorB->SetValue(settings->ClockColor().blue);
+    mSpinnerClockColorR->SetValue(static_cast<int32>(settings->ClockColor().red));
+    mSpinnerClockColorG->SetValue(static_cast<int32>(settings->ClockColor().green));
+    mSpinnerClockColorB->SetValue(static_cast<int32>(settings->ClockColor().blue));
     mTextControlClockPlaceX->SetText(std::to_string(settings->ClockLocation().x).c_str());
     mTextControlClockPlaceY->SetText(std::to_string(settings->ClockLocation().y).c_str());
+
     mCheckBoxSessionBar->SetValue(settings->SessionBarIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mCheckBoxSysInfo->SetValue(settings->SystemInfoPanelIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mCheckBoxKillerShortcut->SetValue(settings->KillerShortcutIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mCheckBoxEventLog->SetValue(settings->EventLogIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
-    switch(settings->BackgroundMode()) {
-        case 0:
-            mRadioBtUseBgImgNone->SetValue(B_CONTROL_ON);
-            mRadioBtUseBgImgFolder->SetValue(B_CONTROL_OFF);
-            mRadioBtUseBgImgList->SetValue(B_CONTROL_OFF);
-            break;
-        case 2:
-            mRadioBtUseBgImgNone->SetValue(B_CONTROL_OFF);
-            mRadioBtUseBgImgFolder->SetValue(B_CONTROL_OFF);
-            mRadioBtUseBgImgList->SetValue(B_CONTROL_ON);
-            break;
-        case 1:
-        default:
-            mRadioBtUseBgImgNone->SetValue(B_CONTROL_OFF);
-            mRadioBtUseBgImgFolder->SetValue(B_CONTROL_ON);
-            mRadioBtUseBgImgList->SetValue(B_CONTROL_OFF);
-            break;
-    }
 
     UnlockLooper();
 }
@@ -756,10 +740,10 @@ BView* mWindow::CreateCardView_AccountMethod()
     BStringView* appaccountDesc = new BStringView(NULL,
         B_TRANSLATE_COMMENT(
             "This authentication method will make use of the username-password\n"
-            "pairs saved in this application's settings file. To manage the \n"
-            "application accounts, please make use of this application's view\n"
-            "\"Application user\". Please consider that deleting or restoring \n"
-            "the default values may delete such application-based accounts.",
+            "pair saved in this application's settings file. To manage the \n"
+            "application account, please make use of this application's view\n"
+            "\"Accounts\". Please consider that deleting or restoring \n"
+            "the default values may delete this application-based account.",
             "Please place the new line characters accordingly to accomodate the"
             " string, in order to not stretch the window too much")
     );
@@ -769,8 +753,6 @@ BView* mWindow::CreateCardView_AccountMethod()
         .SetInsets(B_USE_SMALL_INSETS)
         .Add(mRadioBtAuthSysaccount)
         .Add(sysaccountDesc)
-        // .Add(mRadioBtAuthSyskeystore)
-        // .Add(keyaccountDesc)
         .Add(mRadioBtAuthAppaccount)
         .Add(appaccountDesc)
         .AddGlue()
@@ -816,40 +798,27 @@ BView* mWindow::CreateCardView_User()
 
     BBox* mBoxAroundAddUserName = new BBox("box_addusr",
         B_WILL_DRAW | B_FRAME_EVENTS | B_NAVIGABLE_JUMP, B_FANCY_BORDER, mView);
-    mBoxAroundAddUserName->SetLabel(B_TRANSLATE("Change Login"));
+    mBoxAroundAddUserName->SetLabel(B_TRANSLATE("Application account"));
 
     /* UserList */
-    mListOfUsers = new BListView("UserList", B_SINGLE_SELECTION_LIST);
+    mListOfUsers = new BListView(B_SINGLE_SELECTION_LIST);
     mListOfUsers->SetSelectionMessage(new BMessage(M_APPUSER_SEL));
     mListOfUsers->SetInvocationMessage(new BMessage(M_APPUSER_IVK));
-    // BScrollView* userlistScroll = new BScrollView("scv_usrlst", mListOfUsers,
-        // B_FOLLOW_LEFT_TOP, 0, false, true, B_FANCY_BORDER);
+    BScrollView* userlistScroll = new BScrollView("scv_usrlst", mListOfUsers,
+        B_FOLLOW_LEFT_TOP, B_SUPPORTS_LAYOUT, false, true, B_FANCY_BORDER);
 
     BView* mListView = new BView("ListView", B_SUPPORTS_LAYOUT, NULL);
-        // new BView(BRect(0, 0, 100, 100), "ListView", 0, 0);
     mListView->SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
     mListView->SetHighUIColor(B_PANEL_TEXT_COLOR);
 
-    mButtonUserMod = new BButton("bt_usrmod", B_TRANSLATE("Modify"),
-        new BMessage(M_APPUSER_MODIFY));
-    mButtonUserMod->SetEnabled(false);
-    mButtonUserRem = new BButton("bt_usrrem", B_TRANSLATE("Remove"),
-        new BMessage(M_APPUSER_REMOVE));
-    mButtonUserRem->SetEnabled(false);
-
     BLayoutBuilder::Group<>(mListView, B_VERTICAL)
         .SetInsets(B_USE_SMALL_INSETS)
-        // .Add(userlistScroll)
-        .Add(mListOfUsers)
-        .AddGroup(B_HORIZONTAL)
-            .Add(mButtonUserMod)
-            .Add(mButtonUserRem)
-        .End()
+        .Add(userlistScroll)
     .End();
 
     BBox* mBoxAroundListUsers = new BBox("box_lstusr",
         B_WILL_DRAW | B_FRAME_EVENTS | B_NAVIGABLE_JUMP, B_FANCY_BORDER, mListView);
-    mBoxAroundListUsers->SetLabel(B_TRANSLATE("Current Users"));
+    mBoxAroundListUsers->SetLabel(B_TRANSLATE("Haiku accounts"));
 
     BView* thisview = new BView(NULL, B_SUPPORTS_LAYOUT, NULL);
     BLayoutBuilder::Group<>(thisview, B_VERTICAL)
@@ -897,31 +866,44 @@ BView* mWindow::CreateCardView_Background()
 
     /* ImagePath */
 
+    mPumBgImageOption = new BPopUpMenu("");
+    BLayoutBuilder::Menu<>(mPumBgImageOption)
+        .AddItem(B_TRANSLATE("Do not use background image"), new BMessage(M_BGMODE_NONE))
+        .AddSeparator()
+        .AddItem(B_TRANSLATE("Use a single image file"), new BMessage(M_BGMODE_SINGLE))
+        .AddItem(B_TRANSLATE("Load images from a folder"), new BMessage(M_BGMODE_FOLDER))
+        .AddItem(B_TRANSLATE("Load images from a list file"), new BMessage(M_BGMODE_LIST))
+    .End();
+    mMfBgImageOption = new BMenuField("mf_bgmode",
+        B_TRANSLATE("Background image mode"), mPumBgImageOption, true);
+
+    mTextControlmPathToImage = new BTextControl("Path to image file", "",
+        new BMessage(M_BGIMG_SINGLEPATH));
     mTextControlmPathToImageFolder = new BTextControl("TextPathToImages",
-        B_TRANSLATE("Path to image folder"),
-        settings->BackgroundImageFolderPath(),
-        new BMessage(TEXT_IMAGEPATH));
+        B_TRANSLATE("Path to image folder"), "",
+        new BMessage(M_BGIMG_FOLDERPATH));
     mTextControlmPathToImageFolder->SetModificationMessage(new BMessage(CHECK_BUTTONS));
-    mButtonDefaultImagePath = new BButton("mFrameButtonDefaultImagePath",
-        B_TRANSLATE("Default"), new BMessage(BUTTON_DEFAULTPATH));
-    mButtonBrowseImagePath = new BButton("mFrameButtonBrowseImagePath",
-        B_TRANSLATE("Browse"), new BMessage(BROWSE_FOLDER));
+    mTextControlmPathToImageList = new BTextControl("TextPathToList",
+        B_TRANSLATE("Path to list file"), "",
+        new BMessage(M_BGIMG_LISTPATH));
+
+    // mButtonDefaultImagePath = new BButton("mFrameButtonDefaultImagePath",
+        // B_TRANSLATE("Default"), new BMessage(BUTTON_DEFAULTPATH));
+    mButtonBrowseImageFilePath = new BButton("mFrameButtonBrowseImagePath",
+        B_TRANSLATE("Browse"), new BMessage(M_BGIMG_BROWSE_SINGLE));
+    mButtonBrowseImageFolderPath = new BButton("mFrameButtonBrowseImageFPath",
+        B_TRANSLATE("Browse"), new BMessage(M_BGIMG_BROWSE_FOLDER));
+    mButtonBrowseImageListPath = new BButton("mFrameButtonBrowseImageLPath",
+        B_TRANSLATE("Browse"), new BMessage(M_BGIMG_BROWSE_LIST));
+
     mSliderBgSnooze = new BSlider("sl_snooze",
         B_TRANSLATE("Image transition delay (in seconds)"),
-        new BMessage(M_SNOOZE_SLIDER_CHANGED), 5, 60, B_HORIZONTAL, B_TRIANGLE_THUMB,
+        new BMessage(M_BGIMG_SNOOZE_CHANGED), 5, 60, B_HORIZONTAL, B_TRIANGLE_THUMB,
         B_FRAME_EVENTS | B_WILL_DRAW | B_NAVIGABLE);
     mSliderBgSnooze->SetHashMarks(B_HASH_MARKS_BOTH);
     mSliderBgSnooze->SetHashMarkCount(12);
     mSliderBgSnooze->SetKeyIncrementValue(5);
     mSliderBgSnooze->SetLimitLabels("5", "60");
-
-    mRadioBtUseBgImgNone = new BRadioButton("rb_folder",
-        B_TRANSLATE("Do not use background images"), new BMessage(M_BGMODE_RADIO_NONE));
-    mRadioBtUseBgImgFolder = new BRadioButton("rb_folder",
-        B_TRANSLATE("Load background images from a folder"), new BMessage(M_BGMODE_RADIO_FOLDER));
-    mRadioBtUseBgImgList = new BRadioButton("rb_list",
-        B_TRANSLATE("Load background images from a list file"), new BMessage(M_BGMODE_RADIO_LIST));
-    mRadioBtUseBgImgList->SetEnabled(false);
 
     BView* mImageView = new BView("ImageView", B_SUPPORTS_LAYOUT, NULL);
     mImageView->SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
@@ -929,18 +911,15 @@ BView* mWindow::CreateCardView_Background()
 
     BLayoutBuilder::Group<>(mImageView, B_VERTICAL)
         .SetInsets(B_USE_SMALL_INSETS)
-        .Add(mRadioBtUseBgImgNone)
-        .Add(mRadioBtUseBgImgFolder)
-        .AddGroup(B_VERTICAL)
-            .SetInsets(B_USE_SMALL_INSETS)
-            .Add(mTextControlmPathToImageFolder)
-            .AddGroup(B_HORIZONTAL)
-                .AddGlue()
-                .Add(mButtonDefaultImagePath)
-                .Add(mButtonBrowseImagePath)
-            .End()
+        .Add(mMfBgImageOption)
+        .AddGrid()
+            .AddTextControl(mTextControlmPathToImage, 0, 0)
+            .Add(mButtonBrowseImageFilePath, 2, 0)
+            .AddTextControl(mTextControlmPathToImageFolder, 0, 1)
+            .Add(mButtonBrowseImageFolderPath, 2, 1)
+            .AddTextControl(mTextControlmPathToImageList, 0, 2)
+            .Add(mButtonBrowseImageListPath, 2, 2)
         .End()
-        .Add(mRadioBtUseBgImgList)
         .AddStrut(4.0f)
         .Add(mSliderBgSnooze)
     .End();
@@ -949,6 +928,7 @@ BView* mWindow::CreateCardView_Background()
         B_WILL_DRAW | B_FRAME_EVENTS | B_NAVIGABLE_JUMP, B_FANCY_BORDER, mImageView);
     mBoxAroundImagePath->SetLabel(B_TRANSLATE("Background image"));
 
+    /* Layout builder */
     BView* thisview = new BView(NULL, B_SUPPORTS_LAYOUT, NULL);
     BLayoutBuilder::Group<>(thisview, B_VERTICAL)
         .Add(mBoxAroundColorControl)
@@ -1077,7 +1057,7 @@ BView* mWindow::CreateCardView_Options()
         B_TRANSLATE("Enable shortcut (Cmd+Ctrl+Space) to bypass password protection."),
         new BMessage(M_BOOL_KILLER));
     mCheckBoxEventLog = new BCheckBox("cb_el",
-        B_TRANSLATE("Enable login events logging"), new BMessage());
+        B_TRANSLATE("Enable login events logging"), new BMessage(M_BOOL_EVTLOG));
 
     BView* thisview = new BView(NULL, B_SUPPORTS_LAYOUT, NULL);
     BLayoutBuilder::Group<>(thisview, B_VERTICAL)
@@ -1096,7 +1076,7 @@ BView* mWindow::CreateCardView_Options()
 bool mWindow::UI_IsDefault(BMessage* defaults)
 {
     /* background */
-    bool isBgModeDefault = mRadioBtUseBgImgFolder->Value() == defaults->GetUInt8(mNameConfigBgMode, 1);
+    bool isBgModeDefault = mMfBgImageOption->Menu()->ItemAt(3)->IsMarked();
     bool isBgColorDefault = UI_IsBgColorDefault(defaults);
     bool isImgFolderPathDefault = UI_IsBgFolderDefault(defaults);
     bool isBgSnoozeDefault = mSliderBgSnooze->Value() == defaults->GetUInt32(mNameConfigBgSnooze, 10);
@@ -1129,8 +1109,14 @@ bool mWindow::UI_IsBgColorDefault(BMessage* archive)
 
 bool mWindow::UI_IsBgFolderDefault(BMessage* archive)
 {
-    return strcmp(mTextControlmPathToImageFolder->Text(),
-        archive->GetString(mNameConfigImagePath)) == 0;
+/*
+    if(strcmp(mTextControlmPathToImageFolder->Text(), "") == 0)
+        return false;
+    else
+        return strcmp(mTextControlmPathToImageFolder->Text(),
+            archive->GetString(mNameConfigImagePath)) == 0;
+*/
+    return true;
 }
 
 bool mWindow::UI_IsClockColorDefault(BMessage* archive)
@@ -1148,3 +1134,15 @@ bool mWindow::UI_IsClockPlaceDefault(BMessage* archive)
         atoi(mTextControlClockPlaceY->Text()) == archive->GetPoint(mNameConfigClockPlace, {}).y;
 }
 
+void mWindow::CallBgImgFilePanel(uint32 what, uint32 node_flavors, BRefFilter* f)
+{
+    BMessage* notifymsg = new BMessage(what);
+
+    mFilePanelFolderBrowse->SetMessage(notifymsg);
+    mFilePanelFolderBrowse->SetNodeFlavors(node_flavors);
+    if(f != NULL)
+        mFilePanelFolderBrowse->SetRefFilter(f);
+
+    mFilePanelFolderBrowse->Show();
+    delete notifymsg;
+}

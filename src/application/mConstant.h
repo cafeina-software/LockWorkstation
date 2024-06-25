@@ -10,6 +10,7 @@
 #define M_LOGIN_FAILED       'fail'
 #define M_RESTART_REQUESTED  'rstr'
 #define M_SHUTDOWN_REQUESTED 'shut'
+#define M_PASSWORD_EXPIRED   'pexp'
 
 #include <StorageKit.h>
 #include <KernelKit.h>

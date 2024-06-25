@@ -16,21 +16,20 @@ class mBackgroundView : public BView, public ThreadedClass
 {
 public:
                     mBackgroundView(BRect, const char*, uint32, uint32, rgb_color,
-                        uint8 bgmode, BString imgfolder = "", uint32 snooze = 10);
-                    // mBackgroundView(BRect, const char*, uint32, uint32, rgb_color,
-                        // uint8 bgmode, BStringList imglist, uint32 snooze = 10);
+                        uint8 bgmode, BString imgsrcpath = "", uint32 snooze = 10);
     virtual         ~mBackgroundView();
     virtual void    Draw(BRect updateRect);
-
 private:
     void            InitUIData();
-    status_t        InitImageList();
+    status_t        InitImageFolder(BString imageFolderPath);
+    status_t        InitImageListFile(BString imageListPath);
+    status_t        InitImageStatic(BString imagePath);
     static int      CallSetBackgroundImage(void* data);
     void            SetBackgroundImage(void* data);
 private:
     rgb_color       fBackgroundColor;
     uint8           fBackgroundMode;
-    BString         imageFolderPath;
+    BString         fSrcPath;
     BStringList     imagePaths;
     BObjectList<BBitmap*> imageList;
     static BBitmap* currentimage;

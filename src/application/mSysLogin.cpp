@@ -1,5 +1,10 @@
+/*
+ * Copyright 2024, cafeina <cafeina@world>
+ * All rights reserved. Distributed under the terms of the MIT license.
+ */
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <pwd.h>
 #include <shadow.h>
 #include <unistd.h>
@@ -31,6 +36,11 @@ status_t try_login(const char* in_username, const char* in_password)
         trace("info: login successful.\n");
         return B_OK;
     }
+    else if(strcmp(pwd->pw_passwd, "!") == 0 || strcmp(pwd->pw_passwd, "*") == 0) {
+        // password authentication not allowed, other methods still possible
+        trace("error: this account cannot login via password authentication.\n");
+        return B_NOT_ALLOWED;
+    }
     else if(strcmp(pwd->pw_passwd, "*NP*") == 0) {
         trace("error: NIS+ network passwords are not supported.\n");
         return B_NOT_SUPPORTED;
@@ -40,16 +50,22 @@ status_t try_login(const char* in_username, const char* in_password)
         struct spwd* sp = getspnam(in_username);
         if(sp == NULL) {
             trace("error: user not found in 'shadow', despite being in 'passwd'.\n");
-            return B_ENTRY_NOT_FOUND;
+            return B_MISMATCHED_VALUES;
         }
 
-        if(strcmp(crypt(in_password, sp->sp_pwdp), sp->sp_pwdp) == 0) {
-            trace("info: login successful.\n");
-            return B_OK;
+        if(strcmp(sp->sp_pwdp, "!") == 0 || strcmp(sp->sp_pwdp, "*") == 0) {
+            trace("error: this account cannot login via password authentication.\n");
+            return B_NOT_ALLOWED;
         }
         else {
-            trace("error: login failed.\n");
-            return B_ERROR;
+            if(strcmp(crypt(in_password, sp->sp_pwdp), sp->sp_pwdp) == 0) {
+                trace("info: login successful.\n");
+                return B_OK;
+            }
+            else {
+                trace("error: login failed.\n");
+                return B_ERROR;
+            }
         }
     }
     else {
@@ -67,4 +83,29 @@ status_t try_login(const char* in_username, const char* in_password)
     }
 
     return B_DONT_DO_THAT;
+}
+
+status_t is_password_not_expired(const char* in_username)
+/* Precondition: user exists */
+{
+    std::time_t now = std::time(nullptr);
+
+    struct spwd* sp = getspnam(in_username);
+    if(sp == NULL) // user is not 'shadow-ed', so it is not subject to expiration
+        return B_OK;
+
+    if(sp->sp_expire > 0 && sp->sp_expire <= now) // account expired
+        return B_NOT_ALLOWED;
+
+    long int lastch = sp->sp_lstchg;
+    if(lastch < 0 || sp->sp_max < 0) // pw expiration disabled
+        return B_OK;
+    else if(lastch == 0) // pw expired and must be changed immediately
+        return B_TIMED_OUT;
+    else {
+        if(lastch + sp->sp_max < now) // pw expired
+            return B_TIMED_OUT;
+        else
+            return B_OK;
+    }
 }

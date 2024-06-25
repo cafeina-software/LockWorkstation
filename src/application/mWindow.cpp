@@ -34,8 +34,8 @@ mWindow::mWindow(const char* mWindowTitle)
     const rgb_color mBlack = {0, 0, 0};
 
     // Child boxes
-    loginbox = new mLoginBox(BRect(0, 0, 400, 400));
-    infoview = new mSystemInfo(BRect(0, 0, 500, 500));
+    loginbox = new mLoginBox(BRect(0, 0, 0, 0));
+    infoview = new mSystemInfo(BRect(0, 0, 0, 0));
     if(!settings->SystemInfoPanelIsEnabled())
         infoview->Hide();
     sessionbar = new mSessionBar(B_HORIZONTAL, this);
@@ -45,7 +45,7 @@ mWindow::mWindow(const char* mWindowTitle)
     // Background view
     mView = new mBackgroundView(BRect(0, 0, 2000, 2000), NULL, B_FOLLOW_NONE,
         B_WILL_DRAW, settings->BackgroundColor(), settings->BackgroundMode(),
-        settings->BackgroundImageFolderPath(), settings->BackgroundImageSnooze());
+        imgpath, settings->BackgroundImageSnooze());
 
     BLayoutBuilder::Group<>(mView, B_HORIZONTAL, 0)
         .SetInsets(B_USE_WINDOW_INSETS)
@@ -217,22 +217,6 @@ status_t mWindow::Login(AuthMethod mthd, const char* usr, const char* pwd)
             bool userMatch = strcmp(usr, settings->DefaultUser()) == 0;
             bool passMatch = strcmp(pwd, settings->DefaultUserPassword()) == 0;
             status = userMatch && passMatch ? B_OK : B_ERROR;
-
-            // if(settings->HasAppUser(usr)) {
-                // if(strcmp(pwd, settings->AppPasswordOf(usr)) == 0) {
-                    // fprintf(stderr, "Login successful.\n");
-                    // status = B_OK;
-                // }
-                // else {
-                    // fprintf(stderr, "Login failed.\n");
-                    // status = B_ERROR;
-                // }
-            // }
-            // else {
-                // fprintf(stderr, "User name not found.\n");
-                // status = B_ENTRY_NOT_FOUND;
-            // }
-
             break;
         }
     }
@@ -247,6 +231,21 @@ void mWindow::InitUIData()
 	path.Append(mPathToConfigFile);
 
     settings = new LWSettings(path.Path());
+    switch(settings->BackgroundMode())
+    {
+        case BGM_STATIC:
+            imgpath.SetTo(settings->BackgroundImageStaticPath());
+            break;
+        case BGM_FOLDER:
+            imgpath.SetTo(settings->BackgroundImageFolderPath());
+            break;
+        case BGM_LISTFILE:
+            imgpath.SetTo(settings->BackgroundImageListPath());
+            break;
+        default:
+            imgpath.SetTo("");
+            break;
+    }
 }
 
 void mWindow::SystemShutdown(bool restart, bool confirm, bool sync)

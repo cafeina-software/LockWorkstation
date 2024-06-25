@@ -1,109 +1,313 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en-US">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>HTML Editor Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LockWorkstation help file</title>
+  <style type="text/css">
+body {
+    margin: 0;
+}
+header {
+    margin: 0;
+    padding: 0;
+}
+ul.navbar {
+    position: sticky;
+    position: -webkit-sticky;
+    top: 0;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: rgb(64,64,92);
+}
+li.navbar {
+    float: left;
+    border-right: 1px solid #efefef;
+}
+
+li.navbar a {
+    display: block;
+    color: white;
+    padding: 1rem;
+    text-decoration: none;
+}
+#main {
+    font-weight: bold;
+}
+li.navbar a:hover {
+    background-color: rgb(92,92,128);
+}
+h1 {
+    text-align: center;
+}
+h2 {
+    border-bottom-style: dotted;
+    border-bottom-color: dashed;
+    border-bottom-width: 2px;
+    font-size: 2rem;
+}
+h3 {
+    font-size: 1.66rem;
+}
+p {
+    padding-bottom: 1rem;
+    font-size: 1.4rem;
+    text-align: justify;
+}
+.Apple-style-span {
+    font-family: "DejaVu Sans", sans-serif;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+.imgfooter {
+    font-style: italic;
+    font-size: 1.0rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.4rem;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+.imgcontainer {
+    position: inherit;
+}
+img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+.imgfooter {
+    text-align: center;
+}
+div.obsoletebox {
+    border-style: solid;
+    border-width: thin thin thin thick;
+    border-color: FireBrick;
+    padding: 1em;
+    margin: 0.5rem 10%;
+    background-color: MistyRose;
+}
+div.obsoletebox-caption {
+    font-weight: bold;
+    margin-bottom: 0.2em;
+}
+div.obsoletebox-text {
+    text-align: justify;
+}
+ul.stdlist {
+    font-size: 1.3rem;
+    font-family: "DejaVu Sans", sans-serif;
+}
+samp {
+    background-color: #f5f5f5;
+    border: 1px dotted #cfcfcf;
+}
+code {
+    background-color: #f0f0f0;
+    border: 1px dotted #cfcfcf;
+}
+kbd {
+    border: 1px solid #afafaf;
+    border-radius: 0.4em;
+    background-color: #efefef;
+    padding: 1px 3px;
+    font-family: serif;
+}
+  </style>
 </head>
-<body style="">
-<h1 align="center"><font class="Apple-style-span" face="'DejaVu Sans'">LockWorkstation
-README</font></h1>
-<div style="text-align: center;"><font class="Apple-style-span"
- face="'DejaVu Sans'"><img
- src="file:///system/apps/LockWorkstation/docs/img/Action_Logout.png"><br>
-</font></div>
+<body>
+<ul class="navbar">
+<li class="navbar"><a href="#" id="main" target="_self">LockWorkstation README</a></li>
+<li class="navbar"><a href="#Usage" target="_self">Usage</a></li>
+<li class="navbar"><a href="#Background" target="_self">Background</a></li>
+<li class="navbar"><a href="#Add_to_startup" target="_self">Startup</a></li>
+<li class="navbar"><a href="#Rescue" target="_self">Rescue</a></li>
+<li class="navbar"><a href="#Accesses_report" target="_self">Reports</a></li>
+</ul>
+
+<h1 class="Apple-style-span">LockWorkstation README</h1>
+<div class="imgcontainer">
+<img src="./img/Action_Logout.png" alt="App icon" width="64" height="64" />
+</div>
 <!-- This is just a comment. We start here -->
-<p><font class="Apple-style-span" face="'DejaVu Sans'">LockWorkstation
-provide a login screen to Haiku: With LockWorkstation you can protect
-and restrict accesses to Haiku. You can start it by Desktop icon
-(StartLock) and you can also add it to startup.<br>
-</font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'"><u><b>Please
-read this documentation to properly set and use LockWorkstation.<br>
-</b></u></font></p>
-<h1><font class="Apple-style-span" face="'DejaVu Sans'"><b>Quick</b><b>
-Menu</b><b>:</b><u><b><br>
-</b></u></font></h1>
-<p><font class="Apple-style-span" face="'DejaVu Sans'"><u><b><a
- href="#res">Set your monitor resolution</a></b></u></font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'"><u><b><a
- href="#Rescue">I forget username and/or password</a><br>
-</b></u></font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'"><u><b><a
- href="#Add_to_startup">Add to startup</a><br>
-</b></u></font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'"><u><b><a
- href="#Accesses_report">Reports</a><br>
-</b></u></font></p>
-<h2><a name="Usage"></a><font class="Apple-style-span"
- face="'DejaVu Sans'">Usage</font></h2>
-<p><font class="Apple-style-span" face="'DejaVu Sans'">First
-of all is strongly recommended to change the default username and
-password (<b>default username and password are baron - haikubox</b>)</font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'"><img
- src="file:///boot/apps/Lock_Workstation/docs/img/logform.png"><br>
-</font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'">To change user
-and password go to Deskbar menu &gt; Preferences &gt; Login:</font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'"><img
- src="file:///system/apps/LockWorkstation/docs/img/preferences1.png"><br>
-</font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'">Then, in Login
-preflet you can change username and password and then clicking on
-"change" button:</font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'"><img
- src="file:///system/apps/LockWorkstation/docs/img/pref.png"><br>
-</font></p>
-<h2><a name="Monitor_resolution"></a><font class="Apple-style-span"
- face="'DejaVu Sans'">Monitor resolution<br>
-</font></h2>
-<p><font class="Apple-style-span" face="'DejaVu Sans'"><a name="res"></a>Another
-important thing is to set the screen login according to your monitor
-resolution.<br>
-To know your current monitor resolution go to Deskbar menu &gt;
-Preferences &gt; Screen:</font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'"><img
- src="file:///boot/apps/Lock_Workstation/docs/img/Screen.png"><br>
-(<i>in my case is set to 1280x1024: your resolution could be different</i>)</font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'">Then open the
-folder /boot/apps/Lock_Workstation/images and you will see various
+<p class="Apple-style-span">LockWorkstation provide a login screen to Haiku:
+With LockWorkstation you can protect and restrict accesses to Haiku. You can
+start it by Desktop icon (StartLock) and you can also add it to startup.</p>
+<p class="Apple-style-span"><u><b>Please read this documentation to properly
+set and use LockWorkstation.</b></u></p>
+
+<h2 class="Apple-style-span" id="Usage">Usage</h2>
+<p class="Apple-style-span"><strong>LockWorkstation</strong> computer lockdown
+can be performed in two ways: system account lock and application account lock.
+This can be configured in the <em>Authentication method</em> section of the
+preferences application.</p>
+<p class="Apple-style-span">The system account method uses an actual account
+in the system to perform the unlock. Therefore, this option requires an
+existing account in the system to work. The account must not be a service
+account (an account used by some software or the operating system) and must not
+be expired.</p>
+<p class="Apple-style-span">On the other hand, the application account method
+uses an internal pair of username-password to unlock the system, and it does
+not have to match any account in the system. First of all, in order to use this
+method, it is strongly recommended to change the default username and password
+(<b>the default username is <var>baron</var> and the default password is
+<var>haikubox</var></b>).</p>
+<p class="Apple-style-span">To change the application's user and password, go
+to Deskbar menu &gt; Preferences &gt; LockWorkstation:</p>
+<div class="imgcontainer">
+<img src="./img/preferences1.png" alt="Deskbar menu" width="337" height="558" />
+<div class="imgfooter">If this application is installed in the system, the
+preflet should be found in the "Preferences" category.</div>
+</div>
+<p class="Apple-style-span">Then, in the preflet, the authentication system can
+be changed, and for the application-based method, an username and password can
+be modified. Once the new user name and password has been written, the change
+is submitted by pressing the button "Change", and saved by clicking "Apply":</p>
+<div class="imgcontainer">
+<img src="./img/pref.png" alt="Preflet window" width="450" height="396" />
+<div class="imgfooter">Preflet window.</div>
+</div>
+<p class="Apple-style-span">Either way, once the application to lock the system
+is launched, it will display a full screen window featuring a form with two
+fields for the user name and the password, and a button to submit the pair of
+values to try to unlock the system.</p>
+<div class="imgcontainer">
+<img src="./img/logform.png" alt="Login form" width="417" height="78" />
+<div class="imgfooter">Login form in the locking window.</div>
+</div>
+
+<h2 class="Apple-style-span" id="Background">Background style</h2>
+<p class="Apple-style-span">In the preflet application, there is a section
+called "Background", where there are several options to modify the background
+style of the locking application. These include setting the background color
+and the background image or set of images to display.</p>
+<h3 class="Apple-style-span">Background color</h3>
+<p class="Apple-style-span">The background color sub-section allows to
+establish the amount of red, green and blue to paint the background of the
+locking application. When there is not configured an image to display on the
+background, this color is what will be shown instead.</p>
+<h3 class="Apple-style-span">Background image</h3>
+<p class="Apple-style-span">The background image sub-section allows to
+configure what images will be shown on the background. The modes of background
+image comprises:</p>
+<ul class="stdlist">
+<li><var>None</var>: No image will be painted. The background color will be
+painted instead.</li>
+<li><var>Static</var>: An image will be shown as the background image.</li>
+<li><var>Folder</var>: The images contained in a certain folder will be
+sequentially shown as the background image, one at a time during a certain
+amount of time, in an endless loop.</li>
+<li><var>List file</var>: The images whose absolute paths are contained in a
+certain text file will be shown, sequentially and in an endless loop.</li>
+</ul>
+<p class="Apple-style-span">In any of the options that allows the use of
+background images, during startup of the locking application, any invalid file
+(whether due to being of an invalid format, or else, the path itself is invalid
+and does not point to an actual file) will be ignored and the loop will
+continue only with the valid images. If there is none valid images, then no
+image will be displayed and the background color will be painted instead.</p>
+<p class="Apple-style-span">For the looped options, the transition delay can
+also be configured. Lower values means that the current image will be displayed
+for less time before the next entry is painted.</p>
+<p class="Apple-style-span">The preflet allows to configure all the background
+image modes' entry's path, regardless of if the entry's corresponding mode is
+enabled or not: the absolute path of the image for the static mode, the
+absolute path of the folder containing images for the folder mode, and the
+absolute path of the text file that contains the paths of image files for the
+list file mode.</p>
+<h3 class="Apple-style-span" id="Monitor_resolution">Monitor resolution</h3>
+<div class="obsoletebox">
+<div class="obsoletebox-caption">Warning: this is obsolete!</div>
+<div class="obsoletebox-text">The following section contains documentation for
+a feature present in a previous version of the application but that currently
+does not apply. It is kept in order to help users of the previous versions or
+as an aid to transition to the current version.</div>
+</div>
+<p class="Apple-style-span" id="res">Another important thing is to set the
+screen login according to your monitor resolution. To know your current monitor
+resolution go to Deskbar menu &gt; Preferences &gt; Screen:</p>
+<div class="imgcontainer">
+<img src="./img/Screen.png" alt="Screen preflet" width="483" height="356" />
+<div class="imgfooter">In my case is set to 1280x1024. Your resolution could be
+different.</div>
+</div>
+<p class="Apple-style-span">Then, open the folder
+<samp>/boot/apps/Lock_Workstation/images</samp> and you will see various
 subfolders with resolutions as name. Here select the folder which match
 to your monitor resolution, and edit his name to "default" (without
-quotes). If your monitor resolution is not listed, please mail me and i will provide to you ;-)</font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'"><img
- src="file:///system/apps/LockWorkstation/docs/img/logscreens.png"><br>
-</font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'">You're done.
-Optionally you can also set LockWorkstation to startup with Haiku.</font></p>
-<h2><a name="Add_to_startup"></a><font class="Apple-style-span"
- face="'DejaVu Sans'">Add to startup<br>
-</font></h2>
-<p><font class="Apple-style-span" face="'DejaVu Sans'">Go
-to&nbsp;/boot/apps/Lock_Workstation and double click on "addtoboot"
-icon. You can also remove LockWorkstation from boot by double click on
-"removefromboot".</font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'"><img
- src="file:///system/apps/LockWorkstation/docs/img/addtoboot.png"><br>
-</font></p>
-<p><font class="Apple-style-span" face="'DejaVu Sans'">
-<h2><a name="Rescue"></a>Rescue</h2>
-<div>If you forget your login details, don't you worry: i have added an
-embedded shortcut to close LockWorkstation without insert login
-details: just press CTRL+ALT+SPACEBAR. Then, to reset your password, go
-to /boot/home/config/settings and delete the file
-LockWorkstationSetting.<br>
-Then you need to <a href="#Usage">reconfigure username and password</a>
-and <a href="#Monitor_resolution">monitor resolution</a><br>
+quotes). If your monitor resolution is not listed, please mail me and i will
+provide to you ;-)</p>
+<div class="imgcontainer">
+<img src="./img/logscreens.png" alt="Images folder" width="739" height="433" />
+<div class="imgfooter">Contents of the <samp>images</samp> folder.</div>
 </div>
-<div><br>
+<p class="Apple-style-span">You're done. Optionally, you can also set
+<em>LockWorkstation</em> to startup with Haiku (see below).</p>
+
+<h2 id="Add_to_startup" class="Apple-style-span">Add to startup</h2>
+<p class="Apple-style-span">To make <em>LockWorkstation</em> application launch
+at startup, please create a symbolic link of the application in the folder
+<samp>~/config/settings/boot/launch/</samp>, or else add an entry in the
+<samp><abbr title="Found in ~/config/settings/boot/">UserBootscript<abbr></samp>
+ file as follows: <code>PATH_TO_APP_FOLDER/LockWorkstation &amp;</code>
+(replace "PATH_TO_APP_FOLDER" with the folder path of the application).</p>
+<h3 class="Apple-style-span"><samp>addtoboot</samp> and
+<samp>removefromboot</samp> tools</h3>
+<div class="obsoletebox">
+<div class="obsoletebox-caption">Warning: this is obsolete!</div>
+<div class="obsoletebox-text">The following section contains documentation for
+a feature present in a previous version of the application but that currently
+does not apply. It is kept in order to help users of the previous versions or
+as an aid to transition to the current version.</div>
 </div>
-<div>
-<h2><a name="Accesses_report"></a>Accesses report</h2>
+<p class="Apple-style-span">Go to&nbsp;<samp>/boot/apps/Lock_Workstation</samp>
+and double click on "addtoboot" icon. You can also remove LockWorkstation from
+boot by double click on "removefromboot".</p>
+<div class="imgcontainer">
+<img src="./img/addtoboot.png" alt="addtoboot tool." width="739" height="435" />
+<div class="imgfooter">addtoboot tool in the application folder.</div>
 </div>
-<div>Every time that you login, a logfile will be added to
-/boot/home/Login.txt<br>
+
+<h2 id="Rescue" class="Apple-style-span">Rescue</h2>
+<p class="Apple-style-span">If you forgot your login details, don't you worry:
+I have added an embedded shortcut to close LockWorkstation without insert login
+details: just press <kbd>CTRL</kbd>+<kbd>ALT</kbd>+<kbd>SPACEBAR</kbd>.
+However, unlike the previous versions, this option is disabled by default for
+security reasons, but it can be enabled by activating the checkbox "Enable
+shortcut..." in the "Options" section of the preflet application and pressing
+the button "Apply".</p>
+<p class="Apple-style-span">Then, to reset your password for the
+application-based account, you can either open the preflet and go to the
+"Accounts" section to change the user name and password, or take the drastic
+path of going to <samp>~/config/settings</samp> and delete the file
+<samp>LockWorkstationSetting</samp> along with any other saved configuration.
+Then you need to <a href="#Usage">reconfigure the username and password</a>, as
+well as any other option in the preflet application.</p>
+<p class="Apple-style-span">On the other hand, if you are using a Haiku account
+(an actual account in the system) to login, and you do not want to be locked
+out of the system due to have forgot the password, consider to enable the
+killer shortcut beforehand, so if you have to change the password, you close
+LockWorkstation and use the operating system tools (such as
+<samp>passwd</samp>) to change the password of the account. Otherwise, you will
+have to resort to more drastic measures, such as try to kill it from the Team
+Monitor, or booting another operating system (or another instance of Haiku)
+from where to disable the automatic load of LockWorkstation, or else removing
+the disk drive to remove the application from another computer.</p>
+
+<h2 id="Accesses_report" class="Apple-style-span">Access report</h2>
+<p class="Apple-style-span">Every time that you login, a logfile will be added to
+<samp>/boot/system/var/log/LockWorkstation.log</samp>. Older versions of this
+application saved the logfile as <samp>/boot/home/Login.txt</samp>. It will
+log any successful or failed attempt to login, each entry with the date, time
+and user name that was tried. This feature can be toggled on or off from the
+"Options" section of the preflet.</p>
+<div class="imgcontainer">
+<img src="./img/log.png" alt="addtoboot tool." width="516" height="416" />
+<div class="imgfooter">Depiction of a log file (former format).</div>
 </div>
-<div><img src="file:///system/apps/LockWorkstation/docs/img/log.png"><br>
-</div>
-</font></p>
+<hr />
+<footer class="Apple-style-span" id="end">LockWorkstation README</footer>
 </body>
 </html>

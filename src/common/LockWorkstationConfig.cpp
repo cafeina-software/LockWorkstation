@@ -94,7 +94,6 @@ status_t LoadSettings(BMessage* archive)
 			// Something went wrong, let's end with this
 			//   because we don't have the needed data
             fprintf(stderr, "Bad error...\n");
-			// be_app->PostMessage(B_QUIT_REQUESTED);
 			return status;
 	}
 
@@ -121,7 +120,6 @@ status_t SaveSettings(BMessage* archive)
 LWSettings::LWSettings(const char* filename)
 {
     filepath.SetTo(filename);
-    fprintf(stderr, "filename is %s\nfilepath is %s\n", filename, filepath.String());
     LoadSettings();
     InitData();
 
@@ -181,8 +179,6 @@ void LWSettings::InitData()
     fAuthMethod = static_cast<AuthMethod>(savemessage.GetUInt8(mNameConfigAuthMode,
         defaults->GetUInt8(mNameConfigAuthMode, 2)));
 
-    InitUserPasswords();
-
 	mStringUser1 = savemessage.GetString(mNameConfigUser,
 		defaults->GetString(mNameConfigUser));
 	mStringPassword1 = savemessage.GetString(mNameConfigPass,
@@ -191,6 +187,10 @@ void LWSettings::InitData()
         defaults->GetColor(mNameConfigBgColor, rgb_color()));
 	fBackgroundImageFolder = savemessage.GetString(mNameConfigImagePath,
 		defaults->GetString(mNameConfigImagePath, ""));
+    fBackgroundImageListFile = savemessage.GetString(mNameConfigImageList,
+        defaults->GetString(mNameConfigImageList, ""));
+    fBackgroundImageStatic = savemessage.GetString(mNameConfigImageFile,
+        defaults->GetString(mNameConfigImageFile, ""));
     fBackgroundMode = static_cast<BgMode>(savemessage.GetUInt8(mNameConfigBgMode,
         defaults->GetUInt8(mNameConfigBgMode, 1)));
     fClockColor = savemessage.GetColor(mNameConfigClockColor,
@@ -215,19 +215,6 @@ void LWSettings::InitData()
     delete defaults;
 }
 
-void LWSettings::InitUserPasswords()
-{
-    BMessage msg;
-    int i = 0;
-    while(savemessage.FindMessage(mNameConfigUserPassword, i, &msg) == B_OK) {
-        std::pair<const char*,const char*> p = std::make_pair(
-            msg.GetString(mNameConfigUser),
-            msg.GetString(mNameConfigPass));
-        fUserPasswordDB.AddItem(&p);
-        i++;
-    }
-}
-
 void        LWSettings::DefaultSettings(BMessage* archive)
 {
     archive->MakeEmpty();
@@ -249,7 +236,8 @@ void        LWSettings::DefaultSettings(BMessage* archive)
     apppath.GetParent(&defpath);
     defpath.Append("images/default", true);
     archive->AddString(mNameConfigImagePath, defpath.Path());
-    archive->AddString(mNameConfigImageList, NULL);
+    archive->AddString(mNameConfigImageList, "");
+    archive->AddString(mNameConfigImageFile, "");
     archive->AddUInt32(mNameConfigBgSnooze, 10);
 
     archive->AddColor(mNameConfigClockColor, {128, 0, 0, 255});
@@ -289,19 +277,11 @@ void LWSettings::Commit()
     savemessage.SetString(mNameConfigUser, mStringUser1);
     savemessage.SetString(mNameConfigPass, mStringPassword1);
 
-    /* Additional users */
-    savemessage.RemoveName(mNameConfigUserPassword);
-    for(int i = 0; i < fUserPasswordDB.CountItems(); i++) {
-        BMessage msg;
-        msg.MakeEmpty();
-        msg.AddString(mNameConfigUser, fUserPasswordDB.ItemAt(i)->first);
-        msg.AddString(mNameConfigPass, fUserPasswordDB.ItemAt(i)->second);
-        savemessage.AddMessage(mNameConfigUserPassword, &msg);
-    }
-
     /* Background */
     savemessage.SetColor(mNameConfigBgColor, fBackgroundColor);
     savemessage.SetString(mNameConfigImagePath, fBackgroundImageFolder);
+    savemessage.SetString(mNameConfigImageList, fBackgroundImageListFile);
+    savemessage.SetString(mNameConfigImageFile, fBackgroundImageStatic);
     savemessage.SetUInt32(mNameConfigBgSnooze, fBackgroundImageSnooze);
     savemessage.SetUInt8(mNameConfigBgMode, fBackgroundMode);
 
@@ -338,53 +318,6 @@ const char* LWSettings::DefaultUserPassword()
     return mStringPassword1.String();
 }
 
-BStringList LWSettings::AppUserList()
-{
-    BStringList userlist;
-    for(int i = 0; i < fUserPasswordDB.CountItems(); i++)
-        userlist.Add(fUserPasswordDB.ItemAt(i)->first);
-
-    return userlist;
-}
-
-bool LWSettings::HasAppUser(const char* username)
-{
-    return FindUser(username) != nullptr;
-}
-
-const char* LWSettings::AppPasswordOf(const char* username)
-{
-    std::pair<const char*,const char*>* p = FindUser(username);
-    if(p != nullptr)
-        return p->second;
-    else
-        return nullptr;
-}
-
-std::pair<const char*,const char*>*
-LWSettings::FindUser(const char* name)
-{
-    int i = 0;
-    bool found = false;
-    std::pair<const char*,const char*>* p;
-
-    while(!found && i < fUserPasswordDB.CountItems()) {
-        fprintf(stderr, "user[%d]: %s\n", i, fUserPasswordDB.ItemAt(i)->first);
-        if(strcmp(fUserPasswordDB.ItemAt(i)->first, name) == 0) {
-            found = true;
-        }
-        else
-            i++;
-    }
-
-    if(i < fUserPasswordDB.CountItems()) {
-        p = fUserPasswordDB.ItemAt(i);
-        return p;
-    }
-    else
-        return nullptr;
-}
-
 BgMode      LWSettings::BackgroundMode()
 {
     return fBackgroundMode;
@@ -403,6 +336,11 @@ const char* LWSettings::BackgroundImageFolderPath()
 const char* LWSettings::BackgroundImageListPath()
 {
     return fBackgroundImageListFile.String();
+}
+
+const char* LWSettings::BackgroundImageStaticPath()
+{
+    return fBackgroundImageStatic.String();
 }
 
 uint32      LWSettings::BackgroundImageSnooze()
@@ -468,47 +406,6 @@ status_t LWSettings::SetDefaultUserPassword(const char* newpass)
     return B_OK;
 }
 
-status_t    LWSettings::AddAppUser(const char* username, const char* password)
-{
-    std::pair p = std::make_pair(username, password);
-    return fUserPasswordDB.AddItem(&p) ? B_OK : B_ERROR;
-}
-
-status_t    LWSettings::RenameAppUser(const char* username, const char* newname)
-{
-    std::pair<const char*,const char*>* p = FindUser(username);
-    if(p != nullptr) {
-        p->first = newname;
-        return B_OK;
-    }
-    else
-        return B_ERROR;
-}
-
-status_t    LWSettings::ChangeAppUserPassword(const char* username, const char* newpass)
-{
-    std::pair<const char*,const char*>* p = FindUser(username);
-    if(p != nullptr) {
-        p->second = newpass;
-        return B_OK;
-    }
-    else
-        return B_ERROR;
-}
-
-status_t    LWSettings::RemoveAppUser(const char* username)
-{
-    std::pair<const char*,const char*>* p = FindUser(username);
-    if(p != nullptr) {
-        if(fUserPasswordDB.RemoveItem(p))
-            return B_OK;
-        else
-            return B_ERROR;
-    }
-    else
-        return B_ENTRY_NOT_FOUND;
-}
-
 status_t    LWSettings::SetBackgroundMode(BgMode mode)
 {
     fBackgroundMode = mode;
@@ -530,6 +427,12 @@ status_t    LWSettings::SetBackgroundImageFolderPath(BString path)
 status_t    LWSettings::SetBackgroundImageListPath(BString path)
 {
     fBackgroundImageListFile.SetTo(path.String());
+    return B_OK;
+}
+
+status_t LWSettings::SetBackgroundImageStatic(BString path)
+{
+    fBackgroundImageStatic.SetTo(path.String());
     return B_OK;
 }
 

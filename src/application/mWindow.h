@@ -35,6 +35,7 @@ private:
 
     LWSettings         *settings;
     mLogger            *logger;
+    BString             imgpath;
 };
 
 #endif
