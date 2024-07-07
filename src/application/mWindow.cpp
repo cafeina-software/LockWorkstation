@@ -197,7 +197,6 @@ void mWindow::ResizeToScreen()
 status_t mWindow::Login(AuthMethod mthd, const char* usr, const char* pwd)
 {
     status_t status = B_ERROR;
-    fprintf(stderr, "Proposed user: %s. Proposed pass: %s.\n", usr, pwd);
 
     switch(mthd)
     {

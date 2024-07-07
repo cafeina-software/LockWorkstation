@@ -41,6 +41,7 @@ mLoginBox::mLoginBox(BRect frame)
         new BMessage('user'));
     tcUserName->SetModificationMessage(new BMessage(LBM_USERNAME_CHANGED));
     tcUserName->SetFont(&font3);
+    tcUserName->MakeFocus(true);
     tcPassword = new BTextControl("tc_password", B_TRANSLATE("Password"), "",
         new BMessage('pass'));
     tcPassword->SetModificationMessage(new BMessage(LBM_PASSWORD_CHANGED));
@@ -50,6 +51,7 @@ mLoginBox::mLoginBox(BRect frame)
         new BMessage(LBM_LOGIN_REQUESTED));
     btLogin->SetFont(&font3);
     btLogin->SetEnabled(IsAbleToLogin());
+    btLogin->MakeDefault(true);
 
     BFont errorFont(be_bold_font);
     errorFont.SetSize(be_bold_font->Size() * 1.5);
