@@ -104,6 +104,7 @@ private:
                        *mButtonDefaultClockColors,
                        *mButtonDefaultClockPlace,
                        *mButtonApplyEverything,
+                       *mButtonClearLogs,
                        *mEraserButtonOfDoom;
     BCardView          *fCardView;
 	BCheckBox          *mCheckBoxBoolClock,
@@ -126,6 +127,7 @@ private:
 	                   *mSpinnerClockColorR,
 	                   *mSpinnerClockColorG,
 	                   *mSpinnerClockColorB;
+    BStringView        *mStaticLogClrResponse;
 	BTextControl       *mAddUserName,
 	                   *mAddPassWord,
 	                   *mAddPassWordRetype,

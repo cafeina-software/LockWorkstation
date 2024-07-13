@@ -493,6 +493,29 @@ void mWindow::MessageReceived(BMessage* message)
             ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
                 "Enable and disable user button", B_LOW_PRIORITY, this);
             break;
+        case M_EVTLOG_CLEAR:
+        {
+            BString response("");
+            BPath path;
+            find_directory(B_SYSTEM_LOG_DIRECTORY, &path);
+            path.Append("LockWorkstation.log");
+            BEntry logfile(path.Path());
+
+            if(logfile.Exists()) {
+                status_t status = logfile.Remove();
+                if(status == B_OK)
+                    response.SetTo("Logs cleared successfully.");
+                else if(status == B_NO_INIT)
+                    response.SetTo("The log file does not exist.");
+                else
+                    response.SetTo("There was an error while trying to delete log file.");
+            }
+            else
+                response.SetTo("The log file does not exist.");
+
+            mStaticLogClrResponse->SetText(response.String());
+            break;
+        }
         case B_ABOUT_REQUESTED:
             be_app->PostMessage(B_ABOUT_REQUESTED);
             break;
@@ -1058,6 +1081,9 @@ BView* mWindow::CreateCardView_Options()
         new BMessage(M_BOOL_KILLER));
     mCheckBoxEventLog = new BCheckBox("cb_el",
         B_TRANSLATE("Enable login events logging"), new BMessage(M_BOOL_EVTLOG));
+    mButtonClearLogs = new BButton("bt_clrlg", B_TRANSLATE("Clear logs"),
+        new BMessage(M_EVTLOG_CLEAR));
+    mStaticLogClrResponse = new BStringView("sv_rsp", "");
 
     BView* thisview = new BView(NULL, B_SUPPORTS_LAYOUT, NULL);
     BLayoutBuilder::Group<>(thisview, B_VERTICAL)
@@ -1065,6 +1091,11 @@ BView* mWindow::CreateCardView_Options()
         .Add(mCheckBoxSysInfo)
         .Add(mCheckBoxKillerShortcut)
         .Add(mCheckBoxEventLog)
+        .AddGroup(B_HORIZONTAL)
+            .Add(mButtonClearLogs)
+            .AddGlue()
+            .Add(mStaticLogClrResponse)
+        .End()
         .AddGlue()
     .End();
 

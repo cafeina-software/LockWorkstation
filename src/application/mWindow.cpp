@@ -71,7 +71,7 @@ mWindow::mWindow(const char* mWindowTitle)
     // Quick key combinations
     if(settings->KillerShortcutIsEnabled())
         AddShortcut(B_SPACE, B_COMMAND_KEY | B_CONTROL_KEY,
-            new BMessage(B_QUIT_REQUESTED));
+            new BMessage(M_BYPASS_REQUESTED));
 
     // Fit to screen, otherwise parts of the running environment will be shown
     //   if using high definitions resolutions
@@ -132,6 +132,10 @@ void mWindow::MessageReceived(BMessage* message)
         case M_SHUTDOWN_REQUESTED:
             logger->AddEvent("Shut down requested.");
             SystemShutdown(false, false, false);
+            break;
+        case M_BYPASS_REQUESTED:
+            logger->AddEvent(EVT_WARNING, "Shutdown using security-bypass requested.");
+            QuitRequested();
             break;
         case B_QUIT_REQUESTED:
             QuitRequested();
