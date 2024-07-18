@@ -25,6 +25,7 @@
 
 #include "mBitmap.h"
 #include "mConstant.h"
+#include "CardView.h"
 #include "../common/LockWorkstationConfig.h"
 #include "../common/ThreadedClass.h"
 

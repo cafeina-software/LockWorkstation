@@ -2,6 +2,7 @@
  * Copyright 2024, cafeina <cafeina@world>
  * All rights reserved. Distributed under the terms of the MIT license.
  */
+
 #include "mBackgroundView.h"
 #include "../common/LockWorkstationConfig.h"
 #include <string>

@@ -3,16 +3,25 @@
  * All rights reserved. Distributed under the terms of the MIT license.
  */
 #include <Catalog.h>
+#include <GraphicsDefs.h>
+#include <InterfaceDefs.h>
 #include <LayoutBuilder.h>
+#include <stdlib.h>
 #include "mLoginBox.h"
+#include "View.h"
+#include "Box.h"
 #include "mConstant.h"
+
+
 
 #undef B_TRANSLATION_CONTEXT
 #define B_TRANSLATION_CONTEXT "Login box"
 
 static BString strLoginFailed = B_TRANSLATE("Login failed.");
+static BString strLoginEaster = B_TRANSLATE("fruitless attempts made\ntime spent which will not return\na shame, won't you say"); // thought it would be a fun addition
 static BString strPassExpired = B_TRANSLATE("The password is expired.");
 static BString strNoError = "";
+int loginAttempts;
 
 mLoginBox::mLoginBox(BRect frame)
 : BView(frame, "v_loginbox", B_FOLLOW_LEFT, B_WILL_DRAW | B_NAVIGABLE |
@@ -31,13 +40,13 @@ mLoginBox::mLoginBox(BRect frame)
     font2.SetFace(B_ITALIC_FACE);
 
     BStringView* instructionsView = new BStringView("sv_inst",
-        B_TRANSLATE("Please write the user name and password to unlock"));
+        B_TRANSLATE("Write your username and password to unlock:"));
     instructionsView->SetFont(&font2);
 
     BFont font3;
     font3.SetSize(be_plain_font->Size() * (1.5));
 
-    tcUserName = new BTextControl("tc_username", B_TRANSLATE("User name"), "",
+    tcUserName = new BTextControl("tc_username", B_TRANSLATE("Username"), "",
         new BMessage('user'));
     tcUserName->SetModificationMessage(new BMessage(LBM_USERNAME_CHANGED));
     tcUserName->SetFont(&font3);
@@ -60,7 +69,7 @@ mLoginBox::mLoginBox(BRect frame)
     errorView->SetFont(&errorFont);
     errorView->SetHighColor(ui_color(B_FAILURE_COLOR));
 
-    BLayoutBuilder::Group<>(this, B_VERTICAL, 0)
+    BLayoutBuilder::Group<>(this, B_VERTICAL, 0 | B_PLAIN_BORDER)
         .SetInsets(B_USE_WINDOW_INSETS)
         .Add(descriptionView)
         .Add(instructionsView)
@@ -74,7 +83,8 @@ mLoginBox::mLoginBox(BRect frame)
             .Add(errorView)
             .AddGlue()
             .Add(btLogin)
-        .End()
+            .SetInsets(0, 0, 0, 0)
+            .End()
     .End();
 
     ResizeToPreferred();
@@ -115,6 +125,7 @@ void mLoginBox::MessageReceived(BMessage* message)
             fprintf(stderr, "Login failed.\n");
             ThreadedCall(thUpdateUIErrorMsg, CallUpdateUIErrorMsg,
                 "Update error message", B_NORMAL_PRIORITY, this);
+            ++loginAttempts;
             break;
         case M_PASSWORD_EXPIRED:
             fprintf(stderr, "Password is expired.\n");
@@ -125,11 +136,17 @@ void mLoginBox::MessageReceived(BMessage* message)
             BView::MessageReceived(message);
             break;
     }
+    if (loginAttempts == 100) {
+        ThreadedCall(thUpdateUIErrorMsg, CallUpdateUIEasterMsg,
+        "Update error message", B_NORMAL_PRIORITY, this);
+    }
 }
 
 void mLoginBox::Draw(BRect updateRect)
 {
     BView::Draw(updateRect);
+    SetHighColor(0, 0, 0, 255);
+    StrokeRect(Bounds());
     Invalidate();
 }
 
@@ -155,12 +172,22 @@ int mLoginBox::CallUpdateUIForm(void* data)
     return 0;
 }
 
+int mLoginBox::CallUpdateUIEasterMsg(void* data)
+{
+    mLoginBox* box = (mLoginBox*)data;
+    box->UpdateUIErrorMsg(strLoginEaster);
+    return 0;
+}
+
+
 int mLoginBox::CallUpdateUIErrorMsg(void* data)
 {
     mLoginBox* box = (mLoginBox*)data;
     box->UpdateUIErrorMsg(strLoginFailed);
     return 0;
 }
+
+
 
 int mLoginBox::CallUpdateUIExpiredMsg(void *data)
 {

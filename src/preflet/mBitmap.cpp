@@ -10,8 +10,6 @@
 
 #include <Application.h>
 #include <Bitmap.h>
-#include <stdio.h>
-
 #include "mBitmap.h"
 
 BitmapView::BitmapView(BBitmap* bitmap, BRect frame, const char* name,

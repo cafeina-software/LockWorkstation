@@ -3,13 +3,20 @@
  * All rights reserved. Distributed under the terms of the MIT license.
  */
 #include <Catalog.h>
+#include <InterfaceDefs.h>
 #include <OS.h>
 #include <sys/utsname.h>
 #include <cpu_type.h>
+#include <stdio.h>
 #include "mSystemInfo.h"
+
+#include <ScreenSaver.h>
+#include <View.h>
+#include <cmath>
 
 #undef B_TRANSLATION_CONTEXT
 #define B_TRANSLATION_CONTEXT "System info"
+
 
 mSystemInfo::mSystemInfo(BRect frame)
 : BView(frame, NULL, B_FOLLOW_NONE, B_PULSE_NEEDED)
@@ -17,7 +24,6 @@ mSystemInfo::mSystemInfo(BRect frame)
     InitUIData();
 
     SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
-
     infoFont.SetFace(B_BOLD_FACE);
     infoFont.SetFlags(B_FORCE_ANTIALIASING);
     infoFont.SetSize(be_bold_font->Size() * 1.5);
@@ -82,12 +88,23 @@ void mSystemInfo::AttachedToWindow()
     BView::AttachedToWindow();
 }
 
-void mSystemInfo::Draw(BRect updateRect)
+void mSystemInfo::Draw(BRect updateRect, BRect frame, BView* view)
 {
+
+    // SetHighColor(255,255,255);
+    // BPoint bordersl2[4];
+    // for (int i = 0; i < 4; i++) {
+    //     bordersl2[i].x = 100;
+    //     bordersl2[i].y = 100; // Working on this
+    // }
+    // FillPolygon(bordersl2, 50);
+
     BView::Draw(updateRect);
+
 
     Invalidate();
 }
+
 
 void mSystemInfo::InitUIData()
 {
@@ -116,6 +133,7 @@ void mSystemInfo::InitUIData()
 
 void mSystemInfo::Update()
 {
+
     system_info info;
 
     get_system_info(&info);

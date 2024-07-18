@@ -10,6 +10,7 @@
 #include <SupportKit.h>
 #include <TranslationKit.h>
 #include <ObjectList.h>
+#include "StringList.h"
 #include "../common/ThreadedClass.h"
 
 class mBackgroundView : public BView, public ThreadedClass

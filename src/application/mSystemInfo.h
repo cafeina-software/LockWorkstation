@@ -9,6 +9,7 @@
 #include <SupportDefs.h>
 #include <sys/utsname.h>
 #include "mClockView.h"
+#include "LayoutBuilder.h"
 #include "../common/ThreadedClass.h"
 
 class mSystemInfo : public BView, public ThreadedClass
@@ -18,7 +19,7 @@ public:
     virtual         ~mSystemInfo();
     virtual void    Pulse();
     virtual void    AttachedToWindow();
-    virtual void    Draw(BRect updateRect);
+    virtual void    Draw(BRect updateRect, BRect frame, BView* view);
     void            Update();
 private:
     void            InitUIData();

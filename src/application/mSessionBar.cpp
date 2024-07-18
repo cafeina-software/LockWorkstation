@@ -17,4 +17,6 @@ mSessionBar::mSessionBar(orientation ont, BHandler* target)
 
 	AddAction(M_RESTART_REQUESTED, fTarget, NULL, strRestart, strRestart, false);
 	AddAction(M_SHUTDOWN_REQUESTED, fTarget, NULL, strShutdown, strShutdown, false);
+
+
 }

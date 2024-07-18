@@ -29,6 +29,7 @@ private:
 
     static int      CallUpdateUIForm(void* data);
     static int      CallUpdateUIErrorMsg(void* data);
+    static int      CallUpdateUIEasterMsg(void* data);
     static int      CallUpdateUIExpiredMsg(void *data);
     void            UpdateUIForm();
     void            UpdateUIErrorMsg(BString str);
