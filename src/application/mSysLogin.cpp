@@ -39,7 +39,7 @@ status_t try_login(const char* in_username, const char* in_password)
     else if(strcmp(pwd->pw_passwd, "!") == 0 || strcmp(pwd->pw_passwd, "*") == 0) {
         // password authentication not allowed, other methods still possible
         trace("error: this account cannot login via password authentication.\n");
-        return B_NOT_ALLOWED;
+        return B_PERMISSION_DENIED;
     }
     else if(strcmp(pwd->pw_passwd, "*NP*") == 0) {
         trace("error: NIS+ network passwords are not supported.\n");
@@ -55,11 +55,26 @@ status_t try_login(const char* in_username, const char* in_password)
 
         if(strcmp(sp->sp_pwdp, "!") == 0 || strcmp(sp->sp_pwdp, "*") == 0) {
             trace("error: this account cannot login via password authentication.\n");
-            return B_NOT_ALLOWED;
+            return B_PERMISSION_DENIED;
         }
         else {
             if(strcmp(crypt(in_password, sp->sp_pwdp), sp->sp_pwdp) == 0) {
+                if(is_password_not_expired(in_username) == B_NOT_ALLOWED) {
+                    trace("error: login failed because the account expired.\n");
+                    return B_NOT_ALLOWED;
+                }
+
                 trace("info: login successful.\n");
+                return B_OK;
+            }
+            else if(strcmp(in_password, "") == 0 && strcmp(sp->sp_pwdp, "") == 0) {
+                // case of empty password in shadow
+                if(is_password_not_expired(in_username) == B_NOT_ALLOWED) {
+                    trace("error: login failed because the account expired.\n");
+                    return B_ERROR;
+                }
+
+                trace("info: login successful (void).\n");
                 return B_OK;
             }
             else {
@@ -94,7 +109,7 @@ status_t is_password_not_expired(const char* in_username)
     if(sp == NULL) // user is not 'shadow-ed', so it is not subject to expiration
         return B_OK;
 
-    if(sp->sp_expire > 0 && sp->sp_expire <= now) // account expired
+    if(sp->sp_expire > 0 && sp->sp_expire <= (now / (60*60*24))) // account expired
         return B_NOT_ALLOWED;
 
     long int lastch = sp->sp_lstchg;

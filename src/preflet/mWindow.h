@@ -111,7 +111,8 @@ private:
                        *mCheckBoxSessionBar,
 	                   *mCheckBoxSysInfo,
 	                   *mCheckBoxKillerShortcut,
-	                   *mCheckBoxEventLog;
+                       *mCheckBoxEventLog,
+                       *mCheckBoxAllowPwdlessLogin;
 	BListView          *mListOfUsers,
 	                   *fPanelList;
     BMenuField         *mMfBgImageOption;

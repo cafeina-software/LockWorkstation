@@ -31,6 +31,7 @@
 #define mNameConfigSysInfoPanelOn        "_sysinfopanel_visible"
 #define mNameConfigKillerShortcutOn      "_shortcuts_killer"
 #define mNameConfigEvtLoggingOn          "_logging_enabled"
+#define mNameConfigPwdLessLogonOn        "_pwdless_enabled"
 
 void        DefaultSettings(BMessage* archive);
 status_t    LoadSettings(BMessage* archive);
@@ -75,6 +76,7 @@ public:
     bool        SystemInfoPanelIsEnabled();
     bool        KillerShortcutIsEnabled();
     bool        EventLogIsEnabled();
+    bool        PasswordLessAuthEnabled();
 public:
     status_t    SetAuthenticationMethod(AuthMethod method);
     status_t    SetDefaultUser(const char* newname);
@@ -93,6 +95,7 @@ public:
     status_t    SetSystemInfoPanelEnabled(bool status);
     status_t    SetKillerShortcutEnabled(bool status);
     status_t    SetEventLogEnabled(bool status);
+    status_t    SetPasswordLessAuthEnabled(bool status);
 private:
 	status_t	LoadSettings();
 	void		InitData();
@@ -117,6 +120,7 @@ private:
     bool        fSystemInfoPanelEnabled;
     bool        fKillerShortcutEnabled;
     bool        fEventLogEnabled;
+    bool        fPasswordLessAuthEnabled;
 };
 
 #endif /* _LW_COMMON_DEFS_H_ */

@@ -34,7 +34,7 @@ mWindow::mWindow(const char* mWindowTitle)
     const rgb_color mBlack = {0, 0, 0};
 
     // Child boxes
-    loginbox = new mLoginBox(BRect(0, 0, 0, 0));
+    loginbox = new mLoginBox(BRect(0, 0, 0, 0), settings->PasswordLessAuthEnabled());
     infoview = new mSystemInfo(BRect(0, 0, 0, 0));
     if(!settings->SystemInfoPanelIsEnabled())
         infoview->Hide();
@@ -100,7 +100,8 @@ void mWindow::MessageReceived(BMessage* message)
             const char* user, *pass;
             if(message->FindString("username", &user) == B_OK &&
             message->FindString("password", &pass) == B_OK) {
-                if(Login(settings->AuthenticationMethod(), user, pass) == B_OK) {
+                status_t status = B_OK;
+                if((status = Login(settings->AuthenticationMethod(), user, pass)) == B_OK) {
                     BString desc;
                     desc.SetToFormat("Login successful for username: %s", user);
                     logger->AddEvent(desc.String());
@@ -110,17 +111,17 @@ void mWindow::MessageReceived(BMessage* message)
                     BString desc;
                     desc.SetToFormat("Login failed for username: %s", user);
                     logger->AddEvent(EVT_ERROR, desc.String());
+
                     BMessage reply(M_LOGIN_FAILED);
-                    reply.AddBool("emptyFields", false);
-                    // reply.AddBool("wrongUsername", !userMatch);
-                    // reply.AddBool("wrongPassword", !passMatch);
+                    reply.AddInt32("errorCode", status);
+                    reply.AddString("username", user);
                     message->SendReply(&reply);
                 }
             }
             else {
                 logger->AddEvent(EVT_ERROR, "Login failed: missing user or password.");
                 BMessage reply(M_LOGIN_FAILED);
-                reply.AddBool("emptyFields", true);
+                reply.AddBool("errorCode", B_BAD_DATA);
                 message->SendReply(&reply);
             }
             break;

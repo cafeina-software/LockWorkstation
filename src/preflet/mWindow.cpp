@@ -249,6 +249,14 @@ void mWindow::MessageReceived(BMessage* message)
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
+        case M_BOOL_PWDLESS:
+        {
+            settings->SetPasswordLessAuthEnabled(mCheckBoxAllowPwdlessLogin->Value() == B_CONTROL_ON);
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
         case COLOR_CHANGED_R:
         case COLOR_CHANGED_G:
         case COLOR_CHANGED_B:
@@ -639,6 +647,7 @@ void mWindow::UpdateStrings_Thread()
     settings->SetSystemInfoPanelEnabled(mCheckBoxSysInfo->Value() == B_CONTROL_ON);
     settings->SetKillerShortcutEnabled(mCheckBoxKillerShortcut->Value() == B_CONTROL_ON);
     settings->SetEventLogEnabled(mCheckBoxEventLog->Value() == B_CONTROL_ON);
+    settings->SetPasswordLessAuthEnabled(mCheckBoxAllowPwdlessLogin->Value() == B_CONTROL_ON);
 
     UnlockLooper();
 }
@@ -708,6 +717,7 @@ void mWindow::InitUIControls()
     mCheckBoxSysInfo->SetValue(settings->SystemInfoPanelIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mCheckBoxKillerShortcut->SetValue(settings->KillerShortcutIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mCheckBoxEventLog->SetValue(settings->EventLogIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
+    mCheckBoxAllowPwdlessLogin->SetValue(settings->PasswordLessAuthEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
 
     UnlockLooper();
 }
@@ -1072,12 +1082,15 @@ BView* mWindow::CreateCardView_Clock()
 
 BView* mWindow::CreateCardView_Options()
 {
+    mCheckBoxAllowPwdlessLogin = new BCheckBox("cb_pwdless",
+        B_TRANSLATE("Allow password-less accounts to login"),
+        new BMessage(M_BOOL_PWDLESS));
     mCheckBoxSessionBar = new BCheckBox("cb_sb",
         B_TRANSLATE("Show session bar (shutdown, restart)"), new BMessage(M_BOOL_SESSION));
     mCheckBoxSysInfo = new BCheckBox("cb_si",
         B_TRANSLATE("Show system information panel"), new BMessage(M_BOOL_INFO));
     mCheckBoxKillerShortcut = new BCheckBox("cb_ks",
-        B_TRANSLATE("Enable shortcut (Cmd+Ctrl+Space) to bypass password protection."),
+        B_TRANSLATE("Enable shortcut (Cmd+Ctrl+Space) to bypass password protection"),
         new BMessage(M_BOOL_KILLER));
     mCheckBoxEventLog = new BCheckBox("cb_el",
         B_TRANSLATE("Enable login events logging"), new BMessage(M_BOOL_EVTLOG));
@@ -1087,6 +1100,7 @@ BView* mWindow::CreateCardView_Options()
 
     BView* thisview = new BView(NULL, B_SUPPORTS_LAYOUT, NULL);
     BLayoutBuilder::Group<>(thisview, B_VERTICAL)
+        .Add(mCheckBoxAllowPwdlessLogin)
         .Add(mCheckBoxSessionBar)
         .Add(mCheckBoxSysInfo)
         .Add(mCheckBoxKillerShortcut)
@@ -1123,11 +1137,13 @@ bool mWindow::UI_IsDefault(BMessage* defaults)
     bool isSysInfoPanelDefault = mCheckBoxSysInfo->Value() == defaults->GetBool(mNameConfigSysInfoPanelOn);
     bool isKillerShctDefault = mCheckBoxKillerShortcut->Value() == defaults->GetBool(mNameConfigKillerShortcutOn);
     bool isLoggingDefault = mCheckBoxEventLog->Value() == defaults->GetBool(mNameConfigEvtLoggingOn);
+    bool isPwdlessAuthDefault  = mCheckBoxAllowPwdlessLogin->Value() == defaults->GetBool(mNameConfigPwdLessLogonOn);
 
     return isBgModeDefault && isBgColorDefault && isImgFolderPathDefault &&
            isBgSnoozeDefault && isClockColorDefault && isClockPlacementDefault &&
            isClockHidden && isClockSizeDefault && isSessionBarDefault &&
-           isSysInfoPanelDefault && isKillerShctDefault && isLoggingDefault;
+           isSysInfoPanelDefault && isKillerShctDefault && isLoggingDefault &&
+           isPwdlessAuthDefault;
 }
 
 bool mWindow::UI_IsBgColorDefault(BMessage* archive)

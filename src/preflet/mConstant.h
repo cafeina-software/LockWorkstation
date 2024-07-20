@@ -75,6 +75,7 @@
 #define M_BOOL_INFO             'cbsi'
 #define M_BOOL_KILLER           'cbks'
 #define M_BOOL_EVTLOG           'cbel'
+#define M_BOOL_PWDLESS          'cbpw'
 #define M_EVTLOG_CLEAR          'lgcl'
 
 #endif /* __mConstant_h_ */

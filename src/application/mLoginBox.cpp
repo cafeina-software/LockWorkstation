@@ -11,12 +11,16 @@
 #define B_TRANSLATION_CONTEXT "Login box"
 
 static BString strLoginFailed = B_TRANSLATE("Login failed.");
+static BString strLoginNotAllowed = B_TRANSLATE("Account has password login disabled.");
+static BString strAccExpired = B_TRANSLATE("Account is expired.");
 static BString strPassExpired = B_TRANSLATE("The password is expired.");
+static BString strPwdlessOff = B_TRANSLATE("Empty password usage is disabled.");
 static BString strNoError = "";
 
-mLoginBox::mLoginBox(BRect frame)
+mLoginBox::mLoginBox(BRect frame, bool pwdless)
 : BView(frame, "v_loginbox", B_FOLLOW_LEFT, B_WILL_DRAW | B_NAVIGABLE |
-    B_NAVIGABLE_JUMP | B_INPUT_METHOD_AWARE | B_DRAW_ON_CHILDREN)
+    B_NAVIGABLE_JUMP | B_INPUT_METHOD_AWARE | B_DRAW_ON_CHILDREN),
+    isPwdLessOn(pwdless)
 {
     SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
 
@@ -50,7 +54,7 @@ mLoginBox::mLoginBox(BRect frame)
     btLogin = new BButton("bt_login", B_TRANSLATE("Login"),
         new BMessage(LBM_LOGIN_REQUESTED));
     btLogin->SetFont(&font3);
-    btLogin->SetEnabled(IsAbleToLogin());
+    btLogin->SetEnabled(IsAbleToLogin(isPwdLessOn));
     btLogin->MakeDefault(true);
 
     BFont errorFont(be_bold_font);
@@ -108,17 +112,37 @@ void mLoginBox::MessageReceived(BMessage* message)
                 "Update error message", B_NORMAL_PRIORITY, this);
             break;
         case loginBoxMsgs::LBM_LOGIN_REQUESTED:
-            if(IsAbleToLogin())
-                RequestLogin();
+            if(!isPwdLessOn && tcPassword->TextLength() == 0) {
+                ThreadedCall(thUpdateUIErrorMsg, CallUpdateUIPwdlessOffMsg,
+                    "Update error message", B_NORMAL_PRIORITY, this);
+            }
+            else {
+                if(IsAbleToLogin(isPwdLessOn))
+                    RequestLogin();
+            }
             break;
         case M_LOGIN_FAILED:
             fprintf(stderr, "Login failed.\n");
-            ThreadedCall(thUpdateUIErrorMsg, CallUpdateUIErrorMsg,
-                "Update error message", B_NORMAL_PRIORITY, this);
-            break;
-        case M_PASSWORD_EXPIRED:
-            fprintf(stderr, "Password is expired.\n");
-            ThreadedCall(thUpdateUIErrorMsg, CallUpdateUIExpiredMsg,
+
+            int (*fncall)(void*);
+            switch(message->GetInt32("errorCode", B_ERROR))
+            {
+                case B_NOT_ALLOWED:
+                    fncall = CallUpdateUIAccExpiredMsg;
+                    break;
+                case B_TIMED_OUT:
+                    fncall = CallUpdateUIExpiredMsg;
+                    break;
+                case B_PERMISSION_DENIED:
+                    fncall = CallUpdateUINotAllowedMsg;
+                    break;
+                case B_ERROR:
+                default:
+                    fncall = CallUpdateUIErrorMsg;
+                    break;
+            }
+
+            ThreadedCall(thUpdateUIErrorMsg, fncall,
                 "Update error message", B_NORMAL_PRIORITY, this);
             break;
         default:
@@ -143,9 +167,10 @@ void mLoginBox::RequestLogin()
 
 // #pragma mark -
 
-bool mLoginBox::IsAbleToLogin()
+bool mLoginBox::IsAbleToLogin(bool pwdlessmode)
 {
-    return tcUserName->TextLength() > 0 && tcPassword->TextLength() > 0;
+    return tcUserName->TextLength() > 0/* &&
+           (pwdlessmode || tcPassword->TextLength() > 0)*/;
 }
 
 int mLoginBox::CallUpdateUIForm(void* data)
@@ -169,12 +194,33 @@ int mLoginBox::CallUpdateUIExpiredMsg(void *data)
     return 0;
 }
 
+int mLoginBox::CallUpdateUIAccExpiredMsg(void *data)
+{
+    mLoginBox* box = (mLoginBox*)data;
+    box->UpdateUIErrorMsg(strAccExpired);
+    return 0;
+}
+
+int mLoginBox::CallUpdateUINotAllowedMsg(void *data)
+{
+    mLoginBox* box = (mLoginBox*)data;
+    box->UpdateUIErrorMsg(strLoginNotAllowed);
+    return 0;
+}
+
+int mLoginBox::CallUpdateUIPwdlessOffMsg(void* data)
+{
+    mLoginBox* box = (mLoginBox*)data;
+    box->UpdateUIErrorMsg(strPwdlessOff);
+    return 0;
+}
+
 void mLoginBox::UpdateUIForm()
 {
     LockLooper();
     tcUserName->MarkAsInvalid(!(tcUserName->TextLength() > 0));
-    tcPassword->MarkAsInvalid(!(tcPassword->TextLength() > 0));
-    btLogin->SetEnabled(IsAbleToLogin());
+    tcPassword->MarkAsInvalid(!(isPwdLessOn || tcPassword->TextLength() > 0));
+    btLogin->SetEnabled(IsAbleToLogin(isPwdLessOn));
     UnlockLooper();
 }
 

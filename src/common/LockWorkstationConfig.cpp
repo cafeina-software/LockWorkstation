@@ -47,6 +47,7 @@ void DefaultSettings(BMessage* archive)
     archive->AddBool(mNameConfigSysInfoPanelOn, true);
     archive->AddBool(mNameConfigKillerShortcutOn, false);
     archive->AddBool(mNameConfigEvtLoggingOn, true);
+    archive->AddBool(mNameConfigPwdLessLogonOn, true);
 }
 
 status_t LoadSettings(BMessage* archive)
@@ -211,6 +212,8 @@ void LWSettings::InitData()
         defaults->GetBool(mNameConfigKillerShortcutOn));
     fEventLogEnabled = savemessage.GetBool(mNameConfigEvtLoggingOn,
         defaults->GetBool(mNameConfigEvtLoggingOn));
+    fPasswordLessAuthEnabled = savemessage.GetBool(mNameConfigPwdLessLogonOn,
+        defaults->GetBool(mNameConfigPwdLessLogonOn));
 
     delete defaults;
 }
@@ -251,6 +254,7 @@ void        LWSettings::DefaultSettings(BMessage* archive)
     archive->AddBool(mNameConfigSysInfoPanelOn, true);
     archive->AddBool(mNameConfigKillerShortcutOn, false);
     archive->AddBool(mNameConfigEvtLoggingOn, true);
+    archive->AddBool(mNameConfigPwdLessLogonOn, true);
 }
 
 status_t    LWSettings::SaveSettings()
@@ -301,7 +305,10 @@ void LWSettings::Commit()
     /* Other configs */
     savemessage.SetBool(mNameConfigKillerShortcutOn, fKillerShortcutEnabled);
     savemessage.SetBool(mNameConfigEvtLoggingOn, fEventLogEnabled);
+    savemessage.SetBool(mNameConfigPwdLessLogonOn, fPasswordLessAuthEnabled);
 }
+
+// #pragma mark -
 
 AuthMethod  LWSettings::AuthenticationMethod()
 {
@@ -387,6 +394,13 @@ bool        LWSettings::EventLogIsEnabled()
 {
     return fEventLogEnabled;
 }
+
+bool LWSettings::PasswordLessAuthEnabled()
+{
+    return fPasswordLessAuthEnabled;
+}
+
+// #pragma mark -
 
 status_t    LWSettings::SetAuthenticationMethod(AuthMethod method)
 {
@@ -490,3 +504,8 @@ status_t    LWSettings::SetEventLogEnabled(bool status)
     return fEventLogEnabled == status ? B_OK : B_ERROR;
 }
 
+status_t LWSettings::SetPasswordLessAuthEnabled(bool status)
+{
+    fPasswordLessAuthEnabled = status;
+    return fPasswordLessAuthEnabled == status ? B_OK : B_ERROR;
+}
