@@ -11,7 +11,6 @@
 #include <Application.h>
 #include <Catalog.h>
 #include <LayoutBuilder.h>
-#include <Spinner.h>
 #include <stdio.h>
 #include <string>
 //Local
@@ -257,29 +256,17 @@ void mWindow::MessageReceived(BMessage* message)
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
-        case COLOR_CHANGED_R:
-        case COLOR_CHANGED_G:
-        case COLOR_CHANGED_B:
+        case M_BGCOLOR_CHANGED:
         {
-            settings->SetBackgroundColor({
-                static_cast<uint8>(mSpinnerColorR->Value()),
-                static_cast<uint8>(mSpinnerColorG->Value()),
-                static_cast<uint8>(mSpinnerColorB->Value())
-            });
+            settings->SetBackgroundColor(mCCBgColor->ValueAsColor());
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
-        case CLOCKCOLOR_CHANGED_R:
-        case CLOCKCOLOR_CHANGED_G:
-        case CLOCKCOLOR_CHANGED_B:
+        case M_CLOCK_COLORCHANGED:
         {
-            settings->SetClockColor({
-                static_cast<uint8>(mSpinnerClockColorR->Value()),
-                static_cast<uint8>(mSpinnerClockColorG->Value()),
-                static_cast<uint8>(mSpinnerClockColorB->Value())
-            });
+            settings->SetClockColor(mCCClockColor->ValueAsColor());
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
@@ -291,9 +278,7 @@ void mWindow::MessageReceived(BMessage* message)
             LWSettings::DefaultSettings(temp);
 
             settings->SetBackgroundColor(temp->GetColor(mNameConfigBgColor, {}));
-            mSpinnerColorR->SetValue(settings->BackgroundColor().red);
-            mSpinnerColorG->SetValue(settings->BackgroundColor().green);
-            mSpinnerColorB->SetValue(settings->BackgroundColor().blue);
+            mCCBgColor->SetValue(settings->BackgroundColor());
 
             //Update Strings
             ThreadedCall(UpdateStringsThread, UpdateStringsThread_static,
@@ -311,9 +296,7 @@ void mWindow::MessageReceived(BMessage* message)
             LWSettings::DefaultSettings(temp);
 
             settings->SetClockColor(temp->GetColor(mNameConfigClockColor, {}));
-            mSpinnerClockColorR->SetValue(settings->ClockColor().red);
-            mSpinnerClockColorG->SetValue(settings->ClockColor().green);
-            mSpinnerClockColorB->SetValue(settings->ClockColor().blue);
+            mCCClockColor->SetValue(settings->ClockColor());
 
             //Update Strings
             ThreadedCall(UpdateStringsThread, UpdateStringsThread_static,
@@ -624,20 +607,12 @@ void mWindow::UpdateStrings_Thread()
     mAddUserName->SetText(settings->DefaultUser());
     ((BStringView*)mListOfUsers->ItemAt(0))->SetText(settings->DefaultUser());
 
-    settings->BackgroundColor().set_to(
-        static_cast<uint8>(mSpinnerColorR->Value()),
-        static_cast<uint8>(mSpinnerColorG->Value()),
-        static_cast<uint8>(mSpinnerColorB->Value())
-    );
+    settings->BackgroundColor() = mCCBgColor->ValueAsColor();
 	settings->SetBackgroundImageFolderPath(mTextControlmPathToImageFolder->Text());
 
     settings->SetClockEnabled(mCheckBoxBoolClock->Value() == B_CONTROL_ON);
     settings->SetClockSize((uint32)mSliderFontSize->Value());
-    settings->ClockColor().set_to(
-        static_cast<uint8>(mSpinnerClockColorR->Value()),
-        static_cast<uint8>(mSpinnerClockColorG->Value()),
-        static_cast<uint8>(mSpinnerClockColorB->Value())
-    );
+    settings->ClockColor() = mCCClockColor->ValueAsColor();
     settings->ClockLocation().Set(
         static_cast<float>(atof(mTextControlClockPlaceX->Text())),
         static_cast<float>(atof(mTextControlClockPlaceY->Text()))
@@ -682,9 +657,7 @@ void mWindow::InitUIControls()
     for(int i = 0; i < users.CountStrings(); i++)
         mListOfUsers->AddItem(new BStringItem(users.StringAt(i).String()));
 
-    mSpinnerColorR->SetValue(static_cast<int32>(settings->BackgroundColor().red));
-    mSpinnerColorG->SetValue(static_cast<int32>(settings->BackgroundColor().green));
-    mSpinnerColorB->SetValue(static_cast<int32>(settings->BackgroundColor().blue));
+    mCCBgColor->SetValue(settings->BackgroundColor());
     switch(settings->BackgroundMode()) {
         case BGM_STATIC:
             mMfBgImageOption->Menu()->ItemAt(2)->SetMarked(true);
@@ -707,9 +680,7 @@ void mWindow::InitUIControls()
 
     mCheckBoxBoolClock->SetValue(settings->ClockIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mSliderFontSize->SetValue(settings->ClockSize());
-    mSpinnerClockColorR->SetValue(static_cast<int32>(settings->ClockColor().red));
-    mSpinnerClockColorG->SetValue(static_cast<int32>(settings->ClockColor().green));
-    mSpinnerClockColorB->SetValue(static_cast<int32>(settings->ClockColor().blue));
+    mCCClockColor->SetValue(settings->ClockColor());
     mTextControlClockPlaceX->SetText(std::to_string(settings->ClockLocation().x).c_str());
     mTextControlClockPlaceY->SetText(std::to_string(settings->ClockLocation().y).c_str());
 
@@ -864,15 +835,9 @@ BView* mWindow::CreateCardView_User()
 
 BView* mWindow::CreateCardView_Background()
 {
-    int32 min = 0, max = 255;
-
     /* Colorcontrol */
-    mSpinnerColorR = new BSpinner("sp_col_r", NULL, new BMessage(COLOR_CHANGED_R));
-    mSpinnerColorR->SetRange(min, max);
-    mSpinnerColorG = new BSpinner("sp_col_g", NULL, new BMessage(COLOR_CHANGED_G));
-    mSpinnerColorG->SetRange(min, max);
-    mSpinnerColorB = new BSpinner("sp_col_b", NULL, new BMessage(COLOR_CHANGED_B));
-    mSpinnerColorB->SetRange(min, max);
+    mCCBgColor = new BColorControl(BPoint(0, 0), B_CELLS_32x8,
+        8.5f, "cc_bgcol", new BMessage(M_BGCOLOR_CHANGED), false);
     mButtonDefaultColors = new BButton("DefaultColors",
         B_TRANSLATE("Default"), new BMessage(DEFAULT_COLORS));
 
@@ -882,15 +847,11 @@ BView* mWindow::CreateCardView_Background()
 
     BLayoutBuilder::Group<>(mColorView, B_VERTICAL)
         .SetInsets(B_USE_SMALL_INSETS)
-        .AddGrid()
-            .Add(new BStringView(NULL, B_TRANSLATE("Red")), 0, 0)
-            .Add(mSpinnerColorR, 1, 0)
-            .Add(new BStringView(NULL, B_TRANSLATE("Green")), 0, 1)
-            .Add(mSpinnerColorG, 1, 1)
-            .Add(new BStringView(NULL, B_TRANSLATE("Blue")), 0, 2)
-            .Add(mSpinnerColorB, 1, 2)
+        .Add(mCCBgColor)
+        .AddGroup(B_HORIZONTAL)
+            .AddGlue()
+            .Add(mButtonDefaultColors)
         .End()
-        .Add(mButtonDefaultColors)
     .End();
 
     BBox* mBoxAroundColorControl = new BBox("box_col",
@@ -973,7 +934,6 @@ BView* mWindow::CreateCardView_Background()
 
 BView* mWindow::CreateCardView_Clock()
 {
-    int32 min = 0, max = 255;
     int32 mMinFontValue = 5, mMaxFontValue = 15;
     int32 HashMarksCount = 11;
     const char* mStringSliderMinLimitLabel =	"10";
@@ -996,15 +956,8 @@ BView* mWindow::CreateCardView_Clock()
     mSliderFontSize->SetValue(CurrentSliderValue);
 
     /* Clock color */
-    mSpinnerClockColorR = new BSpinner("sp_clk_r", NULL,
-        new BMessage(CLOCKCOLOR_CHANGED_R));
-    mSpinnerClockColorR->SetRange(min, max);
-    mSpinnerClockColorG = new BSpinner("sp_clk_g", NULL,
-        new BMessage(CLOCKCOLOR_CHANGED_G));
-    mSpinnerClockColorG->SetRange(min, max);
-    mSpinnerClockColorB = new BSpinner("sp_clk_b", NULL,
-        new BMessage(CLOCKCOLOR_CHANGED_B));
-    mSpinnerClockColorB->SetRange(min, max);
+    mCCClockColor = new BColorControl(BPoint(0, 0), B_CELLS_32x8,
+        8.5f, "cc_clockcol", new BMessage(M_CLOCK_COLORCHANGED), false);
     mButtonDefaultClockColors = new BButton("DefaultClockColors",
         B_TRANSLATE("Default"), new BMessage(DEFAULT_CLOCK_COLORS));
 
@@ -1014,14 +967,7 @@ BView* mWindow::CreateCardView_Clock()
 
     BLayoutBuilder::Group<>(clockColorView, B_VERTICAL)
         .SetInsets(B_USE_SMALL_INSETS)
-        .AddGrid()
-            .Add(new BStringView(NULL, B_TRANSLATE("Red")), 0, 0)
-            .Add(mSpinnerClockColorR, 1, 0)
-            .Add(new BStringView(NULL, B_TRANSLATE("Green")), 0, 1)
-            .Add(mSpinnerClockColorG, 1, 1)
-            .Add(new BStringView(NULL, B_TRANSLATE("Blue")), 0, 2)
-            .Add(mSpinnerClockColorB, 1, 2)
-        .End()
+        .Add(mCCClockColor)
         .AddGroup(B_HORIZONTAL)
             .AddGlue()
             .Add(mButtonDefaultClockColors)
@@ -1075,6 +1021,7 @@ BView* mWindow::CreateCardView_Clock()
         .Add(mSliderFontSize)
         .Add(boxClockColor)
         .Add(boxClockPlace)
+        .AddGlue()
     .End();
 
     return thisview;
@@ -1148,10 +1095,8 @@ bool mWindow::UI_IsDefault(BMessage* defaults)
 
 bool mWindow::UI_IsBgColorDefault(BMessage* archive)
 {
-    return
-        (uint8)mSpinnerColorR->Value() == archive->GetColor(mNameConfigBgColor, {}).red &&
-        (uint8)mSpinnerColorG->Value() == archive->GetColor(mNameConfigBgColor, {}).green &&
-        (uint8)mSpinnerColorB->Value() == archive->GetColor(mNameConfigBgColor, {}).blue;
+    return mCCBgColor->ValueAsColor() ==
+        archive->GetColor(mNameConfigBgColor, {});
 }
 
 bool mWindow::UI_IsBgFolderDefault(BMessage* archive)
@@ -1168,10 +1113,8 @@ bool mWindow::UI_IsBgFolderDefault(BMessage* archive)
 
 bool mWindow::UI_IsClockColorDefault(BMessage* archive)
 {
-    return
-        (uint8)mSpinnerClockColorR->Value() == archive->GetColor(mNameConfigClockColor, {}).red &&
-        (uint8)mSpinnerClockColorG->Value() == archive->GetColor(mNameConfigClockColor, {}).green &&
-        (uint8)mSpinnerClockColorB->Value() == archive->GetColor(mNameConfigClockColor, {}).blue;
+    return mCCClockColor->ValueAsColor() ==
+        archive->GetColor(mNameConfigClockColor, {});
 }
 
 bool mWindow::UI_IsClockPlaceDefault(BMessage* archive)

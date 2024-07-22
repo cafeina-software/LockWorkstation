@@ -17,7 +17,6 @@
 #include <InterfaceKit.h>
 #include <SupportKit.h>
 #include <TranslationKit.h>
-#include <Spinner.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -113,6 +112,8 @@ private:
 	                   *mCheckBoxKillerShortcut,
                        *mCheckBoxEventLog,
                        *mCheckBoxAllowPwdlessLogin;
+    BColorControl      *mCCBgColor,
+                       *mCCClockColor;
 	BListView          *mListOfUsers,
 	                   *fPanelList;
     BMenuField         *mMfBgImageOption;
@@ -122,12 +123,6 @@ private:
                        *mRadioBtAuthAppaccount;
 	BSlider            *mSliderFontSize,
                        *mSliderBgSnooze;
-	BSpinner           *mSpinnerColorR,
-	                   *mSpinnerColorG,
-	                   *mSpinnerColorB,
-	                   *mSpinnerClockColorR,
-	                   *mSpinnerClockColorG,
-	                   *mSpinnerClockColorB;
     BStringView        *mStaticLogClrResponse;
 	BTextControl       *mAddUserName,
 	                   *mAddPassWord,
