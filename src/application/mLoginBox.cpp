@@ -4,6 +4,7 @@
  */
 #include <Catalog.h>
 #include <LayoutBuilder.h>
+#include <OS.h>
 #include "mLoginBox.h"
 #include "mConstant.h"
 
@@ -17,10 +18,13 @@ static BString strPassExpired = B_TRANSLATE("The password is expired.");
 static BString strPwdlessOff = B_TRANSLATE("Empty password usage is disabled.");
 static BString strNoError = "";
 
-mLoginBox::mLoginBox(BRect frame, bool pwdless)
+mLoginBox::mLoginBox(BRect frame, LWSettings* settings)
 : BView(frame, "v_loginbox", B_FOLLOW_LEFT, B_WILL_DRAW | B_NAVIGABLE |
     B_NAVIGABLE_JUMP | B_INPUT_METHOD_AWARE | B_DRAW_ON_CHILDREN),
-    isPwdLessOn(pwdless)
+    loginAttempts(0),
+    isPwdLessOn(settings->PasswordLessAuthEnabled()),
+    errorThreshold(settings->AuthenticationAttemptsThreshold()),
+    snoozeMultiplier(settings->AuthenticationCooldownAfterThreshold())
 {
     SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
 
@@ -144,6 +148,16 @@ void mLoginBox::MessageReceived(BMessage* message)
 
             ThreadedCall(thUpdateUIErrorMsg, fncall,
                 "Update error message", B_NORMAL_PRIORITY, this);
+
+            // Inspired by uber-perfect-cell: use fail count feature to prevent
+            //  brute-force attacks. After a number of failed attempts,
+            //  it will cool down for a few seconds after which the user
+            //  is able to try again.
+            ++loginAttempts;
+            if(errorThreshold > 0 && snoozeMultiplier > 0 &&
+            loginAttempts >= 1 && loginAttempts % errorThreshold == 0)
+                ThreadedCall(thUpdateUILockdown, CallUpdateUILockdown,
+                    "Update UI after too many errors", B_NORMAL_PRIORITY, this);
             break;
         default:
             BView::MessageReceived(message);
@@ -176,51 +190,109 @@ bool mLoginBox::IsAbleToLogin(bool pwdlessmode)
 int mLoginBox::CallUpdateUIForm(void* data)
 {
     mLoginBox* box = (mLoginBox*)data;
+    if(box == nullptr)
+        return B_ERROR;
+
     box->UpdateUIForm();
-    return 0;
+    return B_OK;
 }
 
 int mLoginBox::CallUpdateUIErrorMsg(void* data)
 {
     mLoginBox* box = (mLoginBox*)data;
+    if(box == nullptr)
+        return B_ERROR;
+
     box->UpdateUIErrorMsg(strLoginFailed);
-    return 0;
+    return B_OK;
 }
 
 int mLoginBox::CallUpdateUIExpiredMsg(void *data)
 {
     mLoginBox* box = (mLoginBox*)data;
+    if(box == nullptr)
+        return B_ERROR;
+
     box->UpdateUIErrorMsg(strPassExpired);
-    return 0;
+    return B_OK;
 }
 
 int mLoginBox::CallUpdateUIAccExpiredMsg(void *data)
 {
     mLoginBox* box = (mLoginBox*)data;
+    if(box == nullptr)
+        return B_ERROR;
+
     box->UpdateUIErrorMsg(strAccExpired);
-    return 0;
+    return B_OK;
 }
 
 int mLoginBox::CallUpdateUINotAllowedMsg(void *data)
 {
     mLoginBox* box = (mLoginBox*)data;
+    if(box == nullptr)
+        return B_ERROR;
+
     box->UpdateUIErrorMsg(strLoginNotAllowed);
-    return 0;
+    return B_OK;
 }
 
 int mLoginBox::CallUpdateUIPwdlessOffMsg(void* data)
 {
     mLoginBox* box = (mLoginBox*)data;
+    if(box == nullptr)
+        return B_ERROR;
+
     box->UpdateUIErrorMsg(strPwdlessOff);
-    return 0;
+    return B_OK;
+}
+
+int mLoginBox::CallUpdateUILockdown(void* data)
+{
+    mLoginBox* box = (mLoginBox*)data;
+    if(box == nullptr)
+        return B_ERROR;
+
+    box->LockUIForm();
+    snooze(box->snoozeMultiplier * 1000000);
+    box->UnlockUIForm();
+    return B_OK;
 }
 
 void mLoginBox::UpdateUIForm()
 {
     LockLooper();
+
     tcUserName->MarkAsInvalid(!(tcUserName->TextLength() > 0));
     tcPassword->MarkAsInvalid(!(isPwdLessOn || tcPassword->TextLength() > 0));
     btLogin->SetEnabled(IsAbleToLogin(isPwdLessOn));
+
+    UnlockLooper();
+}
+
+void mLoginBox::LockUIForm()
+{
+    LockLooper();
+
+    tcUserName->SetEnabled(false);
+    tcPassword->SetEnabled(false);
+    btLogin->SetEnabled(false);
+    Invalidate();
+    Window()->UpdateIfNeeded();
+
+    UnlockLooper();
+}
+
+void mLoginBox::UnlockUIForm()
+{
+    LockLooper();
+
+    tcUserName->SetEnabled(true);
+    tcPassword->SetEnabled(true);
+    btLogin->SetEnabled(IsAbleToLogin(isPwdLessOn));
+    Invalidate();
+    Window()->UpdateIfNeeded();
+
     UnlockLooper();
 }
 

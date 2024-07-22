@@ -34,7 +34,7 @@ mWindow::mWindow(const char* mWindowTitle)
     const rgb_color mBlack = {0, 0, 0};
 
     // Child boxes
-    loginbox = new mLoginBox(BRect(0, 0, 0, 0), settings->PasswordLessAuthEnabled());
+    loginbox = new mLoginBox(BRect(0, 0, 0, 0), settings);
     infoview = new mSystemInfo(BRect(0, 0, 0, 0));
     if(!settings->SystemInfoPanelIsEnabled())
         infoview->Hide();

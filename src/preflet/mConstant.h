@@ -12,6 +12,8 @@
 #define M_AUTHMTHD_SYSTEM       'aths'
 #define M_AUTHMTHD_KEYSTR       'athk'
 #define M_AUTHMTHD_APPACC       'atha'
+#define M_AUTHOPTS_THRSHD       'atht'
+#define M_AUTHOPTS_ERRSNZ       'athz'
 
 #define M_APPUSER_MODIFY        'usmd'
 #define M_APPUSER_REMOVE        'usrm'

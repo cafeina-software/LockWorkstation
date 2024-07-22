@@ -32,6 +32,8 @@
 #define mNameConfigKillerShortcutOn      "_shortcuts_killer"
 #define mNameConfigEvtLoggingOn          "_logging_enabled"
 #define mNameConfigPwdLessLogonOn        "_pwdless_enabled"
+#define mNameConfigAuthAttemptsThrshld   "_auth_attempts"
+#define mNameConfigAuthSnoozeAfterErrors "_auth_manyerrors_snz"
 
 void        DefaultSettings(BMessage* archive);
 status_t    LoadSettings(BMessage* archive);
@@ -46,7 +48,7 @@ enum BgMode {
 enum AuthMethod {
     AUTH_SYSTEM_ACCOUNT = 0,
     AUTH_KEYSTORE,
-    AUTH_APP_ACCOUNT
+    AUTH_APP_ACCOUNT = 2
 };
 
 class LWSettings
@@ -77,6 +79,8 @@ public:
     bool        KillerShortcutIsEnabled();
     bool        EventLogIsEnabled();
     bool        PasswordLessAuthEnabled();
+    int32       AuthenticationAttemptsThreshold();
+    int32       AuthenticationCooldownAfterThreshold();
 public:
     status_t    SetAuthenticationMethod(AuthMethod method);
     status_t    SetDefaultUser(const char* newname);
@@ -96,6 +100,8 @@ public:
     status_t    SetKillerShortcutEnabled(bool status);
     status_t    SetEventLogEnabled(bool status);
     status_t    SetPasswordLessAuthEnabled(bool status);
+    status_t    SetAuthenticationAttemptsThreshold(int32 count);
+    status_t    SetAuthenticationCooldownAfterThreshold(int32 multiplier);
 private:
 	status_t	LoadSettings();
 	void		InitData();
@@ -121,6 +127,8 @@ private:
     bool        fKillerShortcutEnabled;
     bool        fEventLogEnabled;
     bool        fPasswordLessAuthEnabled;
+    int32       fAuthAttemptsThreshold;
+    int32       fAuthAttemptsErrorCooldown;
 };
 
 #endif /* _LW_COMMON_DEFS_H_ */

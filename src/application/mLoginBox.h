@@ -7,6 +7,7 @@
 
 #include <InterfaceKit.h>
 #include <SupportDefs.h>
+#include "../common/LockWorkstationConfig.h"
 #include "../common/ThreadedClass.h"
 
 enum loginBoxMsgs {
@@ -18,7 +19,7 @@ enum loginBoxMsgs {
 class mLoginBox : public BView, public ThreadedClass
 {
 public:
-                    mLoginBox(BRect frame, bool pwdless = true);
+                    mLoginBox(BRect frame, LWSettings* settings);
     virtual         ~mLoginBox();
     virtual void    AttachedToWindow();
     virtual void    MessageReceived(BMessage* message);
@@ -33,7 +34,10 @@ private:
     static int      CallUpdateUIAccExpiredMsg(void* data);
     static int      CallUpdateUINotAllowedMsg(void* data);
     static int      CallUpdateUIPwdlessOffMsg(void* data);
+    static int      CallUpdateUILockdown(void* data);
     void            UpdateUIForm();
+    void            LockUIForm();
+    void            UnlockUIForm();
     void            UpdateUIErrorMsg(BString str);
 private:
     BStringView     *errorView;
@@ -42,9 +46,13 @@ private:
     BButton         *btLogin;
 
     thread_id       thUpdateUIForm,
+                    thUpdateUILockdown,
                     thUpdateUIErrorMsg;
 
     bool            isPwdLessOn;
+    int32           loginAttempts;
+    int32           snoozeMultiplier;
+    int32           errorThreshold;
 };
 
 #endif // _H

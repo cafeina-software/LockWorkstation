@@ -214,11 +214,15 @@ void LWSettings::InitData()
         defaults->GetBool(mNameConfigEvtLoggingOn));
     fPasswordLessAuthEnabled = savemessage.GetBool(mNameConfigPwdLessLogonOn,
         defaults->GetBool(mNameConfigPwdLessLogonOn));
+    fAuthAttemptsThreshold = savemessage.GetInt32(mNameConfigAuthAttemptsThrshld,
+        defaults->GetInt32(mNameConfigAuthAttemptsThrshld, 0));
+    fAuthAttemptsErrorCooldown = savemessage.GetInt32(mNameConfigAuthSnoozeAfterErrors,
+        defaults->GetInt32(mNameConfigAuthSnoozeAfterErrors, 5));
 
     delete defaults;
 }
 
-void        LWSettings::DefaultSettings(BMessage* archive)
+void LWSettings::DefaultSettings(BMessage* archive)
 {
     archive->MakeEmpty();
 
@@ -255,6 +259,8 @@ void        LWSettings::DefaultSettings(BMessage* archive)
     archive->AddBool(mNameConfigKillerShortcutOn, false);
     archive->AddBool(mNameConfigEvtLoggingOn, true);
     archive->AddBool(mNameConfigPwdLessLogonOn, true);
+    archive->AddInt32(mNameConfigAuthAttemptsThrshld, 0);
+    archive->AddInt32(mNameConfigAuthSnoozeAfterErrors, 5);
 }
 
 status_t    LWSettings::SaveSettings()
@@ -275,7 +281,11 @@ void LWSettings::Reset()
 
 void LWSettings::Commit()
 {
+    /* Authentication */
     savemessage.SetUInt8(mNameConfigAuthMode, static_cast<uint8>(fAuthMethod));
+    savemessage.SetBool(mNameConfigPwdLessLogonOn, fPasswordLessAuthEnabled);
+    savemessage.SetInt32(mNameConfigAuthAttemptsThrshld, fAuthAttemptsThreshold);
+    savemessage.SetInt32(mNameConfigAuthSnoozeAfterErrors, fAuthAttemptsErrorCooldown);
 
     /* User */
     savemessage.SetString(mNameConfigUser, mStringUser1);
@@ -305,7 +315,6 @@ void LWSettings::Commit()
     /* Other configs */
     savemessage.SetBool(mNameConfigKillerShortcutOn, fKillerShortcutEnabled);
     savemessage.SetBool(mNameConfigEvtLoggingOn, fEventLogEnabled);
-    savemessage.SetBool(mNameConfigPwdLessLogonOn, fPasswordLessAuthEnabled);
 }
 
 // #pragma mark -
@@ -398,6 +407,16 @@ bool        LWSettings::EventLogIsEnabled()
 bool LWSettings::PasswordLessAuthEnabled()
 {
     return fPasswordLessAuthEnabled;
+}
+
+int32 LWSettings::AuthenticationAttemptsThreshold()
+{
+    return fAuthAttemptsThreshold;
+}
+
+int32 LWSettings::AuthenticationCooldownAfterThreshold()
+{
+    return fAuthAttemptsErrorCooldown;
 }
 
 // #pragma mark -
@@ -508,4 +527,16 @@ status_t LWSettings::SetPasswordLessAuthEnabled(bool status)
 {
     fPasswordLessAuthEnabled = status;
     return fPasswordLessAuthEnabled == status ? B_OK : B_ERROR;
+}
+
+status_t LWSettings::SetAuthenticationAttemptsThreshold(int32 count)
+{
+    fAuthAttemptsThreshold = count;
+    return fAuthAttemptsThreshold == count ? B_OK : B_ERROR;
+}
+
+status_t LWSettings::SetAuthenticationCooldownAfterThreshold(int32 multiplier)
+{
+    fAuthAttemptsErrorCooldown = multiplier;
+    return fAuthAttemptsErrorCooldown == multiplier ? B_OK : B_ERROR;
 }

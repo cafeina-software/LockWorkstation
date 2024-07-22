@@ -121,10 +121,12 @@ private:
     BRadioButton       *mRadioBtAuthSysaccount,
                        *mRadioBtAuthSyskeystore,
                        *mRadioBtAuthAppaccount;
-	BSlider            *mSliderFontSize,
+    BSlider            *mSliderFontSize,
+                       *mSliderAttemptsThrshld,
+                       *mSliderErrorWaitTime,
                        *mSliderBgSnooze;
     BStringView        *mStaticLogClrResponse;
-	BTextControl       *mAddUserName,
+    BTextControl       *mAddUserName,
 	                   *mAddPassWord,
 	                   *mAddPassWordRetype,
                        *mTextControlmPathToImage,

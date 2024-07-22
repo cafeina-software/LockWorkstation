@@ -56,7 +56,7 @@ mWindow::mWindow(const char *mWindowTitle)
     // Main view
     fPanelList = new BListView(B_SINGLE_SELECTION_LIST);
     fPanelList->SetSelectionMessage(new BMessage(M_ITEM_SELECTED));
-    fPanelList->AddItem(new BStringItem(B_TRANSLATE("Authentication method")));
+    fPanelList->AddItem(new BStringItem(B_TRANSLATE("Authentication")));
     fPanelList->AddItem(new BStringItem(B_TRANSLATE("Accounts")));
     fPanelList->AddItem(new BStringItem(B_TRANSLATE("Background")));
     fPanelList->AddItem(new BStringItem(B_TRANSLATE("Clock")));
@@ -145,6 +145,24 @@ void mWindow::MessageReceived(BMessage* message)
             //Enable and disable buttons
             ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
                 "Enable and disable user button", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_AUTHOPTS_THRSHD:
+        {
+            settings->SetAuthenticationAttemptsThreshold(mSliderAttemptsThrshld->Value());
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_AUTHOPTS_ERRSNZ:
+        {
+            settings->SetAuthenticationCooldownAfterThreshold(mSliderErrorWaitTime->Value());
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
         case BUTTON_DEFAULTPATH:
@@ -649,6 +667,8 @@ void mWindow::InitUIControls()
             mRadioBtAuthAppaccount->SetValue(B_CONTROL_OFF);
             break;
     }
+    mSliderAttemptsThrshld->SetValue(settings->AuthenticationAttemptsThreshold());
+    mSliderErrorWaitTime->SetValue(settings->AuthenticationCooldownAfterThreshold());
 
     mAddUserName->SetText(settings->DefaultUser());
     mAddPassWord->SetText(settings->DefaultUserPassword());
@@ -714,8 +734,7 @@ BView* mWindow::CreateCardView_AccountMethod()
         B_TRANSLATE_COMMENT(
             "This authentication method requires an existing user account\n"
             "in the system to work. The user account must not be a \n"
-            "service account. This application allows to login with accounts \n"
-            "having an empty password.", "Please place the new line characters"
+            "service account.", "Please place the new line characters"
             "accordingly to accomodate the string, in order to not stretch "
             "the window too much")
     );
@@ -752,8 +771,8 @@ BView* mWindow::CreateCardView_AccountMethod()
             " string, in order to not stretch the window too much")
     );
 
-    BView* thisview = new BView("v_acc_mthd", B_SUPPORTS_LAYOUT, NULL);
-    BLayoutBuilder::Group<>(thisview, B_VERTICAL)
+    BView* authMethodView = new BView("v_acc_mthd", B_SUPPORTS_LAYOUT, NULL);
+    BLayoutBuilder::Group<>(authMethodView, B_VERTICAL)
         .SetInsets(B_USE_SMALL_INSETS)
         .Add(mRadioBtAuthSysaccount)
         .Add(sysaccountDesc)
@@ -763,6 +782,50 @@ BView* mWindow::CreateCardView_AccountMethod()
     .End();
 
     mRadioBtAuthSyskeystore->SetEnabled(false);
+
+    BBox* mBoxAuthMethod = new BBox("box_authmthd",
+        B_WILL_DRAW | B_FRAME_EVENTS | B_NAVIGABLE_JUMP, B_FANCY_BORDER, authMethodView);
+    mBoxAuthMethod->SetLabel(B_TRANSLATE("Authentication method"));
+
+    mCheckBoxAllowPwdlessLogin = new BCheckBox("cb_pwdless",
+        B_TRANSLATE("Allow passwordless accounts to login"),
+        new BMessage(M_BOOL_PWDLESS));
+    mSliderAttemptsThrshld = new BSlider("sl_att",
+        B_TRANSLATE("Count of failed attempts tolerance"),
+        new BMessage(M_AUTHOPTS_THRSHD), 0, 10, B_HORIZONTAL, B_TRIANGLE_THUMB,
+        B_FRAME_EVENTS | B_WILL_DRAW | B_NAVIGABLE);
+    mSliderAttemptsThrshld->SetHashMarks(B_HASH_MARKS_BOTH);
+    mSliderAttemptsThrshld->SetHashMarkCount(11);
+    mSliderAttemptsThrshld->SetLimitLabels(B_TRANSLATE("0 (limitless)"),
+        B_TRANSLATE("10"));
+    mSliderErrorWaitTime = new BSlider("sl_snzt",
+        B_TRANSLATE("Waiting seconds after too many failed attempts"),
+        new BMessage(M_AUTHOPTS_ERRSNZ), 0, 10, B_HORIZONTAL, B_TRIANGLE_THUMB,
+        B_FRAME_EVENTS | B_WILL_DRAW | B_NAVIGABLE);
+    mSliderErrorWaitTime->SetHashMarks(B_HASH_MARKS_BOTH);
+    mSliderErrorWaitTime->SetHashMarkCount(11);
+    mSliderErrorWaitTime->SetLimitLabels(B_TRANSLATE("Disabled"),
+        B_TRANSLATE("10 seconds"));
+
+    BView* authOptsView = new BView("authview", B_SUPPORTS_LAYOUT, NULL);
+    BLayoutBuilder::Group<>(authOptsView, B_VERTICAL)
+        .SetInsets(B_USE_SMALL_INSETS)
+        .Add(mCheckBoxAllowPwdlessLogin)
+        .Add(mSliderAttemptsThrshld)
+        .Add(mSliderErrorWaitTime)
+    .End();
+
+
+    BBox* mBoxAuthOptions = new BBox("box_authopts",
+        B_WILL_DRAW | B_FRAME_EVENTS | B_NAVIGABLE_JUMP, B_FANCY_BORDER, authOptsView);
+    mBoxAuthOptions->SetLabel(B_TRANSLATE("Authentication options"));
+
+    BView* thisview = new BView("authview", B_SUPPORTS_LAYOUT, NULL);
+    BLayoutBuilder::Group<>(thisview, B_VERTICAL)
+        .SetInsets(B_USE_SMALL_INSETS)
+        .Add(mBoxAuthMethod)
+        .Add(mBoxAuthOptions)
+    .End();
 
     return thisview;
 }
@@ -927,6 +990,7 @@ BView* mWindow::CreateCardView_Background()
     BLayoutBuilder::Group<>(thisview, B_VERTICAL)
         .Add(mBoxAroundColorControl)
         .Add(mBoxAroundImagePath)
+        .AddGlue()
     .End();
 
     return thisview;
@@ -1029,9 +1093,6 @@ BView* mWindow::CreateCardView_Clock()
 
 BView* mWindow::CreateCardView_Options()
 {
-    mCheckBoxAllowPwdlessLogin = new BCheckBox("cb_pwdless",
-        B_TRANSLATE("Allow password-less accounts to login"),
-        new BMessage(M_BOOL_PWDLESS));
     mCheckBoxSessionBar = new BCheckBox("cb_sb",
         B_TRANSLATE("Show session bar (shutdown, restart)"), new BMessage(M_BOOL_SESSION));
     mCheckBoxSysInfo = new BCheckBox("cb_si",
@@ -1047,7 +1108,6 @@ BView* mWindow::CreateCardView_Options()
 
     BView* thisview = new BView(NULL, B_SUPPORTS_LAYOUT, NULL);
     BLayoutBuilder::Group<>(thisview, B_VERTICAL)
-        .Add(mCheckBoxAllowPwdlessLogin)
         .Add(mCheckBoxSessionBar)
         .Add(mCheckBoxSysInfo)
         .Add(mCheckBoxKillerShortcut)
@@ -1067,6 +1127,12 @@ BView* mWindow::CreateCardView_Options()
 
 bool mWindow::UI_IsDefault(BMessage* defaults)
 {
+    /* authentication */
+    bool isMethodDefault = mRadioBtAuthAppaccount->Value() == defaults->GetUInt8(mNameConfigAuthMode, 2);
+    bool isPwdlessAuthDefault  = mCheckBoxAllowPwdlessLogin->Value() == defaults->GetBool(mNameConfigPwdLessLogonOn);
+    bool isAttemptsDefault = mSliderAttemptsThrshld->Value() == defaults->GetInt32(mNameConfigAuthAttemptsThrshld, 0);
+    bool isWaitTimeDefault = mSliderErrorWaitTime->Value()  == defaults->GetInt32(mNameConfigAuthSnoozeAfterErrors, 5);
+
     /* background */
     bool isBgModeDefault = mMfBgImageOption->Menu()->ItemAt(3)->IsMarked();
     bool isBgColorDefault = UI_IsBgColorDefault(defaults);
@@ -1084,9 +1150,9 @@ bool mWindow::UI_IsDefault(BMessage* defaults)
     bool isSysInfoPanelDefault = mCheckBoxSysInfo->Value() == defaults->GetBool(mNameConfigSysInfoPanelOn);
     bool isKillerShctDefault = mCheckBoxKillerShortcut->Value() == defaults->GetBool(mNameConfigKillerShortcutOn);
     bool isLoggingDefault = mCheckBoxEventLog->Value() == defaults->GetBool(mNameConfigEvtLoggingOn);
-    bool isPwdlessAuthDefault  = mCheckBoxAllowPwdlessLogin->Value() == defaults->GetBool(mNameConfigPwdLessLogonOn);
 
-    return isBgModeDefault && isBgColorDefault && isImgFolderPathDefault &&
+    return isMethodDefault && isPwdlessAuthDefault && isAttemptsDefault && isWaitTimeDefault &&
+           isBgModeDefault && isBgColorDefault && isImgFolderPathDefault &&
            isBgSnoozeDefault && isClockColorDefault && isClockPlacementDefault &&
            isClockHidden && isClockSizeDefault && isSessionBarDefault &&
            isSysInfoPanelDefault && isKillerShctDefault && isLoggingDefault &&
