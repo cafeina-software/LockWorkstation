@@ -177,6 +177,11 @@ values to try to unlock the system.</p>
 <img src="./img/logform.png" alt="Login form" width="417" height="78" />
 <div class="imgfooter">Login form in the locking window.</div>
 </div>
+<p class="Apple-style-span">By default, LockWorkstation will allow an account
+with an empty password to authenticate (as long as the user tries to login
+with that account's username and leaving the password field empty). However,
+this behaviour can be changed and to disable the authentication of
+passwordless accounts, by unchecking the check box "Allow passwordless accounts to login" found in the "Options" section of the preflet.</p>
 
 <h2 class="Apple-style-span" id="Background">Background style</h2>
 <p class="Apple-style-span">In the preflet application, there is a section
@@ -301,8 +306,11 @@ the disk drive to remove the application from another computer.</p>
 <samp>/boot/system/var/log/LockWorkstation.log</samp>. Older versions of this
 application saved the logfile as <samp>/boot/home/Login.txt</samp>. It will
 log any successful or failed attempt to login, each entry with the date, time
-and user name that was tried. This feature can be toggled on or off from the
-"Options" section of the preflet.</p>
+and user name that was tried. Any other important events may be logged there
+as well. This feature can be toggled on or off from the
+"Options" section of the preflet. In addition, the log file can be deleted by
+removing it manually from the filesystem, or using the button "Clear logs" from
+the "Options" section of the preflet.</p>
 <div class="imgcontainer">
 <img src="./img/log.png" alt="addtoboot tool." width="516" height="416" />
 <div class="imgfooter">Depiction of a log file (former format).</div>

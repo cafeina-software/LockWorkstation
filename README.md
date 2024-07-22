@@ -6,8 +6,9 @@ You can lock your screen manually, by clicking on the icon, or you can lock your
 
 ## Features
 
-- Screen locking: Better than nothing!
-- Logging: All logins are logged under `/boot/home/Login.txt`.
+- Screen locking: Better than nothing! You can either use an internal authentication or an authentication via an actual user in the system.
+- Rice your lock screen!: You can configure your lock screen to feature a background color, a background image or a slideshow of images.
+- Logging: All logins are logged under `/boot/system/var/log/LockWorkstation.log`.
 
 ## Disclaimer
 
