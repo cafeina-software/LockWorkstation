@@ -4,8 +4,8 @@
 #include "mWindow.h"
 #include "mBackgroundView.h"
 #include "mSessionBar.h"
-#include "../common/LockWorkstationConfig.h"
 #include "mSysLogin.h"
+#include "../common/LockWorkstationConfig.h"
 
 const char* mDefaultPathToSelBG =			"/login_gfx";
 const char* mDefaultPathToSelUI =			"/UserImage";
@@ -17,7 +17,7 @@ const char* mDefaultPathToSelNUI =			"/NoUserImage";
 /**********************************************************/
 mWindow::mWindow(const char* mWindowTitle)
 : BWindow(BRect(200, 200, 2000, 2000), mWindowTitle, B_NO_BORDER_WINDOW_LOOK,
-    B_MODAL_ALL_WINDOW_FEEL, B_WILL_ACCEPT_FIRST_CLICK |
+    LW_WSCREEN_WINDOW_FEEL, B_WILL_ACCEPT_FIRST_CLICK |
     B_FLOATING_SUBSET_WINDOW_FEEL | B_NOT_CLOSABLE | B_NOT_ZOOMABLE |
     B_NOT_RESIZABLE, B_ALL_WORKSPACES)
 {
@@ -141,43 +141,6 @@ void mWindow::MessageReceived(BMessage* message)
         case B_QUIT_REQUESTED:
             QuitRequested();
             break;
-        //Kill the Team manager
-        case B_SOME_APP_ACTIVATED:
-        {
-            /* THIS PIECE OF CODE HAS BEEN "BORROWED" FROM BeLogin, I HAVE NOT
-            TALKED WITH THEM, BUT I JUST WANT TO MAKE SURE THAT THEY GET SOME
-            OF THE CREDIT
-            And my program doesnt use it at all BTW :-) */
-            BString strSignature;
-            message->FindString("be:signature", &strSignature);
-            if (strSignature.ICompare ("application/x-vnd.Be-input_server") == 0)
-            {
-                app_info info;
-                be_roster->GetAppInfo (strSignature.String(), &info);
-
-                BMessage msgGetProperty, msgSetProperty, msgReply;
-                status_t result;
-                msgGetProperty.what = B_GET_PROPERTY;
-                msgGetProperty.AddSpecifier("Messenger");
-                msgGetProperty.AddSpecifier("Window", "Team monitor");
-                result = BMessenger(info.signature, info.team).SendMessage(&msgGetProperty, &msgReply);
-
-                if (result == B_OK)
-                {
-                    BMessenger msng;
-                    if (msgReply.FindMessenger("result", &msng) == B_OK)
-                    {
-                        // msng.SendMessage(QUIT_TEAM_MONITOR);
-                        new BMessage(B_QUIT_REQUESTED);
-                        app_info mwinfo;
-                        be_app->GetAppInfo(&mwinfo);
-                        be_roster->ActivateApp(mwinfo.team);
-                        Activate(true);
-                    }
-                }
-            }
-            break;
-        }
         default:
             BWindow::MessageReceived(message);
             break;
@@ -208,11 +171,6 @@ status_t mWindow::Login(AuthMethod mthd, const char* usr, const char* pwd)
         case AUTH_SYSTEM_ACCOUNT:
         {
             status = try_login(usr, pwd);
-            break;
-        }
-        case AUTH_KEYSTORE:
-        {
-            status = B_NOT_SUPPORTED;
             break;
         }
         case AUTH_APP_ACCOUNT:

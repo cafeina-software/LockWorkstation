@@ -3,6 +3,8 @@
 #ifndef _mConstant_h_
 #define _mConstant_h_
 
+#define LW_WSCREEN_WINDOW_FEEL window_feel(1026)
+
 #define QUIT_TEAM_MONITOR    'Dsab'
 #define BUTTON_LOGIN         'pre4'
 #define LOGIN_CHANGED        'pre7'

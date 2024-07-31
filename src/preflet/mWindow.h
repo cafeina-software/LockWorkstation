@@ -119,7 +119,6 @@ private:
     BMenuField         *mMfBgImageOption;
     BPopUpMenu         *mPumBgImageOption;
     BRadioButton       *mRadioBtAuthSysaccount,
-                       *mRadioBtAuthSyskeystore,
                        *mRadioBtAuthAppaccount;
     BSlider            *mSliderFontSize,
                        *mSliderAttemptsThrshld,

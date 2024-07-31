@@ -47,7 +47,6 @@ enum BgMode {
 };
 enum AuthMethod {
     AUTH_SYSTEM_ACCOUNT = 0,
-    AUTH_KEYSTORE,
     AUTH_APP_ACCOUNT = 2
 };
 

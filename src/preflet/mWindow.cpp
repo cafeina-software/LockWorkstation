@@ -64,7 +64,7 @@ mWindow::mWindow(const char *mWindowTitle)
     BScrollView *listScrollView = new BScrollView("sc_cont", fPanelList,
         0, false, true, B_FANCY_BORDER);
     fPanelList->SetExplicitMinSize(
-        BSize(fPanelList->StringWidth(B_TRANSLATE("Authentication method")) * 1.1,
+        BSize(fPanelList->StringWidth(B_TRANSLATE("Authentication")) * 1.1,
         B_SIZE_UNSET));
 
     fCardView = new BCardView();
@@ -123,15 +123,6 @@ void mWindow::MessageReceived(BMessage* message)
         case M_AUTHMTHD_SYSTEM:
         {
             settings->SetAuthenticationMethod(AUTH_SYSTEM_ACCOUNT);
-
-            //Enable and disable buttons
-            ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
-                "Enable and disable user button", B_LOW_PRIORITY, this);
-            break;
-        }
-        case M_AUTHMTHD_KEYSTR:
-        {
-            settings->SetAuthenticationMethod(AUTH_KEYSTORE);
 
             //Enable and disable buttons
             ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
@@ -652,19 +643,15 @@ void mWindow::InitUIControls()
     switch(settings->AuthenticationMethod()) {
         case 0:
             mRadioBtAuthSysaccount->SetValue(B_CONTROL_ON);
-            mRadioBtAuthSyskeystore->SetValue(B_CONTROL_OFF);
             mRadioBtAuthAppaccount->SetValue(B_CONTROL_OFF);
             break;
         case 2:
             mRadioBtAuthSysaccount->SetValue(B_CONTROL_OFF);
-            mRadioBtAuthSyskeystore->SetValue(B_CONTROL_OFF);
             mRadioBtAuthAppaccount->SetValue(B_CONTROL_ON);
             break;
-        case 1:
         default:
             mRadioBtAuthSysaccount->SetValue(B_CONTROL_OFF);
-            mRadioBtAuthSyskeystore->SetValue(B_CONTROL_ON);
-            mRadioBtAuthAppaccount->SetValue(B_CONTROL_OFF);
+            mRadioBtAuthAppaccount->SetValue(B_CONTROL_ON);
             break;
     }
     mSliderAttemptsThrshld->SetValue(settings->AuthenticationAttemptsThreshold());
@@ -739,23 +726,6 @@ BView* mWindow::CreateCardView_AccountMethod()
             "the window too much")
     );
 
-    mRadioBtAuthSyskeystore = new BRadioButton("rb_syskey",
-        B_TRANSLATE("Authenticate using a key from the Keystore"),
-        new BMessage(M_AUTHMTHD_KEYSTR));
-    mRadioBtAuthSyskeystore->SetFont(be_bold_font);
-    BStringView* keyaccountDesc = new BStringView(NULL,
-        B_TRANSLATE_COMMENT(
-            "This authentication method makes use of the keystore server, \n"
-            "from where it retrieves the username-password pair, stored in \n"
-            "this application's keyring (LockWorkstation) in the system. The \n"
-            "first time this option is enabled from this preflet, it will ask\n"
-            "the system to create such keyring in the keystore, and later it\n"
-            "will also ask for permission to add a key containing a pair of \n"
-            "username-password.", "Please place the new line characters"
-            "accordingly to accomodate the string, in order to not stretch "
-            "the window too much")
-    );
-
     mRadioBtAuthAppaccount = new BRadioButton("rb_appacc",
         B_TRANSLATE("Authenticate using an application based account (default)"),
         new BMessage(M_AUTHMTHD_APPACC));
@@ -780,8 +750,6 @@ BView* mWindow::CreateCardView_AccountMethod()
         .Add(appaccountDesc)
         .AddGlue()
     .End();
-
-    mRadioBtAuthSyskeystore->SetEnabled(false);
 
     BBox* mBoxAuthMethod = new BBox("box_authmthd",
         B_WILL_DRAW | B_FRAME_EVENTS | B_NAVIGABLE_JUMP, B_FANCY_BORDER, authMethodView);
@@ -822,7 +790,6 @@ BView* mWindow::CreateCardView_AccountMethod()
 
     BView* thisview = new BView("authview", B_SUPPORTS_LAYOUT, NULL);
     BLayoutBuilder::Group<>(thisview, B_VERTICAL)
-        .SetInsets(B_USE_SMALL_INSETS)
         .Add(mBoxAuthMethod)
         .Add(mBoxAuthOptions)
     .End();
