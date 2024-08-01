@@ -71,14 +71,22 @@ int mBackgroundView::CallSetBackgroundImage(void* data)
 void mBackgroundView::SetBackgroundImage(void* data)
 {
     BStringList* localList = (BStringList*)data;
+    BBitmap* nextimage = nullptr, *releaseimage = nullptr;
+
     while(!shouldExit) {
-        for(int i = 1; i < localList->CountStrings(); i++) {
-            BBitmap* image = BTranslationUtils::GetBitmap(localList->StringAt(i));
-            fprintf(stderr, "Local string at %d: %s\n", i, localList->StringAt(i).String());
-            if(image != NULL) {
+        for(int i = 0; i < localList->CountStrings(); i++) {
+            nextimage = BTranslationUtils::GetBitmap(localList->StringAt(i));
+
+            if(nextimage != NULL) {
                 snooze(multiplier * 1000000);
-                currentimage = image;
+                releaseimage = currentimage;
+                currentimage = nextimage;
+                delete releaseimage;
+                releaseimage = nullptr;
+                nextimage = nullptr;
             }
+
+            // Dirty hack to make a linked list look like a ring
             if(i > localList->CountStrings())
                 i = 0;
         }

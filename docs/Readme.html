@@ -139,6 +139,7 @@ start it by Desktop icon (StartLock) and you can also add it to startup.</p>
 set and use LockWorkstation.</b></u></p>
 
 <h2 class="Apple-style-span" id="Usage">Usage</h2>
+<h3 class="Apple-style-span" id="Authentication">Authentication and users</h3>
 <p class="Apple-style-span"><strong>LockWorkstation</strong> computer lockdown
 can be performed in two ways: system account lock and application account lock.
 This can be configured in the <em>Authentication method</em> section of the
@@ -177,11 +178,19 @@ values to try to unlock the system.</p>
 <img src="./img/logform.png" alt="Login form" width="417" height="78" />
 <div class="imgfooter">Login form in the locking window.</div>
 </div>
+<h3 class="Apple-style-span" id="AuthOps">Authentication control</h3>
 <p class="Apple-style-span">By default, LockWorkstation will allow an account
 with an empty password to authenticate (as long as the user tries to login
 with that account's username and leaving the password field empty). However,
 this behaviour can be changed and to disable the authentication of
-passwordless accounts, by unchecking the check box "Allow passwordless accounts to login" found in the "Options" section of the preflet.</p>
+passwordless accounts, by unchecking the check box "Allow passwordless accounts
+to login" found in the "Authentication" section of the preflet.</p>
+<p class="Apple-style-span">Other authentication options that can be configured
+are the cooldown time between a number of failed authentication attempts, and
+that threshold number itself. If the number of failed attempts is set to zero,
+or either the cooldown time before the user can attempt to login is set to
+disabled, then the user has no limits and can attempt to login as many times
+as desired.</p>
 
 <h2 class="Apple-style-span" id="Background">Background style</h2>
 <p class="Apple-style-span">In the preflet application, there is a section
@@ -253,8 +262,11 @@ provide to you ;-)</p>
 
 <h2 id="Add_to_startup" class="Apple-style-span">Add to startup</h2>
 <p class="Apple-style-span">To make <em>LockWorkstation</em> application launch
-at startup, please create a symbolic link of the application in the folder
-<samp>~/config/settings/boot/launch/</samp>, or else add an entry in the
+at startup, you can use the buttons <var>Add to boot</var> or <var>Remove
+from boot</var> found in the Options view to either enable or disable the
+application to launch during startup. This operation can be also performed
+manually, by creating a symbolic link of the application in the folder
+<samp>~/config/settings/boot/launch/</samp>, or else adding an entry in the
 <samp><abbr title="Found in ~/config/settings/boot/">UserBootscript<abbr></samp>
  file as follows: <code>PATH_TO_APP_FOLDER/LockWorkstation &amp;</code>
 (replace "PATH_TO_APP_FOLDER" with the folder path of the application).</p>
@@ -292,12 +304,15 @@ Then you need to <a href="#Usage">reconfigure the username and password</a>, as
 well as any other option in the preflet application.</p>
 <p class="Apple-style-span">On the other hand, if you are using a Haiku account
 (an actual account in the system) to login, and you do not want to be locked
-out of the system due to have forgot the password, consider to enable the
-killer shortcut beforehand, so if you have to change the password, you close
-LockWorkstation and use the operating system tools (such as
-<samp>passwd</samp>) to change the password of the account. Otherwise, you will
-have to resort to more drastic measures, such as try to kill it from the Team
-Monitor, or booting another operating system (or another instance of Haiku)
+out of the system because you forgot the password, consider to enable the
+killer shortcut beforehand (under the risk of security bypass by unauthorized
+third parties), so if you have to change the password, you close LockWorkstation
+and use the operating system tools (such as <samp>passwd</samp>) to change the
+password of the account. Otherwise, you will have to resort to more drastic
+measures, such as reboot to Haiku Boot Manager and temporarily blacklist the entry
+(using Disable user add-ons if it is installed in the user hierarchy, or manually
+disabling it if it is under the system hierarchy), or booting another operating
+system (or another instance of Haiku)
 from where to disable the automatic load of LockWorkstation, or else removing
 the disk drive to remove the application from another computer.</p>
 

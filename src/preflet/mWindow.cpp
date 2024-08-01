@@ -11,7 +11,7 @@
 #include <Application.h>
 #include <Catalog.h>
 #include <LayoutBuilder.h>
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 //Local
 #include "mWindow.h"
@@ -516,6 +516,25 @@ void mWindow::MessageReceived(BMessage* message)
             mStaticLogClrResponse->SetText(response.String());
             break;
         }
+        case M_UTIL_ADDBOOT:
+        {
+            EnableAutoStart(true);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+
+            break;
+        }
+        case M_UTIL_REMBOOT:
+        {
+            EnableAutoStart(false);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
         case B_ABOUT_REQUESTED:
             be_app->PostMessage(B_ABOUT_REQUESTED);
             break;
@@ -571,6 +590,11 @@ void mWindow::EnDButtons_Thread()
     mButtonDefaultClockColors->SetEnabled(!UI_IsClockColorDefault(defaults));
     mButtonDefaultClockPlace->SetEnabled(!UI_IsClockPlaceDefault(defaults));
     clockCardView->UnlockLooper();
+
+    extraCardView->LockLooper();
+    mButtonAddToBoot->SetEnabled(HasAutoStartInstalled() == B_ENTRY_NOT_FOUND);
+    mButtonRemFromBoot->SetEnabled(HasAutoStartInstalled() != B_ENTRY_NOT_FOUND);
+    extraCardView->UnlockLooper();
 
     /* Reset everything to defaults */
     mApplyView->LockLooper();
@@ -696,6 +720,9 @@ void mWindow::InitUIControls()
     mCheckBoxKillerShortcut->SetValue(settings->KillerShortcutIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mCheckBoxEventLog->SetValue(settings->EventLogIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mCheckBoxAllowPwdlessLogin->SetValue(settings->PasswordLessAuthEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
+
+    mButtonAddToBoot->SetEnabled(HasAutoStartInstalled() == B_ENTRY_NOT_FOUND);
+    mButtonRemFromBoot->SetEnabled(HasAutoStartInstalled() != B_ENTRY_NOT_FOUND);
 
     UnlockLooper();
 }
@@ -1073,6 +1100,21 @@ BView* mWindow::CreateCardView_Options()
         new BMessage(M_EVTLOG_CLEAR));
     mStaticLogClrResponse = new BStringView("sv_rsp", "");
 
+    mButtonAddToBoot = new BButton(NULL, B_TRANSLATE("Add to boot"),
+        new BMessage(M_UTIL_ADDBOOT));
+    mButtonRemFromBoot = new BButton(NULL, B_TRANSLATE("Remove from boot"),
+        new BMessage(M_UTIL_REMBOOT));
+
+    BView *view = new BView(NULL, B_SUPPORTS_LAYOUT, NULL);
+    BLayoutBuilder::Group<>(view, B_HORIZONTAL)
+        .SetInsets(B_USE_SMALL_INSETS, 0, B_USE_SMALL_INSETS, B_USE_SMALL_INSETS)
+        .Add(mButtonAddToBoot)
+        .Add(mButtonRemFromBoot)
+    .End();
+
+    BBox* box = new BBox("box_boot", B_WILL_DRAW|B_FRAME_EVENTS|B_NAVIGABLE_JUMP,B_FANCY_BORDER,view);
+    box->SetLabel(B_TRANSLATE("Startup"));
+
     BView* thisview = new BView(NULL, B_SUPPORTS_LAYOUT, NULL);
     BLayoutBuilder::Group<>(thisview, B_VERTICAL)
         .Add(mCheckBoxSessionBar)
@@ -1084,6 +1126,7 @@ BView* mWindow::CreateCardView_Options()
             .AddGlue()
             .Add(mStaticLogClrResponse)
         .End()
+        .Add(box)
         .AddGlue()
     .End();
 
@@ -1168,4 +1211,73 @@ void mWindow::CallBgImgFilePanel(uint32 what, uint32 node_flavors, BRefFilter* f
 
     mFilePanelFolderBrowse->Show();
     delete notifymsg;
+}
+
+void mWindow::EnableAutoStart(bool status)
+{
+    BPath path;
+    find_directory(B_USER_BOOT_DIRECTORY, &path);
+    path.Append("launch", true);
+
+    if(status && HasAutoStartInstalled() == B_ENTRY_NOT_FOUND) {
+        entry_ref ref;
+        be_roster->FindApp("application/x-vnd.LockWorkstation", &ref);
+        BEntry entry(&ref);
+        BPath binpath;
+        entry.GetPath(&binpath);
+        BSymLink symlink(&ref);
+        BDirectory autolaunch(path.Path());
+        autolaunch.CreateSymLink(ref.name, binpath.Path(), &symlink);
+    }
+    else {
+        BDirectory directory(path.Path());
+        BEntry entry(&directory, "LockWorkstation", false);
+        if(HasAutoStartInstalled() == B_BAD_DATA) {
+            int32 result = ((new BAlert(B_TRANSLATE("Entry exists"),
+                B_TRANSLATE("There is currently an entry that does not point "
+                "to the right destination or it is not a symbolic link.\nDo "
+                "you want to delete it anyways?"),
+                B_TRANSLATE("Delete file"),
+                B_TRANSLATE("Keep existing entry"))))->Go();
+            if(result == 0) {
+                entry.Remove();
+            }
+        }
+        else {
+            entry.Remove();
+        }
+    }
+}
+
+status_t mWindow::HasAutoStartInstalled(const char* targetname)
+{
+    BPath path;
+    find_directory(B_USER_BOOT_DIRECTORY, &path);
+    path.Append("launch", true);
+    BDirectory launchdir(path.Path());
+
+    BEntry entry(&launchdir, targetname, false);
+    if(entry.Exists()) { // match found...
+        if(!entry.IsSymLink()) // but it is not a symlink as it should have been
+            return B_BAD_DATA;
+        else {
+            BSymLink symlink(&entry);
+            char buffer[B_PATH_NAME_LENGTH + B_FILE_NAME_LENGTH];
+            if(symlink.ReadLink(buffer, B_PATH_NAME_LENGTH + B_FILE_NAME_LENGTH) > 0) {
+                BFile file(buffer, B_READ_ONLY);
+                BAppFileInfo fileinfo(&file);
+                char signature[B_MIME_TYPE_LENGTH];
+                fileinfo.GetSignature(signature);
+                if(strcmp(signature, "application/x-vnd.LockWorkstation") == 0)
+                    return B_OK;
+                else
+                    return B_ERROR;
+            }
+            else
+                return B_BAD_DATA;
+
+        }
+    }
+    else // entry does not exist, we are free to create one without issue
+        return B_ENTRY_NOT_FOUND;
 }

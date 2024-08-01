@@ -75,4 +75,7 @@
 #define M_BOOL_PWDLESS          'cbpw'
 #define M_EVTLOG_CLEAR          'lgcl'
 
+#define M_UTIL_ADDBOOT          'boot'
+#define M_UTIL_REMBOOT          'woot'
+
 #endif /* __mConstant_h_ */

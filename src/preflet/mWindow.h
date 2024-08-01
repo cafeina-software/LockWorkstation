@@ -71,6 +71,8 @@ private:
     void                InitUIData();
     void                CallBgImgFilePanel(uint32 what, uint32 node_flavors,
                             BRefFilter* filter = NULL);
+    void                EnableAutoStart(bool status);
+    status_t            HasAutoStartInstalled(const char* targetname = "LockWorkstation");
 
     //UI
     BView*              CreateCardView_AccountMethod();
@@ -104,6 +106,8 @@ private:
                        *mButtonDefaultClockPlace,
                        *mButtonApplyEverything,
                        *mButtonClearLogs,
+                       *mButtonAddToBoot,
+                       *mButtonRemFromBoot,
                        *mEraserButtonOfDoom;
     BCardView          *fCardView;
 	BCheckBox          *mCheckBoxBoolClock,
