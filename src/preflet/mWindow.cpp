@@ -638,7 +638,7 @@ void mWindow::UpdateStrings_Thread()
     LockLooper();
 
     mAddUserName->SetText(settings->DefaultUser());
-    ((BStringView*)mListOfUsers->ItemAt(0))->SetText(settings->DefaultUser());
+    // ((BStringView*)mListOfUsers->ItemAt(0))->SetText(settings->DefaultUser());
 
     settings->BackgroundColor() = mCCBgColor->ValueAsColor();
 	settings->SetBackgroundImageFolderPath(mTextControlmPathToImageFolder->Text());

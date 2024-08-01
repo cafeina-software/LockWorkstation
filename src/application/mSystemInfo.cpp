@@ -125,10 +125,12 @@ void mSystemInfo::Update()
 
     LockLooper();
 
-    memmax->SetText(fStrMaxMem);
-    memused->SetText(fStrUsedMem);
-    runtime->SetText(fStrRunningTime);
+    memmax->SetText(fStrMaxMem.String());
+    memused->SetText(fStrUsedMem.String());
+    runtime->SetText(fStrRunningTime.String());
 
+    UnlockLooper();
+    LockLooper();
     UnlockLooper();
 }
 

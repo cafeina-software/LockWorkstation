@@ -71,11 +71,11 @@ int mBackgroundView::CallSetBackgroundImage(void* data)
 void mBackgroundView::SetBackgroundImage(void* data)
 {
     BStringList* localList = (BStringList*)data;
-    BBitmap* nextimage = nullptr, *releaseimage = nullptr;
 
     while(!shouldExit) {
+        BBitmap* nextimage = nullptr, *releaseimage = nullptr;
         for(int i = 0; i < localList->CountStrings(); i++) {
-            nextimage = BTranslationUtils::GetBitmap(localList->StringAt(i));
+            nextimage = BTranslationUtils::GetBitmap(localList->StringAt(i).String());
 
             if(nextimage != NULL) {
                 snooze(multiplier * 1000000);
