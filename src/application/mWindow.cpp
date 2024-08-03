@@ -4,7 +4,7 @@
 #include "mWindow.h"
 #include "mBackgroundView.h"
 #include "mSessionBar.h"
-#include "mSysLogin.h"
+#include "../common/mSysLogin.h"
 #include "../common/LockWorkstationConfig.h"
 
 const char* mDefaultPathToSelBG =			"/login_gfx";

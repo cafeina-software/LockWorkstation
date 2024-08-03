@@ -24,6 +24,7 @@
 
 #include "mBitmap.h"
 #include "mConstant.h"
+#include "mUserInfo.h"
 #include "../common/LockWorkstationConfig.h"
 #include "../common/ThreadedClass.h"
 
@@ -151,6 +152,7 @@ private:
 
 	BFilePanel*			mFilePanelFolderBrowse;
 	entry_ref 			mEntryRef;
+    mUserInfo          *fInfoWnd;
 };
 
 #endif

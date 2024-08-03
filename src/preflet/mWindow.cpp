@@ -26,7 +26,8 @@ const BRect mWindowRect 					(64, 64, 504, 424);
 //Constructa
 mWindow::mWindow(const char *mWindowTitle)
 : BWindow(BRect(mWindowRect), mWindowTitle, B_TITLED_WINDOW,
-    B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_RESIZABLE)
+    B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_RESIZABLE),
+    fInfoWnd(nullptr)
 {
     InitUIData(); // Load data from config file
 
@@ -154,6 +155,21 @@ void mWindow::MessageReceived(BMessage* message)
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_APPUSER_IVK:
+        {
+            int32 index = mListOfUsers->CurrentSelection();
+            if(index >= 0 && index < mListOfUsers->CountItems()) {
+                const char* name = ((BStringItem*)mListOfUsers->ItemAt(index))->Text();
+                if(system_has_user(name)) {
+                    fInfoWnd = new mUserInfo(BRect(0, 0, 400, 300), this, name);
+                    fInfoWnd->Show();
+                }
+                else {
+                    ((new BAlert("Error", "User does not exist.", "OK")))->Go();
+                }
+            }
             break;
         }
         case BUTTON_DEFAULTPATH:

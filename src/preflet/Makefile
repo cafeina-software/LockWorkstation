@@ -31,8 +31,10 @@ APP_MIME_SIG = application/x-vnd.LockWorkstation-Pref
 SRCS =  mApp.cpp \
 		mBitmap.cpp \
 		mWindow.cpp \
+		mUserInfo.cpp \
         ../common/AuthenticationUtils.cpp \
         ../common/LockWorkstationConfig.cpp \
+        ../common/mSysLogin.cpp \
         ../common/ThreadedClass.cpp
 
 #	Specify the resource definition files to use. Full or relative paths can be
@@ -71,7 +73,12 @@ LIBPATHS =
 #	Additional paths to look for system headers. These use the form
 #	"#include <header>". Directories that contain the files in SRCS are
 #	NOT auto-included here.
-SYSTEM_INCLUDE_PATHS = $(shell findpaths -e B_FIND_PATH_HEADERS_DIRECTORY private/interface)
+SYSTEM_INCLUDE_PATHS = \
+    $(shell findpaths -e B_FIND_PATH_HEADERS_DIRECTORY private/app) \
+    $(shell findpaths -e B_FIND_PATH_HEADERS_DIRECTORY private/interface) \
+    $(shell findpaths -e B_FIND_PATH_HEADERS_DIRECTORY private/kernel) \
+    $(shell findpaths -e B_FIND_PATH_HEADERS_DIRECTORY private/libroot) \
+    $(shell findpaths -e B_FIND_PATH_HEADERS_DIRECTORY private/shared)
 
 #	Additional paths paths to look for local headers. These use the form
 #	#include "header". Directories that contain the files in SRCS are

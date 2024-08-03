@@ -32,12 +32,12 @@ SRCS = mApp.cpp \
 		mBitmap.cpp \
 		mWindow.cpp \
 		mClockView.cpp \
-        mLoginBox.cpp \
         mSystemInfo.cpp \
         mBackgroundView.cpp \
         mSessionBar.cpp \
         mLogger.cpp \
         mSysLogin.cpp \
+        ../common/mLoginBox.cpp \
         ../common/ThreadedClass.cpp \
         ../common/LockWorkstationConfig.cpp
 
