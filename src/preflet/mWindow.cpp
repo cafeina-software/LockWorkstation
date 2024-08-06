@@ -810,7 +810,7 @@ BView* mWindow::CreateCardView_AccountMethod()
     mSliderAttemptsThrshld->SetLimitLabels(B_TRANSLATE("0 (limitless)"),
         B_TRANSLATE("10"));
     mSliderErrorWaitTime = new BSlider("sl_snzt",
-        B_TRANSLATE("Waiting seconds after too many failed attempts"),
+        B_TRANSLATE("Wait time after too many failed attempts"),
         new BMessage(M_AUTHOPTS_ERRSNZ), 0, 10, B_HORIZONTAL, B_TRIANGLE_THUMB,
         B_FRAME_EVENTS | B_WILL_DRAW | B_NAVIGABLE);
     mSliderErrorWaitTime->SetHashMarks(B_HASH_MARKS_BOTH);
@@ -884,12 +884,16 @@ BView* mWindow::CreateCardView_User()
     BScrollView* userlistScroll = new BScrollView("scv_usrlst", mListOfUsers,
         B_FOLLOW_LEFT_TOP, B_SUPPORTS_LAYOUT, false, true, B_FANCY_BORDER);
 
+    BStringView* sysaccountsDesc = new BStringView("sv_sysacc",
+        B_TRANSLATE("List of user accounts available in the system.\n"
+        "A double click shows details of the selected account."));
     BView* mListView = new BView("ListView", B_SUPPORTS_LAYOUT, NULL);
     mListView->SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
     mListView->SetHighUIColor(B_PANEL_TEXT_COLOR);
 
     BLayoutBuilder::Group<>(mListView, B_VERTICAL)
         .SetInsets(B_USE_SMALL_INSETS)
+        .Add(sysaccountsDesc)
         .Add(userlistScroll)
     .End();
 
@@ -929,7 +933,7 @@ BView* mWindow::CreateCardView_Background()
 
     BBox* mBoxAroundColorControl = new BBox("box_col",
         B_WILL_DRAW | B_FRAME_EVENTS | B_NAVIGABLE_JUMP, B_FANCY_BORDER, mColorView);
-    mBoxAroundColorControl->SetLabel(B_TRANSLATE("Colors"));
+    mBoxAroundColorControl->SetLabel(B_TRANSLATE("Color"));
 
     /* ImagePath */
 
@@ -1010,13 +1014,15 @@ BView* mWindow::CreateCardView_Clock()
 {
     int32 mMinFontValue = 5, mMaxFontValue = 15;
     int32 HashMarksCount = 11;
-    const char* mStringSliderMinLimitLabel =	"10";
-    const char* mStringSliderMaxLimitLabel =	"30";
+    const char* mStringSliderMinLimitLabel = B_TRANSLATE_COMMENT("10",
+        "The number in your native language");
+    const char* mStringSliderMaxLimitLabel = B_TRANSLATE_COMMENT("30",
+        "The number in your native language");
     int CurrentSliderValue = 10;
 
     /* Clock feature enablement */
     mCheckBoxBoolClock = new BCheckBox("Bool clock",
-        B_TRANSLATE("Show Clock? (option currently not available)"), new BMessage(BOOL_CLOCK),
+        B_TRANSLATE("Show Clock?"), new BMessage(BOOL_CLOCK),
         B_WILL_DRAW | B_NAVIGABLE);
 
     /* Clock font size */
@@ -1050,7 +1056,7 @@ BView* mWindow::CreateCardView_Clock()
 
     BBox* boxClockColor = new BBox("box_clock_col",
         B_WILL_DRAW | B_FRAME_EVENTS | B_NAVIGABLE_JUMP, B_FANCY_BORDER, clockColorView);
-    boxClockColor->SetLabel(B_TRANSLATE("Colors"));
+    boxClockColor->SetLabel(B_TRANSLATE("Color"));
 
     /* Clock placement */
     mTextControlClockPlaceX = new BTextControl("ClockPlacementX",

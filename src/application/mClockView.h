@@ -4,38 +4,32 @@
 #define _mClockView_h_
 
 #include "mConstant.h"
+#include "../common/LockWorkstationConfig.h"
+#include "../common/ThreadedClass.h"
 
 class mClockView
-		: public BView
+		: public BView, ThreadedClass
 {
 public:
-						mClockView(BRect rect, const char *name, uint32 resizingMode, uint32 flags);
+						mClockView(BRect rect, LWSettings* settings);
 	void				Draw(BRect updateRect);
 	 virtual void		Pulse();
-			
 private:
-	time_t				tmptodaytime;
-	char 				charer[1024];
-	int					todaysecond , todayminute , todayhour , todayday , todaymonth , todayyear ;
-	int					mColorR, mColorG, mColorB, mPlaceX, mPlaceY, mFontSize;
+    void                _InitUIData();
+    void                _TimeUpdate();
+private:
+    // From settings
+    LWSettings         *mSettings;
+	int					mFontSize;
 	bool				mShowClock;
-	struct tm			*TodayTime;
-	BString 			mTimer;
-	BString				mMinute;
-	BString				mHour;
-	BString				mSecond;
-	BPath 				path;
-	BFile				file;
-	status_t			status;
-	BMessage			savemessage;
-	BString				mStringBoolClock;
-	BString				mStringColorR;
-	BString				mStringColorG;
-	BString				mStringColorB;
-	BString				mStringPlaceX;
-	BString				mStringPlaceY;
-	BString				mStringFontSize;
-	mClockView*			mCV;
+    rgb_color           mColor;
+    BPoint              mPlace;
+
+    // Date & time
+	time_t				tmptodaytime;
+	BString 			mTimer,
+                        mDater;
+
 	//threads
 	thread_id			UserThread;
 	static int32 		UserThreadChange_static(void *data);

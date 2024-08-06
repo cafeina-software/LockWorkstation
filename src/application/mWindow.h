@@ -32,6 +32,7 @@ private:
     mLoginBox          *loginbox;
     mSystemInfo        *infoview;
     mSessionBar        *sessionbar;
+    mClockView         *mClock;
 
     LWSettings         *settings;
     mLogger            *logger;

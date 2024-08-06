@@ -42,28 +42,42 @@ mWindow::mWindow(const char* mWindowTitle)
     if(!settings->SessionBarIsEnabled())
         sessionbar->Hide();
 
+    mClock = new mClockView(BRect(0, 0, 100, 100), settings);
+    if(!settings->ClockIsEnabled())
+        mClock->Hide();
+
     // Background view
     mView = new mBackgroundView(BRect(0, 0, 2000, 2000), NULL, B_FOLLOW_NONE,
         B_WILL_DRAW, settings->BackgroundColor(), settings->BackgroundMode(),
         imgpath, settings->BackgroundImageSnooze());
 
-    BLayoutBuilder::Group<>(mView, B_HORIZONTAL, 0)
+    // Layout kit
+    BLayoutBuilder::Group<>(mView, B_VERTICAL, 0)
         .SetInsets(B_USE_WINDOW_INSETS)
-        .AddGlue()
-        .AddGroup(B_VERTICAL)
+        .AddGlue(0.1f)
+        .AddGroup(B_HORIZONTAL, B_USE_DEFAULT_SPACING, 0.1f)
             .AddGlue()
-            .Add(loginbox)
-            .AddStrut(12.0f)
-            .Add(sessionbar)
+            .Add(mClock)
             .AddGlue()
         .End()
-        .AddGlue()
-        .AddGroup(B_VERTICAL)
+        .AddGroup(B_HORIZONTAL, B_USE_DEFAULT_SPACING, 0.7f)
             .AddGlue()
-            .Add(infoview)
+            .AddGroup(B_VERTICAL)
+                .AddGlue()
+                .Add(loginbox)
+                .AddStrut(12.0f)
+                .Add(sessionbar)
+                .AddGlue()
+            .End()
+            .AddGlue()
+            .AddGroup(B_VERTICAL)
+                .AddGlue()
+                .Add(infoview)
+                .AddGlue()
+            .End()
             .AddGlue()
         .End()
-        .AddGlue()
+        .AddGlue(0.1f)
     .End();
 
     AddChild(mView);

@@ -69,7 +69,7 @@ mUserInfo::mUserInfo(BRect frame, BWindow* parent, const char* name)
     .End();
     containerView->Hide();
 
-    fBtShowPwdChangeView = new BButton("bt_change", B_TRANSLATE("Change pass"),
+    fBtShowPwdChangeView = new BButton("bt_change", B_TRANSLATE("Password"),
         new BMessage(UI_WINDOW_SHOW_PWDCHANGE));
     fBtShowPwdChangeView->SetBehavior(BButton::B_TOGGLE_BEHAVIOR);
     fBtCloseWindow = new BButton("bt_ok", B_TRANSLATE("Cerrar"),
