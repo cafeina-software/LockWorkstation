@@ -128,7 +128,7 @@ void mLoginBox::MessageReceived(BMessage* message)
         case M_LOGIN_FAILED:
             fprintf(stderr, "Login failed.\n");
 
-            int (*fncall)(void*);
+            int32 (*fncall)(void*);
             switch(message->GetInt32("errorCode", B_ERROR))
             {
                 case B_NOT_ALLOWED:
@@ -187,7 +187,7 @@ bool mLoginBox::IsAbleToLogin(bool pwdlessmode)
            (pwdlessmode || tcPassword->TextLength() > 0)*/;
 }
 
-int mLoginBox::CallUpdateUIForm(void* data)
+int32 mLoginBox::CallUpdateUIForm(void* data)
 {
     mLoginBox* box = (mLoginBox*)data;
     if(box == nullptr)
@@ -197,7 +197,7 @@ int mLoginBox::CallUpdateUIForm(void* data)
     return B_OK;
 }
 
-int mLoginBox::CallUpdateUIErrorMsg(void* data)
+int32 mLoginBox::CallUpdateUIErrorMsg(void* data)
 {
     mLoginBox* box = (mLoginBox*)data;
     if(box == nullptr)
@@ -207,7 +207,7 @@ int mLoginBox::CallUpdateUIErrorMsg(void* data)
     return B_OK;
 }
 
-int mLoginBox::CallUpdateUIExpiredMsg(void *data)
+int32 mLoginBox::CallUpdateUIExpiredMsg(void *data)
 {
     mLoginBox* box = (mLoginBox*)data;
     if(box == nullptr)
@@ -217,7 +217,7 @@ int mLoginBox::CallUpdateUIExpiredMsg(void *data)
     return B_OK;
 }
 
-int mLoginBox::CallUpdateUIAccExpiredMsg(void *data)
+int32 mLoginBox::CallUpdateUIAccExpiredMsg(void *data)
 {
     mLoginBox* box = (mLoginBox*)data;
     if(box == nullptr)
@@ -227,7 +227,7 @@ int mLoginBox::CallUpdateUIAccExpiredMsg(void *data)
     return B_OK;
 }
 
-int mLoginBox::CallUpdateUINotAllowedMsg(void *data)
+int32 mLoginBox::CallUpdateUINotAllowedMsg(void *data)
 {
     mLoginBox* box = (mLoginBox*)data;
     if(box == nullptr)
@@ -237,7 +237,7 @@ int mLoginBox::CallUpdateUINotAllowedMsg(void *data)
     return B_OK;
 }
 
-int mLoginBox::CallUpdateUIPwdlessOffMsg(void* data)
+int32 mLoginBox::CallUpdateUIPwdlessOffMsg(void* data)
 {
     mLoginBox* box = (mLoginBox*)data;
     if(box == nullptr)
@@ -247,7 +247,7 @@ int mLoginBox::CallUpdateUIPwdlessOffMsg(void* data)
     return B_OK;
 }
 
-int mLoginBox::CallUpdateUILockdown(void* data)
+int32 mLoginBox::CallUpdateUILockdown(void* data)
 {
     mLoginBox* box = (mLoginBox*)data;
     if(box == nullptr)

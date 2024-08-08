@@ -28,13 +28,13 @@ public:
 private:
     bool            IsAbleToLogin(bool pwdlessmode);
 
-    static int      CallUpdateUIForm(void* data);
-    static int      CallUpdateUIErrorMsg(void* data);
-    static int      CallUpdateUIExpiredMsg(void* data);
-    static int      CallUpdateUIAccExpiredMsg(void* data);
-    static int      CallUpdateUINotAllowedMsg(void* data);
-    static int      CallUpdateUIPwdlessOffMsg(void* data);
-    static int      CallUpdateUILockdown(void* data);
+    static int32    CallUpdateUIForm(void* data);
+    static int32    CallUpdateUIErrorMsg(void* data);
+    static int32    CallUpdateUIExpiredMsg(void* data);
+    static int32    CallUpdateUIAccExpiredMsg(void* data);
+    static int32    CallUpdateUINotAllowedMsg(void* data);
+    static int32    CallUpdateUIPwdlessOffMsg(void* data);
+    static int32    CallUpdateUILockdown(void* data);
     void            UpdateUIForm();
     void            LockUIForm();
     void            UnlockUIForm();

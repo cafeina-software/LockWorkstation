@@ -3,6 +3,7 @@
  * All rights reserved. Distributed under the terms of the MIT license.
  */
 #include <Catalog.h>
+#include <LayoutBuilder.h>
 #include <string>
 #include "mUserInfo.h"
 #include "../common/AuthenticationUtils.h"

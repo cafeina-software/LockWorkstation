@@ -945,8 +945,13 @@ BView* mWindow::CreateCardView_Background()
         .AddItem(B_TRANSLATE("Load images from a folder"), new BMessage(M_BGMODE_FOLDER))
         .AddItem(B_TRANSLATE("Load images from a list file"), new BMessage(M_BGMODE_LIST))
     .End();
-    mMfBgImageOption = new BMenuField("mf_bgmode",
-        B_TRANSLATE("Background image mode"), mPumBgImageOption, true);
+    mMfBgImageOption = new BMenuField(
+#if(B_HAIKU_VERSION < B_HAIKU_VERSION_1_PRE_BETA_5)
+        "mf_bgmode", B_TRANSLATE("Background image mode"), mPumBgImageOption
+#else
+        "mf_bgmode", B_TRANSLATE("Background image mode"), mPumBgImageOption, true
+#endif
+    );
 
     mTextControlmPathToImage = new BTextControl("Path to image file", "",
         new BMessage(M_BGIMG_SINGLEPATH));

@@ -34,7 +34,7 @@ private:
     const char* 	ParseUsedMem(system_info*);
     const char*		ParseNodeName(utsname*);
 
-    static int      UpdateUIThreadCall(void* data);
+    static int32    UpdateUIThreadCall(void* data);
 private:
     mClockView*     clock;
     BStringView     *runtime,

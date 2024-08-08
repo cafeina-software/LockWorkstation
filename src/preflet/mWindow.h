@@ -17,6 +17,7 @@
 #include <InterfaceKit.h>
 #include <SupportKit.h>
 #include <TranslationKit.h>
+#include <CardView.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

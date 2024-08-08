@@ -3,6 +3,7 @@
  * All rights reserved. Distributed under the terms of the MIT license.
  */
 #include <Catalog.h>
+#include <LayoutBuilder.h>
 #include <OS.h>
 #include <sys/utsname.h>
 #include <cpu_type.h>
@@ -152,7 +153,7 @@ BStringView* mSystemInfo::AddText(const char* text)
     return textView;
 }
 
-int mSystemInfo::UpdateUIThreadCall(void* data)
+int32 mSystemInfo::UpdateUIThreadCall(void* data)
 {
     mSystemInfo* target = (mSystemInfo*)data;
     target->Update();

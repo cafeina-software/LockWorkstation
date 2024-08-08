@@ -4,7 +4,7 @@
  */
 #include "ThreadedClass.h"
 
-void ThreadedClass::ThreadedCall(thread_id thid, int (*func)(void*),
+void ThreadedClass::ThreadedCall(thread_id thid, int32 (*func)(void*),
 	const char* name, int32 priority, void* data)
 {
 	thid = spawn_thread(func, name, priority, data);

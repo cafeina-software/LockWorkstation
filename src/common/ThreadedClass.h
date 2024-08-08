@@ -11,7 +11,7 @@
 class ThreadedClass
 {
 public:
-	void            ThreadedCall(thread_id thid, int (*func)(void*),
+	void            ThreadedCall(thread_id thid, int32 (*func)(void*),
                         const char* name, int32 priority, void* data);
 };
 
