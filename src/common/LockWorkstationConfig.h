@@ -21,6 +21,7 @@
 #define mNameConfigImagePath             "imagePath"
 #define mNameConfigImageList             "imageList"
 #define mNameConfigImageFile             "imageStatic"
+#define mNameConfigImageAdjustment       "imageAdjust"
 #define mNameConfigBoolClock 		     "clockShown"
 #define mNameConfigClockColor            "clockColor"
 #define mNameConfigClockFontSize 	     "fontSize"
@@ -35,15 +36,18 @@
 #define mNameConfigAuthAttemptsThrshld   "_auth_attempts"
 #define mNameConfigAuthSnoozeAfterErrors "_auth_manyerrors_snz"
 
-void        DefaultSettings(BMessage* archive);
-status_t    LoadSettings(BMessage* archive);
-status_t    SaveSettings(BMessage* archive);
-
 enum BgMode {
     BGM_NONE = 0,
     BGM_STATIC,
     BGM_FOLDER,
     BGM_LISTFILE
+};
+enum ImgAdjust {
+    BGI_ADJ_KEEP_AND_CENTER = 0,
+    BGI_ADJ_SCALE_X = 1,
+    BGI_ADJ_SCALE_Y = 2,
+    BGI_ADJ_SCALE_X_Y = 3,
+    BGI_ADJ_STRETCH_TO_SCREEN = 4
 };
 enum AuthMethod {
     AUTH_SYSTEM_ACCOUNT = 0,
@@ -69,6 +73,7 @@ public:
     const char* BackgroundImageListPath();
     const char* BackgroundImageStaticPath();
     uint32      BackgroundImageSnooze();
+    ImgAdjust   BackgroundImageAdjustment();
     bool        ClockIsEnabled();
     rgb_color   ClockColor();
     BPoint      ClockLocation();
@@ -90,6 +95,7 @@ public:
     status_t    SetBackgroundImageListPath(BString path);
     status_t    SetBackgroundImageStatic(BString path);
     status_t    SetBackgroundImageSnooze(uint32 multiplier);
+    status_t    SetBackgroundImageAdjustment(ImgAdjust value);
     status_t    SetClockEnabled(bool status);
     status_t    SetClockColor(rgb_color color);
     status_t    SetClockLocation(BPoint point);
@@ -116,6 +122,7 @@ private:
     BString     fBackgroundImageListFile;
     BString     fBackgroundImageStatic;
     uint32      fBackgroundImageSnooze;
+    ImgAdjust   fBackgroundImageAdjustment;
     bool        fClockEnabled;
     rgb_color   fClockColor;
     uint32      fClockSize;

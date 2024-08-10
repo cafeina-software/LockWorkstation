@@ -122,6 +122,7 @@ kbd {
 <li class="navbar"><a href="#" id="main" target="_self">LockWorkstation README</a></li>
 <li class="navbar"><a href="#Usage" target="_self">Usage</a></li>
 <li class="navbar"><a href="#Background" target="_self">Background</a></li>
+<li class="navbar"><a href="#Clock" target="_self">Clock</a></li>
 <li class="navbar"><a href="#Add_to_startup" target="_self">Startup</a></li>
 <li class="navbar"><a href="#Rescue" target="_self">Rescue</a></li>
 <li class="navbar"><a href="#Accesses_report" target="_self">Reports</a></li>
@@ -222,6 +223,34 @@ background images, during startup of the locking application, any invalid file
 and does not point to an actual file) will be ignored and the loop will
 continue only with the valid images. If there is none valid images, then no
 image will be displayed and the background color will be painted instead.</p>
+<p class="Apple-style-span">For any of the image options, you can configure how
+the image is displayed on the screen:</p>
+<ul class="stdlist">
+<li><var>Keep dimensions and center</var>: centers the image and keeps its
+dimensions. If the image is larger than screen frame, the excess will not be
+visible. If any of the two dimensions is smaller than the screen frame, stripes
+will be visible in both sides of that dimension (the color will be that of the
+background color).</li>
+<li><var>Scale and fit to X</var>: scale (up or down) the image keeping its
+proportion until it fits in X axis. Any excess in the Y axis will not be
+visible. If the vertical dimension is smaller than that of the screen frame,
+stripes will be visible in both sides of that dimension (the color will be that
+of the background color).</li>
+<li><var>Scale and fit to Y</var>: scale (up or down) the image keeping its
+proportion until it fits in Y axis. Any excess in the X axis will not be
+visible. If the horizontal dimension is smaller than that of the screen frame,
+stripes will be visible in both sides of that dimension (the color will be that
+of the background color).</li>
+<li><var>Scale and fit to X:Y</var>:  scale (up or down) the image keeping its
+proportion until it fits in both X and Y axis. If any of the two dimensions is
+smaller than the screen frame, stripes will be visible in both sides of that
+dimension (the color will be that of the background color).</li>
+<li><var>Resize to screen (allows deformation)</var>: it will convert the image
+position, width and height to match the screen frame. If the image is not
+exactly the same size as the screen frame, at least it will be scaled (up or
+down) if the image has the same dimension proportion, or otherwise, it will
+both scale the image and deform it.</li>
+</ul>
 <p class="Apple-style-span">For the looped options, the transition delay can
 also be configured. Lower values means that the current image will be displayed
 for less time before the next entry is painted.</p>
@@ -259,6 +288,13 @@ provide to you ;-)</p>
 </div>
 <p class="Apple-style-span">You're done. Optionally, you can also set
 <em>LockWorkstation</em> to startup with Haiku (see below).</p>
+
+<h2 id="Clock" class="Apple-style-span">Clock</h2>
+<p class="Apple-style-span">The <em>Clock</em> is a widget that shows the
+current time and the current date. It can be enabled from the option
+"Show Clock?" in the section "Clock" of the preflet.</p>
+<p class="Apple-style-span">This section also allows to configure the size
+of the font and its color.</p>
 
 <h2 id="Add_to_startup" class="Apple-style-span">Add to startup</h2>
 <p class="Apple-style-span">To make <em>LockWorkstation</em> application launch

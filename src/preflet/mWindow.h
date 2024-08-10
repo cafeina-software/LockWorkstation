@@ -122,8 +122,10 @@ private:
                        *mCCClockColor;
 	BListView          *mListOfUsers,
 	                   *fPanelList;
-    BMenuField         *mMfBgImageOption;
-    BPopUpMenu         *mPumBgImageOption;
+    BMenuField         *mMfBgImageOption,
+                       *mMfBgImageAdjustment;
+    BPopUpMenu         *mPumBgImageOption,
+                       *mPumBgImageAdjustment;
     BRadioButton       *mRadioBtAuthSysaccount,
                        *mRadioBtAuthAppaccount;
     BSlider            *mSliderFontSize,

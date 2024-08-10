@@ -401,6 +401,51 @@ void mWindow::MessageReceived(BMessage* message)
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
+        case M_BGIMG_ADJUST_KEEP:
+        {
+            settings->SetBackgroundImageAdjustment(BGI_ADJ_KEEP_AND_CENTER);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_BGIMG_ADJUST_X:
+        {
+            settings->SetBackgroundImageAdjustment(BGI_ADJ_SCALE_X);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_BGIMG_ADJUST_Y:
+        {
+            settings->SetBackgroundImageAdjustment(BGI_ADJ_SCALE_Y);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_BGIMG_ADJUST_X_Y:
+        {
+            settings->SetBackgroundImageAdjustment(BGI_ADJ_SCALE_X_Y);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_BGIMG_ADJUST_STRETCH:
+        {
+            settings->SetBackgroundImageAdjustment(BGI_ADJ_STRETCH_TO_SCREEN);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
         case CHANGE_LOGIN:
         {
             settings->SetDefaultUser(mAddUserName->Text());
@@ -654,7 +699,6 @@ void mWindow::UpdateStrings_Thread()
     LockLooper();
 
     mAddUserName->SetText(settings->DefaultUser());
-    // ((BStringView*)mListOfUsers->ItemAt(0))->SetText(settings->DefaultUser());
 
     settings->BackgroundColor() = mCCBgColor->ValueAsColor();
 	settings->SetBackgroundImageFolderPath(mTextControlmPathToImageFolder->Text());
@@ -724,6 +768,24 @@ void mWindow::InitUIControls()
     mTextControlmPathToImageFolder->SetText(settings->BackgroundImageFolderPath());
     mTextControlmPathToImageList->SetText(settings->BackgroundImageListPath());
     mSliderBgSnooze->SetValue(settings->BackgroundImageSnooze());
+    switch(settings->BackgroundImageAdjustment()) {
+        case BGI_ADJ_KEEP_AND_CENTER:
+            mMfBgImageAdjustment->Menu()->ItemAt(BGI_ADJ_KEEP_AND_CENTER)->SetMarked(true);
+            break;
+        case BGI_ADJ_STRETCH_TO_SCREEN:
+            mMfBgImageAdjustment->Menu()->ItemAt(BGI_ADJ_STRETCH_TO_SCREEN)->SetMarked(true);
+            break;
+        case BGI_ADJ_SCALE_X:
+            mMfBgImageAdjustment->Menu()->ItemAt(BGI_ADJ_SCALE_X)->SetMarked(true);
+            break;
+        case BGI_ADJ_SCALE_Y:
+            mMfBgImageAdjustment->Menu()->ItemAt(BGI_ADJ_SCALE_Y)->SetMarked(true);
+            break;
+        case BGI_ADJ_SCALE_X_Y:
+        default:
+            mMfBgImageAdjustment->Menu()->ItemAt(BGI_ADJ_SCALE_X_Y)->SetMarked(true);
+            break;
+    }
 
     mCheckBoxBoolClock->SetValue(settings->ClockIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mSliderFontSize->SetValue(settings->ClockSize());
@@ -952,16 +1014,29 @@ BView* mWindow::CreateCardView_Background()
         "mf_bgmode", B_TRANSLATE("Background image mode"), mPumBgImageOption, true
 #endif
     );
+    mPumBgImageAdjustment = new BPopUpMenu("");
+    BLayoutBuilder::Menu<>(mPumBgImageAdjustment)
+        .AddItem(B_TRANSLATE("Keep dimensions and center"), new BMessage(M_BGIMG_ADJUST_KEEP))
+        .AddItem(B_TRANSLATE("Scale and fit to X"), new BMessage(M_BGIMG_ADJUST_X))
+        .AddItem(B_TRANSLATE("Scale and fit to Y"), new BMessage(M_BGIMG_ADJUST_Y))
+        .AddItem(B_TRANSLATE("Scale and fit to X:Y"), new BMessage(M_BGIMG_ADJUST_X_Y))
+        .AddItem(B_TRANSLATE("Resize to screen (allows deformation)"), new BMessage(M_BGIMG_ADJUST_STRETCH))
+    .End();
+    mMfBgImageAdjustment = new BMenuField(
+#if(B_HAIKU_VERSION < B_HAIKU_VERSION_1_PRE_BETA_5)
+        "mf_bgadj", B_TRANSLATE("Image adjustment"), mPumBgImageAdjustment
+#else
+        "mf_bgadj", B_TRANSLATE("Image adjustment"), mPumBgImageAdjustment, true
+#endif
+    );
 
-    mTextControlmPathToImage = new BTextControl("Path to image file", "",
-        new BMessage(M_BGIMG_SINGLEPATH));
+    mTextControlmPathToImage = new BTextControl("TextPathToFile",
+        NULL, "", new BMessage(M_BGIMG_SINGLEPATH));
     mTextControlmPathToImageFolder = new BTextControl("TextPathToImages",
-        B_TRANSLATE("Path to image folder"), "",
-        new BMessage(M_BGIMG_FOLDERPATH));
+        NULL, "", new BMessage(M_BGIMG_FOLDERPATH));
     mTextControlmPathToImageFolder->SetModificationMessage(new BMessage(CHECK_BUTTONS));
     mTextControlmPathToImageList = new BTextControl("TextPathToList",
-        B_TRANSLATE("Path to list file"), "",
-        new BMessage(M_BGIMG_LISTPATH));
+        NULL, "", new BMessage(M_BGIMG_LISTPATH));
 
     // mButtonDefaultImagePath = new BButton("mFrameButtonDefaultImagePath",
         // B_TRANSLATE("Default"), new BMessage(BUTTON_DEFAULTPATH));
@@ -979,7 +1054,7 @@ BView* mWindow::CreateCardView_Background()
     mSliderBgSnooze->SetHashMarks(B_HASH_MARKS_BOTH);
     mSliderBgSnooze->SetHashMarkCount(12);
     mSliderBgSnooze->SetKeyIncrementValue(5);
-    mSliderBgSnooze->SetLimitLabels("5", "60");
+    mSliderBgSnooze->SetLimitLabels(B_TRANSLATE("5"), B_TRANSLATE("60"));
 
     BView* mImageView = new BView("ImageView", B_SUPPORTS_LAYOUT, NULL);
     mImageView->SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
@@ -987,16 +1062,27 @@ BView* mWindow::CreateCardView_Background()
 
     BLayoutBuilder::Group<>(mImageView, B_VERTICAL)
         .SetInsets(B_USE_SMALL_INSETS)
-        .Add(mMfBgImageOption)
         .AddGrid()
-            .AddTextControl(mTextControlmPathToImage, 0, 0)
-            .Add(mButtonBrowseImageFilePath, 2, 0)
-            .AddTextControl(mTextControlmPathToImageFolder, 0, 1)
-            .Add(mButtonBrowseImageFolderPath, 2, 1)
-            .AddTextControl(mTextControlmPathToImageList, 0, 2)
-            .Add(mButtonBrowseImageListPath, 2, 2)
+            .AddMenuField(mMfBgImageOption, 0, 0)
+            .AddGlue(0, 1)
+            .Add(new BStringView(NULL, B_TRANSLATE("Path to image file")), 0, 2)
+            .AddGrid(B_USE_SMALL_SPACING, B_USE_SMALL_SPACING, 1, 2)
+                .Add(mTextControlmPathToImage, 0, 0)
+                .Add(mButtonBrowseImageFilePath, 1, 0)
+            .End()
+            .Add(new BStringView(NULL, B_TRANSLATE("Path to image folder")), 0, 3)
+            .AddGrid(B_USE_SMALL_SPACING, B_USE_SMALL_SPACING, 1, 3)
+                .Add(mTextControlmPathToImageFolder, 0, 0)
+                .Add(mButtonBrowseImageFolderPath, 1, 0)
+            .End()
+            .Add(new BStringView(NULL, B_TRANSLATE("Path to image list")), 0, 4)
+            .AddGrid(B_USE_SMALL_SPACING, B_USE_SMALL_SPACING, 1, 4)
+                .Add(mTextControlmPathToImageList, 0, 0)
+                .Add(mButtonBrowseImageListPath, 1, 0)
+            .End()
+            .AddGlue(0, 5)
+            .AddMenuField(mMfBgImageAdjustment, 0, 6)
         .End()
-        .AddStrut(4.0f)
         .Add(mSliderBgSnooze)
     .End();
 
@@ -1165,16 +1251,19 @@ BView* mWindow::CreateCardView_Options()
 bool mWindow::UI_IsDefault(BMessage* defaults)
 {
     /* authentication */
-    bool isMethodDefault = mRadioBtAuthAppaccount->Value() == defaults->GetUInt8(mNameConfigAuthMode, 2);
+    bool isMethodDefault = mRadioBtAuthAppaccount->Value() == defaults->GetUInt8(mNameConfigAuthMode, AUTH_APP_ACCOUNT);
     bool isPwdlessAuthDefault  = mCheckBoxAllowPwdlessLogin->Value() == defaults->GetBool(mNameConfigPwdLessLogonOn);
     bool isAttemptsDefault = mSliderAttemptsThrshld->Value() == defaults->GetInt32(mNameConfigAuthAttemptsThrshld, 0);
     bool isWaitTimeDefault = mSliderErrorWaitTime->Value()  == defaults->GetInt32(mNameConfigAuthSnoozeAfterErrors, 5);
 
     /* background */
-    bool isBgModeDefault = mMfBgImageOption->Menu()->ItemAt(3)->IsMarked();
+    bool isBgModeDefault = mMfBgImageOption->Menu()->ItemAt(defaults->GetUInt8(mNameConfigBgMode, 3))->IsMarked();
     bool isBgColorDefault = UI_IsBgColorDefault(defaults);
     bool isImgFolderPathDefault = UI_IsBgFolderDefault(defaults);
+    bool isImgStaticDefault = strcmp(mTextControlmPathToImage->Text(), "") == 0;
+    bool isImgListFileDefault = strcmp(mTextControlmPathToImageList->Text(), "") == 0;
     bool isBgSnoozeDefault = mSliderBgSnooze->Value() == defaults->GetUInt32(mNameConfigBgSnooze, 10);
+    bool isBgImgAdjDefault = mMfBgImageAdjustment->Menu()->ItemAt(defaults->GetUInt8(mNameConfigImageAdjustment, BGI_ADJ_SCALE_X_Y))->IsMarked();
 
     /* clock */
     bool isClockColorDefault = UI_IsClockColorDefault(defaults);
@@ -1189,10 +1278,10 @@ bool mWindow::UI_IsDefault(BMessage* defaults)
     bool isLoggingDefault = mCheckBoxEventLog->Value() == defaults->GetBool(mNameConfigEvtLoggingOn);
 
     return isMethodDefault && isPwdlessAuthDefault && isAttemptsDefault && isWaitTimeDefault &&
-           isBgModeDefault && isBgColorDefault && isImgFolderPathDefault &&
-           isBgSnoozeDefault && isClockColorDefault && isClockPlacementDefault &&
-           isClockHidden && isClockSizeDefault && isSessionBarDefault &&
-           isSysInfoPanelDefault && isKillerShctDefault && isLoggingDefault &&
+           isBgModeDefault && isBgColorDefault && isImgFolderPathDefault && isBgSnoozeDefault &&
+           isImgStaticDefault && isImgListFileDefault && isBgImgAdjDefault &&
+           isClockColorDefault && isClockPlacementDefault && isClockHidden && isClockSizeDefault &&
+           isSessionBarDefault && isSysInfoPanelDefault && isKillerShctDefault && isLoggingDefault &&
            isPwdlessAuthDefault;
 }
 

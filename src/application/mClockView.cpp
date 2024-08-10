@@ -17,8 +17,6 @@ mClockView::mClockView(BRect rect, LWSettings* settings)
     _InitUIData();
 
     SetHighColor(mColor);
-    SetDrawingMode(B_OP_ALPHA);
-    SetBlendingMode(B_CONSTANT_ALPHA, B_ALPHA_COMPOSITE_LIGHTEN);
     SetFont(be_bold_font);
     SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
     ResizeToPreferred();

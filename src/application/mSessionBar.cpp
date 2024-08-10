@@ -12,6 +12,8 @@
 mSessionBar::mSessionBar(orientation ont, BHandler* target)
 : BToolBar(ont), fTarget(target)
 {
+    SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
+
     BString strRestart(B_TRANSLATE("Restart"));
     BString strShutdown(B_TRANSLATE("Shut down"));
 

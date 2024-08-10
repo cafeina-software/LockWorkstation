@@ -13,7 +13,7 @@
 #define B_TRANSLATION_CONTEXT "System info"
 
 mSystemInfo::mSystemInfo(BRect frame)
-: BView(frame, NULL, B_FOLLOW_NONE, B_PULSE_NEEDED)
+: BView(frame, NULL, B_FOLLOW_NONE, B_WILL_DRAW | B_PULSE_NEEDED)
 {
     InitUIData();
 
@@ -42,9 +42,6 @@ mSystemInfo::mSystemInfo(BRect frame)
     BStringView* sessiontitle = AddTitle(B_TRANSLATE("Session"));
     BStringView* hostname = AddText(fStrNodeName);
     runtime = AddText(fStrRunningTime);
-
-    // clock = new mClockView(BRect(0, 0, 200, 100), "mCLockViewaeasdsad",
-        // B_FOLLOW_TOP | B_FOLLOW_LEFT, B_WILL_DRAW | B_PULSE_NEEDED);
 
     BLayoutBuilder::Group<>(this, B_VERTICAL, 0)
         .SetInsets(B_USE_WINDOW_INSETS)

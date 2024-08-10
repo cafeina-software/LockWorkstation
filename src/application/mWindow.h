@@ -22,6 +22,7 @@ public:
     virtual  			~mWindow();
     virtual void 		MessageReceived(BMessage* message);
     virtual bool        QuitRequested();
+    virtual void        ScreenChanged(BRect frame, color_space mode);
     void                ResizeToScreen();
     status_t            Login(AuthMethod mthd, const char* usr, const char* pwd);
 private:
@@ -36,7 +37,6 @@ private:
 
     LWSettings         *settings;
     mLogger            *logger;
-    BString             imgpath;
 };
 
 #endif

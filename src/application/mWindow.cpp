@@ -47,9 +47,8 @@ mWindow::mWindow(const char* mWindowTitle)
         mClock->Hide();
 
     // Background view
-    mView = new mBackgroundView(BRect(0, 0, 2000, 2000), NULL, B_FOLLOW_NONE,
-        B_WILL_DRAW, settings->BackgroundColor(), settings->BackgroundMode(),
-        imgpath, settings->BackgroundImageSnooze());
+    mView = new mBackgroundView(BRect(0, 0, 2000, 2000), NULL, B_FOLLOW_ALL,
+        B_WILL_DRAW | B_FRAME_EVENTS, settings);
 
     // Layout kit
     BLayoutBuilder::Group<>(mView, B_VERTICAL, 0)
@@ -86,12 +85,12 @@ mWindow::mWindow(const char* mWindowTitle)
     if(settings->KillerShortcutIsEnabled())
         AddShortcut(B_SPACE, B_COMMAND_KEY | B_CONTROL_KEY,
             new BMessage(M_BYPASS_REQUESTED));
+    AddShortcut('Q', B_COMMAND_KEY, new BMessage(LOGIN_CHANGED));
 
     // Fit to screen, otherwise parts of the running environment will be shown
     //   if using high definitions resolutions
     MoveTo(0, 0);
     ResizeToScreen();
-    mView->ResizeTo(Frame().Width(), Frame().Height());
 }
 
 /**********************************************************/
@@ -108,6 +107,7 @@ void mWindow::MessageReceived(BMessage* message)
     switch(message->what)
 	{
         case LOGIN_CHANGED:
+            logger->AddEvent(EVT_WARNING, "User tried to exit the locker application (Cmd+Q).");
             break;
         case BUTTON_LOGIN:
         {
@@ -168,12 +168,21 @@ bool mWindow::QuitRequested()
     return BWindow::QuitRequested();
 }
 
+void mWindow::ScreenChanged(BRect frame, color_space mode)
+{
+    // Upon monitor resolution change, trigger window resize
+    ResizeToScreen();
+}
+
 void mWindow::ResizeToScreen()
 {
     BScreen screen(B_MAIN_SCREEN_ID);
     display_mode dmode;
     screen.GetMode(&dmode);
     ResizeTo(dmode.virtual_width, dmode.virtual_height);
+
+    mView->MoveTo(0, 0);
+    mView->ResizeTo(Frame().Width(), Frame().Height());
 }
 
 status_t mWindow::Login(AuthMethod mthd, const char* usr, const char* pwd)
@@ -207,21 +216,6 @@ void mWindow::InitUIData()
 	path.Append(mPathToConfigFile);
 
     settings = new LWSettings(path.Path());
-    switch(settings->BackgroundMode())
-    {
-        case BGM_STATIC:
-            imgpath.SetTo(settings->BackgroundImageStaticPath());
-            break;
-        case BGM_FOLDER:
-            imgpath.SetTo(settings->BackgroundImageFolderPath());
-            break;
-        case BGM_LISTFILE:
-            imgpath.SetTo(settings->BackgroundImageListPath());
-            break;
-        default:
-            imgpath.SetTo("");
-            break;
-    }
 }
 
 void mWindow::SystemShutdown(bool restart, bool confirm, bool sync)
