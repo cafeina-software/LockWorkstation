@@ -35,10 +35,14 @@ private:
     static int32    CallUpdateUINotAllowedMsg(void* data);
     static int32    CallUpdateUIPwdlessOffMsg(void* data);
     static int32    CallUpdateUILockdown(void* data);
+    static int32    CallInactivityTimerWatcher(void* data);
+    static void     OnExitResetForm(void* data);
     void            UpdateUIForm();
     void            LockUIForm();
     void            UnlockUIForm();
     void            UpdateUIErrorMsg(BString str);
+    void            InactivityTimerWatcher();
+
 private:
     BStringView     *errorView;
     BTextControl    *tcUserName,
@@ -47,12 +51,15 @@ private:
 
     thread_id       thUpdateUIForm,
                     thUpdateUILockdown,
+                    thInactivityTimer,
                     thUpdateUIErrorMsg;
 
     bool            isPwdLessOn;
     int32           loginAttempts;
     int32           snoozeMultiplier;
     int32           errorThreshold;
+    bool            isInactivityTimerOn;
+    const uint32    inactivityTime;
 };
 
 #endif // _H

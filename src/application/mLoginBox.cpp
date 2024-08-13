@@ -24,7 +24,9 @@ mLoginBox::mLoginBox(BRect frame, LWSettings* settings)
     loginAttempts(0),
     isPwdLessOn(settings->PasswordLessAuthEnabled()),
     errorThreshold(settings->AuthenticationAttemptsThreshold()),
-    snoozeMultiplier(settings->AuthenticationCooldownAfterThreshold())
+    snoozeMultiplier(settings->AuthenticationCooldownAfterThreshold()),
+    isInactivityTimerOn(settings->AuthenticationResetFormIfInactive()),
+    inactivityTime(30) // 30 seconds
 {
     SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
 
@@ -47,6 +49,10 @@ mLoginBox::mLoginBox(BRect frame, LWSettings* settings)
 
     tcUserName = new BTextControl("tc_username", B_TRANSLATE("User name"), "",
         new BMessage('user'));
+    const char blacklist [] = {"\0\a\b\t\n\v\f\r\e\x20"};
+    for(int i = 0; i < sizeof(blacklist)/sizeof(blacklist[0]); i++)
+        tcUserName->TextView()->DisallowChar(blacklist[i]);
+
     tcUserName->SetModificationMessage(new BMessage(LBM_USERNAME_CHANGED));
     tcUserName->SetFont(&font3);
     tcUserName->MakeFocus(true);
@@ -109,11 +115,21 @@ void mLoginBox::MessageReceived(BMessage* message)
         case loginBoxMsgs::LBM_USERNAME_CHANGED:
             ThreadedCall(thUpdateUIForm, CallUpdateUIForm,
                 "Update error message", B_NORMAL_PRIORITY, this);
+            if(isInactivityTimerOn) {
+                kill_thread(thInactivityTimer); // nothing to be worth of saving
+                ThreadedCall(thInactivityTimer, CallInactivityTimerWatcher,
+                    "Inactivity watcher thread", B_LOW_PRIORITY, this);
+            }
             break;
         case 'pass':
         case loginBoxMsgs::LBM_PASSWORD_CHANGED:
             ThreadedCall(thUpdateUIForm, CallUpdateUIForm,
                 "Update error message", B_NORMAL_PRIORITY, this);
+            if(isInactivityTimerOn) {
+                kill_thread(thInactivityTimer); // nothing to be worth of saving
+                ThreadedCall(thInactivityTimer, CallInactivityTimerWatcher,
+                    "Inactivity watcher thread", B_LOW_PRIORITY, this);
+            }
             break;
         case loginBoxMsgs::LBM_LOGIN_REQUESTED:
             if(!isPwdLessOn && tcPassword->TextLength() == 0) {
@@ -259,6 +275,16 @@ int32 mLoginBox::CallUpdateUILockdown(void* data)
     return B_OK;
 }
 
+int32 mLoginBox::CallInactivityTimerWatcher(void* data)
+{
+    mLoginBox* box = (mLoginBox*)data;
+    if(box == nullptr)
+        return B_ERROR;
+
+    box->InactivityTimerWatcher();
+    return B_OK;
+}
+
 void mLoginBox::UpdateUIForm()
 {
     LockLooper();
@@ -289,6 +315,8 @@ void mLoginBox::UnlockUIForm()
 
     tcUserName->SetEnabled(true);
     tcPassword->SetEnabled(true);
+    OnExitResetForm(this);
+    UpdateUIErrorMsg(strNoError);
     btLogin->SetEnabled(IsAbleToLogin(isPwdLessOn));
     Invalidate();
     Window()->UpdateIfNeeded();
@@ -301,4 +329,22 @@ void mLoginBox::UpdateUIErrorMsg(BString whatstr)
     LockLooper();
     errorView->SetText(whatstr);
     UnlockLooper();
+}
+
+void mLoginBox::InactivityTimerWatcher()
+{
+   if(isInactivityTimerOn) {
+        snooze(inactivityTime * 1000000);
+        on_exit_thread(&mLoginBox::OnExitResetForm, this);
+    }
+}
+
+void mLoginBox::OnExitResetForm(void* data)
+{
+    mLoginBox* box = (mLoginBox*)data;
+
+    box->LockLooper();
+    box->tcUserName->SetText("");
+    box->tcPassword->SetText("");
+    box->UnlockLooper();
 }

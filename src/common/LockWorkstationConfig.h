@@ -40,6 +40,7 @@
 #define mNameConfigPwdLessLogonOn        "_pwdless_enabled"
 #define mNameConfigAuthAttemptsThrshld   "_auth_attempts"
 #define mNameConfigAuthSnoozeAfterErrors "_auth_manyerrors_snz"
+#define mNameConfigAuthResetForm         "_auth_form_reset"
 
 class LWSettings
 {
@@ -49,6 +50,7 @@ public:
     static void DefaultSettings(BMessage* archive);
     status_t    SaveSettings();
     void        Commit();
+    bool        HasPendingData();
     void        Reset();
 public:
     AuthMethod  AuthenticationMethod();
@@ -76,6 +78,7 @@ public:
     bool        PasswordLessAuthEnabled();
     int32       AuthenticationAttemptsThreshold();
     int32       AuthenticationCooldownAfterThreshold();
+    bool        AuthenticationResetFormIfInactive();
 public:
     status_t    SetAuthenticationMethod(AuthMethod method);
     status_t    SetDefaultUser(const char* newname);
@@ -102,6 +105,7 @@ public:
     status_t    SetPasswordLessAuthEnabled(bool status);
     status_t    SetAuthenticationAttemptsThreshold(int32 count);
     status_t    SetAuthenticationCooldownAfterThreshold(int32 multiplier);
+    status_t    SetAuthenticationResetFormIfInactive(bool status);
 private:
 	status_t	LoadSettings();
 	void		InitData();
@@ -134,6 +138,7 @@ private:
     bool        fPasswordLessAuthEnabled;
     int32       fAuthAttemptsThreshold;
     int32       fAuthAttemptsErrorCooldown;
+    bool        fAuthResetFormIfInactive;
 };
 
 #endif /* _LW_COMMON_DEFS_H_ */

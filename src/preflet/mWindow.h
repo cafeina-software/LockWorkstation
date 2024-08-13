@@ -58,17 +58,14 @@ public:
 						~mWindow();
 	virtual void 		MessageReceived(BMessage* message);
 	virtual bool 		QuitRequested();
-    void                AppUserMod(const char* n, const char* p, const char* nn = NULL);
 private:
 	//Thread
-	static int32 		CheckerThread_static(void *data);
-	void 				Checker_Thread();
 	static int32 		EnDButtonsThread_static(void *data);
 	void 				EnDButtons_Thread();
 	static int32 		EnDUserButtonThread_static(void *data);
 	void 				EnDUserButton_Thread();
-	static int32 		UpdateStringsThread_static(void *data);
-	void 				UpdateStrings_Thread();
+    static int32        UpdateUIThread_static(void* data);
+    void                UpdateUI_Thread();
 
     void                InitUIControls();
     void                InitUIData();
@@ -123,6 +120,7 @@ private:
 	                   *mCheckBoxSysInfo,
 	                   *mCheckBoxKillerShortcut,
                        *mCheckBoxEventLog,
+                       *mCheckBoxResetLoginForm,
                        *mCheckBoxAllowPwdlessLogin;
     BColorControl      *mCCBgColor,
                        *mCCClockColor;
@@ -154,16 +152,11 @@ private:
 	                   *mTextControlClockPlaceX,
                        *mTextControlClockPlaceY;
 
-    thread_id           CheckerThread,
-                        EnDButtonsThread,
+    thread_id           EnDButtonsThread,
                         EnDUserButtonThread,
-                        UpdateStringsThread;
+                        UpdateUIThread;
 
     LWSettings         *settings;
-
-	//BBitmap*			BitmapBounds;
-	//BBitmap*			BitmapBounds2;
-	//BBitmap*			BitmapBounds3;
 
 	BFilePanel*			mFilePanelFolderBrowse;
 	entry_ref 			mEntryRef;

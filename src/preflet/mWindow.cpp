@@ -104,7 +104,6 @@ mWindow::mWindow(const char *mWindowTitle)
     ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
         "Enable and disable buttons", B_LOW_PRIORITY, this);
 
-    // ResizeToPreferred();
     CenterOnScreen();
 }
 
@@ -130,8 +129,8 @@ void mWindow::MessageReceived(BMessage* message)
             settings->SetAuthenticationMethod(AUTH_SYSTEM_ACCOUNT);
 
             //Enable and disable buttons
-            ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
-                "Enable and disable user button", B_LOW_PRIORITY, this);
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
         case M_AUTHMTHD_APPACC:
@@ -139,8 +138,8 @@ void mWindow::MessageReceived(BMessage* message)
             settings->SetAuthenticationMethod(AUTH_APP_ACCOUNT);
 
             //Enable and disable buttons
-            ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
-                "Enable and disable user button", B_LOW_PRIORITY, this);
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
         case M_AUTHOPTS_THRSHD:
@@ -155,6 +154,16 @@ void mWindow::MessageReceived(BMessage* message)
         case M_AUTHOPTS_ERRSNZ:
         {
             settings->SetAuthenticationCooldownAfterThreshold(mSliderErrorWaitTime->Value());
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_AUTHOPTS_RESETFORM:
+        {
+            bool result = mCheckBoxResetLoginForm->Value() == B_CONTROL_ON;
+            settings->SetAuthenticationResetFormIfInactive(result);
 
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
@@ -176,27 +185,6 @@ void mWindow::MessageReceived(BMessage* message)
             }
             break;
         }
-        case BUTTON_DEFAULTPATH:
-        {
-            BMessage* temp = new BMessage;
-            LWSettings::DefaultSettings(temp);
-            settings->SetBackgroundImageFolderPath(temp->GetString(mNameConfigImagePath));
-            mTextControlmPathToImageFolder->SetText(settings->BackgroundImageFolderPath());
-            delete temp;
-
-            //Check if there are any images there!
-            ThreadedCall(CheckerThread, CheckerThread_static,
-                "Check if images are there thread", B_LOW_PRIORITY, this);
-
-            //Update Strings
-            ThreadedCall(UpdateStringsThread, UpdateStringsThread_static,
-                "Update Strings", B_NORMAL_PRIORITY, this);
-
-            //Enable and disable buttons
-            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
-                "Enable and disable buttons", B_LOW_PRIORITY, this);
-            break;
-        }
         /*****************************************************************************/
         /******************************** DIE!!! *************************************/
         /*****************************************************************************/
@@ -204,20 +192,12 @@ void mWindow::MessageReceived(BMessage* message)
         {
             settings->Reset();
             settings->SaveSettings();
+            InitUIData();
             InitUIControls();
 
-            //Check if images are there
-            ThreadedCall(CheckerThread, CheckerThread_static,
-                "Check if images are there thread", B_LOW_PRIORITY, this);
-            /*buttons*/
-            mApplyView->LockLooper();
-            mButtonApplyEverything->SetEnabled(false);
-            mEraserButtonOfDoom->SetEnabled(false);
-            mApplyView->UnlockLooper();
-
-            //Update Strings
-            ThreadedCall(UpdateStringsThread, UpdateStringsThread_static,
-                "Update Strings", B_NORMAL_PRIORITY, this);
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
         /********************************************************************/
@@ -227,10 +207,6 @@ void mWindow::MessageReceived(BMessage* message)
         {
             settings->Commit();
             settings->SaveSettings();
-
-            //Check if there are any images there!
-            ThreadedCall(CheckerThread, CheckerThread_static,
-                "Check if images are there thread", B_NORMAL_PRIORITY, this);
 
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
@@ -309,9 +285,6 @@ void mWindow::MessageReceived(BMessage* message)
             settings->SetBackgroundColor(temp->GetColor(mNameConfigBgColor, {}));
             mCCBgColor->SetValue(settings->BackgroundColor());
 
-            //Update Strings
-            ThreadedCall(UpdateStringsThread, UpdateStringsThread_static,
-                "Update Strings", B_NORMAL_PRIORITY, this);
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
@@ -327,9 +300,6 @@ void mWindow::MessageReceived(BMessage* message)
             settings->SetClockColor(temp->GetColor(mNameConfigClockColor, {}));
             mCCClockColor->SetValue(settings->ClockColor());
 
-            //Update Strings
-            ThreadedCall(UpdateStringsThread, UpdateStringsThread_static,
-                "Update Strings", B_NORMAL_PRIORITY, this);
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
@@ -376,11 +346,6 @@ void mWindow::MessageReceived(BMessage* message)
             mTextControlClockPlaceX->SetText(std::to_string(settings->ClockLocation().x).c_str());
             mTextControlClockPlaceY->SetText(std::to_string(settings->ClockLocation().y).c_str());
 
-            //Bool clock
-            mCheckBoxBoolClock->SetValue(settings->ClockIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
-            //Update Strings
-            ThreadedCall(UpdateStringsThread, UpdateStringsThread_static,
-                "Update Strings", B_NORMAL_PRIORITY, this);
             //Enable and disable buttons
             ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
@@ -505,9 +470,6 @@ void mWindow::MessageReceived(BMessage* message)
                 settings->SetBackgroundImageFolderPath(path.Path());
                 mTextControlmPathToImageFolder->SetText(settings->BackgroundImageFolderPath());
             }
-
-            ThreadedCall(CheckerThread, CheckerThread_static,
-                "Check if images are there thread", B_NORMAL_PRIORITY, this);
             break;
         }
         case LIST_CHANGED:
@@ -534,29 +496,29 @@ void mWindow::MessageReceived(BMessage* message)
             settings->SetBackgroundMode(BGM_NONE);
 
             //Enable and disable buttons
-            ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
-                "Enable and disable user button", B_LOW_PRIORITY, this);
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         case M_BGMODE_SINGLE:
             settings->SetBackgroundMode(BGM_STATIC);
 
             //Enable and disable buttons
-            ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
-                "Enable and disable user button", B_LOW_PRIORITY, this);
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         case M_BGMODE_FOLDER:
             settings->SetBackgroundMode(BGM_FOLDER);
 
             //Enable and disable buttons
-            ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
-                "Enable and disable user button", B_LOW_PRIORITY, this);
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         case M_BGMODE_LIST:
             settings->SetBackgroundMode(BGM_LISTFILE);
 
             //Enable and disable buttons
-            ThreadedCall(EnDUserButtonThread, EnDUserButtonThread_static,
-                "Enable and disable user button", B_LOW_PRIORITY, this);
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         case M_EVTLOG_CLEAR:
         {
@@ -676,9 +638,6 @@ void mWindow::MessageReceived(BMessage* message)
             be_app->PostMessage(B_ABOUT_REQUESTED);
             break;
         default:
-            //Enable and disable buttons
-            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
-                "Enable and disable buttons", B_LOW_PRIORITY, this);
             BWindow::MessageReceived(message);
             break;
 	}
@@ -691,17 +650,6 @@ bool mWindow::QuitRequested()
 }
 
 // #pragma mark -
-
-int32 mWindow::CheckerThread_static(void *data)
-{
-    mWindow *changeimage = (mWindow *)data;
-	changeimage->Checker_Thread();
-	return 0;
-}
-
-void mWindow::Checker_Thread()
-{
-}
 
 int32
 mWindow::EnDButtonsThread_static(void *data)
@@ -720,7 +668,6 @@ void mWindow::EnDButtons_Thread()
 
     bgCardView->LockLooper();
     mButtonDefaultColors->SetEnabled(!UI_IsBgColorDefault(defaults));
-    // mButtonDefaultImagePath->SetEnabled(!UI_IsBgFolderDefault(defaults));
     bgCardView->UnlockLooper();
 
     clockCardView->LockLooper();
@@ -736,9 +683,9 @@ void mWindow::EnDButtons_Thread()
     mButtonRemFromBoot->SetEnabled(HasAutoStartInstalled() != B_ENTRY_NOT_FOUND);
     extraCardView->UnlockLooper();
 
-    /* Reset everything to defaults */
     mApplyView->LockLooper();
     mEraserButtonOfDoom->SetEnabled(!UI_IsDefault(defaults));
+    mButtonApplyEverything->SetEnabled(settings->HasPendingData());
     mApplyView->UnlockLooper();
 
     delete defaults;
@@ -766,37 +713,16 @@ void mWindow::EnDUserButton_Thread()
 }
 
 int32
-mWindow::UpdateStringsThread_static(void *data)
+mWindow::UpdateUIThread_static(void *data)
 {
 	mWindow *updatestrings = (mWindow *)data;
-	updatestrings->UpdateStrings_Thread();
+	updatestrings->UpdateUI_Thread();
 	return 0;
 }
 
-void mWindow::UpdateStrings_Thread()
+void mWindow::UpdateUI_Thread()
 {
-    LockLooper();
-
-    mAddUserName->SetText(settings->DefaultUser());
-
-    settings->BackgroundColor() = mCCBgColor->ValueAsColor();
-	settings->SetBackgroundImageFolderPath(mTextControlmPathToImageFolder->Text());
-
-    settings->SetClockEnabled(mCheckBoxBoolClock->Value() == B_CONTROL_ON);
-    settings->SetClockSize((uint32)mSliderFontSize->Value());
-    settings->ClockColor() = mCCClockColor->ValueAsColor();
-    settings->ClockLocation().Set(
-        static_cast<float>(atof(mTextControlClockPlaceX->Text())),
-        static_cast<float>(atof(mTextControlClockPlaceY->Text()))
-    );
-
-    settings->SetSessionBarEnabled(mCheckBoxSessionBar->Value() == B_CONTROL_ON);
-    settings->SetSystemInfoPanelEnabled(mCheckBoxSysInfo->Value() == B_CONTROL_ON);
-    settings->SetKillerShortcutEnabled(mCheckBoxKillerShortcut->Value() == B_CONTROL_ON);
-    settings->SetEventLogEnabled(mCheckBoxEventLog->Value() == B_CONTROL_ON);
-    settings->SetPasswordLessAuthEnabled(mCheckBoxAllowPwdlessLogin->Value() == B_CONTROL_ON);
-
-    UnlockLooper();
+    InitUIControls();
 }
 
 void mWindow::InitUIControls()
@@ -809,21 +735,22 @@ void mWindow::InitUIControls()
             mRadioBtAuthAppaccount->SetValue(B_CONTROL_OFF);
             break;
         case 2:
-            mRadioBtAuthSysaccount->SetValue(B_CONTROL_OFF);
-            mRadioBtAuthAppaccount->SetValue(B_CONTROL_ON);
-            break;
         default:
             mRadioBtAuthSysaccount->SetValue(B_CONTROL_OFF);
             mRadioBtAuthAppaccount->SetValue(B_CONTROL_ON);
             break;
     }
+    mCheckBoxAllowPwdlessLogin->SetValue(settings->PasswordLessAuthEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mSliderAttemptsThrshld->SetValue(settings->AuthenticationAttemptsThreshold());
     mSliderErrorWaitTime->SetValue(settings->AuthenticationCooldownAfterThreshold());
+    mCheckBoxResetLoginForm->SetValue(settings->AuthenticationResetFormIfInactive() ?
+        B_CONTROL_ON : B_CONTROL_OFF);
 
     mAddUserName->SetText(settings->DefaultUser());
     mAddPassWord->SetText(settings->DefaultUserPassword());
     mAddPassWordRetype->SetText(settings->DefaultUserPassword());
     BStringList users = get_system_users();
+    mListOfUsers->MakeEmpty();
     for(int i = 0; i < users.CountStrings(); i++)
         mListOfUsers->AddItem(new BStringItem(users.StringAt(i).String()));
 
@@ -907,7 +834,6 @@ void mWindow::InitUIControls()
     mCheckBoxSessionBar->SetValue(settings->SessionBarIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mCheckBoxSysInfo->SetValue(settings->SystemInfoPanelIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mCheckBoxKillerShortcut->SetValue(settings->KillerShortcutIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
-    mCheckBoxAllowPwdlessLogin->SetValue(settings->PasswordLessAuthEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
 
     mButtonAddToBoot->SetEnabled(HasAutoStartInstalled() == B_ENTRY_NOT_FOUND);
     mButtonRemFromBoot->SetEnabled(HasAutoStartInstalled() != B_ENTRY_NOT_FOUND);
@@ -989,6 +915,9 @@ BView* mWindow::CreateCardView_AccountMethod()
     mSliderErrorWaitTime->SetHashMarkCount(11);
     mSliderErrorWaitTime->SetLimitLabels(B_TRANSLATE("Disabled"),
         B_TRANSLATE("10 seconds"));
+    mCheckBoxResetLoginForm = new BCheckBox("cb_resetform",
+        B_TRANSLATE("Reset login form if remained inactive for too long time"),
+        new BMessage(M_AUTHOPTS_RESETFORM));
 
     BView* authOptsView = new BView("authview", B_SUPPORTS_LAYOUT, NULL);
     BLayoutBuilder::Group<>(authOptsView, B_VERTICAL)
@@ -996,6 +925,7 @@ BView* mWindow::CreateCardView_AccountMethod()
         .Add(mCheckBoxAllowPwdlessLogin)
         .Add(mSliderAttemptsThrshld)
         .Add(mSliderErrorWaitTime)
+        .Add(mCheckBoxResetLoginForm)
     .End();
 
 
@@ -1017,6 +947,9 @@ BView* mWindow::CreateCardView_User()
     /* AddUser */
     mAddUserName = new BTextControl("TextAddUser", B_TRANSLATE("Username"),
         "", new BMessage(TEXTADDUSER));
+    const char blacklist [] = {"\0\a\b\t\n\v\f\r\e\x20"};
+    for(int i = 0; i < sizeof(blacklist)/sizeof(blacklist[0]); i++)
+        mAddUserName->TextView()->DisallowChar(blacklist[i]);
     mAddUserName->SetModificationMessage(new BMessage(CHECK_USERBUTTON));
     mAddPassWord = new BTextControl("TextPassWord", B_TRANSLATE("Password"),
         "", new BMessage(TEXTADDPASS));
@@ -1148,8 +1081,6 @@ BView* mWindow::CreateCardView_Background()
     mTextControlmPathToImageList = new BTextControl("TextPathToList",
         NULL, "", new BMessage(M_BGIMG_LISTPATH));
 
-    // mButtonDefaultImagePath = new BButton("mFrameButtonDefaultImagePath",
-        // B_TRANSLATE("Default"), new BMessage(BUTTON_DEFAULTPATH));
     mButtonBrowseImageFilePath = new BButton("mFrameButtonBrowseImagePath",
         B_TRANSLATE("Browse"), new BMessage(M_BGIMG_BROWSE_SINGLE));
     mButtonBrowseImageFolderPath = new BButton("mFrameButtonBrowseImageFPath",
@@ -1422,46 +1353,31 @@ BView* mWindow::CreateCardView_Options()
 
 bool mWindow::UI_IsDefault(BMessage* defaults)
 {
-    /* authentication */
-    bool isMethodDefault = mRadioBtAuthAppaccount->Value() == defaults->GetUInt8(mNameConfigAuthMode, AUTH_APP_ACCOUNT);
-    bool isPwdlessAuthDefault  = mCheckBoxAllowPwdlessLogin->Value() == defaults->GetBool(mNameConfigPwdLessLogonOn);
-    bool isAttemptsDefault = mSliderAttemptsThrshld->Value() == defaults->GetInt32(mNameConfigAuthAttemptsThrshld, 0);
-    bool isWaitTimeDefault = mSliderErrorWaitTime->Value()  == defaults->GetInt32(mNameConfigAuthSnoozeAfterErrors, 5);
-
-    /* background */
-    bool isBgModeDefault = mMfBgImageOption->Menu()->ItemAt(defaults->GetUInt8(mNameConfigBgMode, 3))->IsMarked();
-    bool isBgColorDefault = UI_IsBgColorDefault(defaults);
-    bool isImgFolderPathDefault = UI_IsBgFolderDefault(defaults);
-    bool isImgStaticDefault = strcmp(mTextControlmPathToImage->Text(), "") == 0;
-    bool isImgListFileDefault = strcmp(mTextControlmPathToImageList->Text(), "") == 0;
-    bool isBgSnoozeDefault = mSliderBgSnooze->Value() == defaults->GetUInt32(mNameConfigBgSnooze, 10);
-    bool isBgImgAdjDefault = mMfBgImageAdjustment->Menu()->ItemAt(defaults->GetUInt8(mNameConfigImageAdjustment, BGI_ADJ_SCALE_X_Y))->IsMarked();
-
-    /* clock */
-    bool isClockColorDefault = UI_IsClockColorDefault(defaults);
-    bool isClockPlacementDefault = UI_IsClockPlaceDefault(defaults);
-    bool isClockHidden = mCheckBoxBoolClock->Value() == defaults->GetBool(mNameConfigBoolClock);
-    bool isClockSizeDefault = mSliderFontSize->Value() == defaults->GetUInt32(mNameConfigClockFontSize, 8);
-
-    /* Event log */
-    bool isLoggingDefault = mCheckBoxEventLog->Value() == defaults->GetBool(mNameConfigEvtLoggingOn);
-    bool isLoggingLevDefault = mMfLogLevel->Menu()->ItemAt(0)->IsMarked();
-    bool isLoggingRetPolDefault = mMfLogRetentionPolicy->Menu()->ItemAt(defaults->GetUInt8(mNameConfigEvtLoggingRetention, EVP_CONTINUE))->IsMarked();
-    bool isLoggingMaxSizeDefault = mSpinnerLogMaxSize->Value() == defaults->GetUInt32(mNameConfigEvtLoggingMaxSize, 1);
-    bool isLoggingMaxAgeDefault = mSpinnerLogMaxAge->Value() == defaults->GetUInt32(mNameConfigEvtLoggingMaxAge, 1);
-
-    /* options */
-    bool isSessionBarDefault = mCheckBoxSessionBar->Value() == defaults->GetBool(mNameConfigSessionBarOn);
-    bool isSysInfoPanelDefault = mCheckBoxSysInfo->Value() == defaults->GetBool(mNameConfigSysInfoPanelOn);
-    bool isKillerShctDefault = mCheckBoxKillerShortcut->Value() == defaults->GetBool(mNameConfigKillerShortcutOn);
-
-    return isMethodDefault && isPwdlessAuthDefault && isAttemptsDefault && isWaitTimeDefault &&
-           isBgModeDefault && isBgColorDefault && isImgFolderPathDefault && isBgSnoozeDefault &&
-           isImgStaticDefault && isImgListFileDefault && isBgImgAdjDefault &&
-           isClockColorDefault && isClockPlacementDefault && isClockHidden && isClockSizeDefault &&
-           isSessionBarDefault && isSysInfoPanelDefault && isKillerShctDefault && isLoggingDefault &&
-           isLoggingLevDefault && isLoggingRetPolDefault && isLoggingMaxSizeDefault && isLoggingMaxAgeDefault &&
-           isPwdlessAuthDefault;
+    return
+           (mRadioBtAuthAppaccount->Value() == B_CONTROL_ON && AUTH_APP_ACCOUNT == defaults->GetUInt8(mNameConfigAuthMode, AUTH_APP_ACCOUNT)) &&
+           (mCheckBoxAllowPwdlessLogin->Value() == B_CONTROL_ON) == defaults->GetBool(mNameConfigPwdLessLogonOn, true) &&
+           (mSliderAttemptsThrshld->Value() == defaults->GetInt32(mNameConfigAuthAttemptsThrshld, 0)) &&
+           (mSliderErrorWaitTime->Value()  == defaults->GetInt32(mNameConfigAuthSnoozeAfterErrors, 5)) &&
+           (mCheckBoxResetLoginForm->Value() == B_CONTROL_ON) == defaults->GetBool(mNameConfigAuthResetForm, false) &&
+           (mMfBgImageOption->Menu()->ItemAt(defaults->GetUInt8(mNameConfigBgMode, BGM_NONE))->IsMarked()) &&
+           (UI_IsBgColorDefault(defaults)) &&
+           // (strcmp(mTextControlmPathToImage->Text(), "") == 0) &&
+           // (UI_IsBgFolderDefault(defaults)) &&
+           // (strcmp(mTextControlmPathToImageList->Text(), "") == 0) &&
+           (mSliderBgSnooze->Value() == defaults->GetUInt32(mNameConfigBgSnooze, 10)) &&
+           (mMfBgImageAdjustment->Menu()->ItemAt(defaults->GetUInt8(mNameConfigImageAdjustment, BGI_ADJ_SCALE_X_Y))->IsMarked()) &&
+           (UI_IsClockColorDefault(defaults)) &&
+           (UI_IsClockPlaceDefault(defaults)) &&
+           (mCheckBoxBoolClock->Value() == B_CONTROL_ON) == defaults->GetBool(mNameConfigBoolClock, true) &&
+           (mSliderFontSize->Value() == defaults->GetUInt32(mNameConfigClockFontSize, 8)) &&
+           (mCheckBoxEventLog->Value() == B_CONTROL_ON) == defaults->GetBool(mNameConfigEvtLoggingOn, true) &&
+           (mMfLogLevel->Menu()->ItemAt(EVT_INFO - 1)->IsMarked()) &&
+           (mMfLogRetentionPolicy->Menu()->ItemAt(defaults->GetUInt8(mNameConfigEvtLoggingRetention, EVP_CONTINUE))->IsMarked()) &&
+           (mSpinnerLogMaxSize->Value() == defaults->GetUInt32(mNameConfigEvtLoggingMaxSize, 1)) &&
+           (mSpinnerLogMaxAge->Value() == defaults->GetUInt32(mNameConfigEvtLoggingMaxAge, 1)) &&
+           (mCheckBoxSessionBar->Value() == B_CONTROL_ON) == defaults->GetBool(mNameConfigSessionBarOn, false) &&
+           (mCheckBoxSysInfo->Value() == B_CONTROL_ON) == defaults->GetBool(mNameConfigSysInfoPanelOn, true) &&
+           (mCheckBoxKillerShortcut->Value() == B_CONTROL_ON) == defaults->GetBool(mNameConfigKillerShortcutOn, false);
 }
 
 bool mWindow::UI_IsBgColorDefault(BMessage* archive)

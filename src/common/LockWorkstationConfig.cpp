@@ -81,13 +81,16 @@ void LWSettings::InitData()
         defaults->GetInt32(mNameConfigAuthAttemptsThrshld, 0));
     fAuthAttemptsErrorCooldown = savemessage.GetInt32(mNameConfigAuthSnoozeAfterErrors,
         defaults->GetInt32(mNameConfigAuthSnoozeAfterErrors, 5));
+    fAuthResetFormIfInactive = savemessage.GetBool(mNameConfigAuthResetForm,
+        defaults->GetBool(mNameConfigAuthResetForm));
+
 	mStringUser1 = savemessage.GetString(mNameConfigUser,
 		defaults->GetString(mNameConfigUser));
 	mStringPassword1 = savemessage.GetString(mNameConfigPass,
 		defaults->GetString(mNameConfigPass));
 
     fBackgroundMode = static_cast<BgMode>(savemessage.GetUInt8(mNameConfigBgMode,
-        defaults->GetUInt8(mNameConfigBgMode, 1)));
+        defaults->GetUInt8(mNameConfigBgMode, BGM_NONE)));
 	fBackgroundColor = savemessage.GetColor(mNameConfigBgColor,
         defaults->GetColor(mNameConfigBgColor, rgb_color()));
 	fBackgroundImageFolder = savemessage.GetString(mNameConfigImagePath,
@@ -140,29 +143,32 @@ void LWSettings::DefaultSettings(BMessage* archive)
     archive->AddBool(mNameConfigPwdLessLogonOn, true);
     archive->AddInt32(mNameConfigAuthAttemptsThrshld, 0);
     archive->AddInt32(mNameConfigAuthSnoozeAfterErrors, 5);
+    archive->AddBool(mNameConfigAuthResetForm, false);
+
     archive->AddString(mNameConfigUser, "baron");
     archive->AddString(mNameConfigPass, "haikubox");
 
-    archive->AddUInt8(mNameConfigBgMode, BGM_FOLDER);
+    archive->AddUInt8(mNameConfigBgMode, BGM_NONE);
     archive->AddColor(mNameConfigBgColor, {0, 0, 0, 255});
-    BRoster roster;
-    entry_ref appref;
-    roster.FindApp("application/x-vnd.LockWorkstation", &appref);
-    BEntry appentry(&appref);
-    BPath apppath;
-    appentry.GetPath(&apppath);
-    BPath defpath;
-    apppath.GetParent(&defpath);
-    defpath.Append("images/default", true);
-    archive->AddString(mNameConfigImagePath, defpath.Path());
+    // BRoster roster;
+    // entry_ref appref;
+    // roster.FindApp("application/x-vnd.LockWorkstation", &appref);
+    // BEntry appentry(&appref);
+    // BPath apppath;
+    // appentry.GetPath(&apppath);
+    // BPath defpath;
+    // apppath.GetParent(&defpath);
+    // defpath.Append("images/default", true);
+    // archive->AddString(mNameConfigImagePath, defpath.Path());
     archive->AddString(mNameConfigImageList, "");
+    archive->AddString(mNameConfigImagePath, "");
     archive->AddString(mNameConfigImageFile, "");
     archive->AddUInt32(mNameConfigBgSnooze, 10);
     archive->AddUInt8(mNameConfigImageAdjustment, BGI_ADJ_SCALE_X_Y);
 
     archive->AddColor(mNameConfigClockColor, {128, 0, 0, 255});
     archive->AddPoint(mNameConfigClockPlace, BPoint(0, 0));
-    archive->AddBool(mNameConfigBoolClock, false);
+    archive->AddBool(mNameConfigBoolClock, true);
     archive->AddUInt32(mNameConfigClockFontSize, 8);
 
     archive->AddString(mNameConfigLanguage, "0");
@@ -201,6 +207,7 @@ void LWSettings::Commit()
     savemessage.SetBool(mNameConfigPwdLessLogonOn, fPasswordLessAuthEnabled);
     savemessage.SetInt32(mNameConfigAuthAttemptsThrshld, fAuthAttemptsThreshold);
     savemessage.SetInt32(mNameConfigAuthSnoozeAfterErrors, fAuthAttemptsErrorCooldown);
+    savemessage.SetBool(mNameConfigAuthResetForm, fAuthResetFormIfInactive);
 
     /* User */
     savemessage.SetString(mNameConfigUser, mStringUser1);
@@ -237,6 +244,36 @@ void LWSettings::Commit()
 
     /* Other configs */
     savemessage.SetBool(mNameConfigKillerShortcutOn, fKillerShortcutEnabled);
+}
+
+bool LWSettings::HasPendingData()
+{
+    return savemessage.GetUInt8(mNameConfigAuthMode, AUTH_APP_ACCOUNT) != fAuthMethod ||
+           savemessage.GetBool(mNameConfigPwdLessLogonOn, true) != fPasswordLessAuthEnabled ||
+           savemessage.GetInt32(mNameConfigAuthAttemptsThrshld, 0) != fAuthAttemptsThreshold ||
+           savemessage.GetInt32(mNameConfigAuthSnoozeAfterErrors, 5) != fAuthAttemptsErrorCooldown ||
+           savemessage.GetBool(mNameConfigAuthResetForm, false) != fAuthResetFormIfInactive ||
+           !(strcmp(savemessage.GetString(mNameConfigUser, "baron"), mStringUser1.String()) == 0) ||
+           !(strcmp(savemessage.GetString(mNameConfigPass, "haikubox"), mStringPassword1.String()) == 0) ||
+           savemessage.GetColor(mNameConfigBgColor, {0, 0, 0, 255}) != fBackgroundColor ||
+           savemessage.GetUInt32(mNameConfigBgMode, BGM_NONE) != fBackgroundMode ||
+           !(strcmp(savemessage.GetString(mNameConfigImageFile, ""), fBackgroundImageStatic.String()) == 0) ||
+           !(strcmp(savemessage.GetString(mNameConfigImagePath, ""), fBackgroundImageFolder.String()) == 0) ||
+           !(strcmp(savemessage.GetString(mNameConfigImageList, ""), fBackgroundImageListFile.String()) == 0) ||
+           savemessage.GetUInt32(mNameConfigBgSnooze, 10) != fBackgroundImageSnooze ||
+           savemessage.GetUInt8(mNameConfigImageAdjustment, BGI_ADJ_SCALE_X_Y) != fBackgroundImageAdjustment ||
+           savemessage.GetBool(mNameConfigBoolClock, true) != fClockEnabled ||
+           savemessage.GetColor(mNameConfigClockColor, {128, 0, 0, 255}) != fClockColor ||
+           savemessage.GetPoint(mNameConfigClockPlace, BPoint(0, 0)) != fClockLocation ||
+           savemessage.GetUInt32(mNameConfigClockFontSize, 8) != fClockSize ||
+           savemessage.GetBool(mNameConfigEvtLoggingOn, true) != fEventLogEnabled ||
+           savemessage.GetUInt8(mNameConfigEvtLoggingLevel, EVT_INFO) != fEventLogLevel ||
+           savemessage.GetUInt8(mNameConfigEvtLoggingRetention, EVP_CONTINUE) != fEventLogRetentionPolicy ||
+           savemessage.GetUInt32(mNameConfigEvtLoggingMaxSize, 1) != fEventLogMaxSize ||
+           savemessage.GetUInt32(mNameConfigEvtLoggingMaxAge, 1) != fEventLogMaxAge ||
+           savemessage.GetBool(mNameConfigSessionBarOn, false) != fSessionBarEnabled ||
+           savemessage.GetBool(mNameConfigSysInfoPanelOn, true) != fSystemInfoPanelEnabled ||
+           savemessage.GetBool(mNameConfigKillerShortcutOn,false) != fKillerShortcutEnabled;
 }
 
 // #pragma mark -
@@ -364,6 +401,11 @@ int32 LWSettings::AuthenticationAttemptsThreshold()
 int32 LWSettings::AuthenticationCooldownAfterThreshold()
 {
     return fAuthAttemptsErrorCooldown;
+}
+
+bool LWSettings::AuthenticationResetFormIfInactive()
+{
+    return fAuthResetFormIfInactive;
 }
 
 // #pragma mark -
@@ -497,4 +539,9 @@ status_t LWSettings::SetAuthenticationAttemptsThreshold(int32 count)
 status_t LWSettings::SetAuthenticationCooldownAfterThreshold(int32 multiplier)
 {
     return ((fAuthAttemptsErrorCooldown = multiplier) == multiplier) ? B_OK : B_ERROR;
+}
+
+status_t LWSettings::SetAuthenticationResetFormIfInactive(bool status)
+{
+    return ((fAuthResetFormIfInactive = status) == status) ? B_OK : B_ERROR;
 }
