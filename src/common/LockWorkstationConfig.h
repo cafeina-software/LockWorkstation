@@ -9,6 +9,7 @@
 #include <GraphicsDefs.h>
 #include <Message.h>
 #include <String.h>
+#include "LockWorkstationCommonDefs.h"
 
 #define mPathToConfigFile                "LockWorkstationSettings"
 
@@ -32,27 +33,13 @@
 #define mNameConfigSysInfoPanelOn        "_sysinfopanel_visible"
 #define mNameConfigKillerShortcutOn      "_shortcuts_killer"
 #define mNameConfigEvtLoggingOn          "_logging_enabled"
+#define mNameConfigEvtLoggingLevel       "_logging_level"
+#define mNameConfigEvtLoggingRetention   "_logging_retention"
+#define mNameConfigEvtLoggingMaxSize     "_logging_maxsize"
+#define mNameConfigEvtLoggingMaxAge      "_logging_maxage"
 #define mNameConfigPwdLessLogonOn        "_pwdless_enabled"
 #define mNameConfigAuthAttemptsThrshld   "_auth_attempts"
 #define mNameConfigAuthSnoozeAfterErrors "_auth_manyerrors_snz"
-
-enum BgMode {
-    BGM_NONE = 0,
-    BGM_STATIC,
-    BGM_FOLDER,
-    BGM_LISTFILE
-};
-enum ImgAdjust {
-    BGI_ADJ_KEEP_AND_CENTER = 0,
-    BGI_ADJ_SCALE_X = 1,
-    BGI_ADJ_SCALE_Y = 2,
-    BGI_ADJ_SCALE_X_Y = 3,
-    BGI_ADJ_STRETCH_TO_SCREEN = 4
-};
-enum AuthMethod {
-    AUTH_SYSTEM_ACCOUNT = 0,
-    AUTH_APP_ACCOUNT = 2
-};
 
 class LWSettings
 {
@@ -82,6 +69,10 @@ public:
     bool        SystemInfoPanelIsEnabled();
     bool        KillerShortcutIsEnabled();
     bool        EventLogIsEnabled();
+    uint8       EventLogLevel();
+    uint8       EventLogRetentionPolicy();
+    uint32      EventLogMaxSize();
+    uint32      EventLogMaxAge();
     bool        PasswordLessAuthEnabled();
     int32       AuthenticationAttemptsThreshold();
     int32       AuthenticationCooldownAfterThreshold();
@@ -104,6 +95,10 @@ public:
     status_t    SetSystemInfoPanelEnabled(bool status);
     status_t    SetKillerShortcutEnabled(bool status);
     status_t    SetEventLogEnabled(bool status);
+    status_t    SetEventLogLevel(uint8 level);
+    status_t    SetEventLogRetentionPolicy(uint8 level);
+    status_t    SetEventLogMaxSize(uint32 value);
+    status_t    SetEventLogMaxAge(uint32 value);
     status_t    SetPasswordLessAuthEnabled(bool status);
     status_t    SetAuthenticationAttemptsThreshold(int32 count);
     status_t    SetAuthenticationCooldownAfterThreshold(int32 multiplier);
@@ -132,6 +127,10 @@ private:
     bool        fSystemInfoPanelEnabled;
     bool        fKillerShortcutEnabled;
     bool        fEventLogEnabled;
+    uint8       fEventLogLevel;
+    uint8       fEventLogRetentionPolicy;
+    uint32      fEventLogMaxSize;
+    uint32      fEventLogMaxAge;
     bool        fPasswordLessAuthEnabled;
     int32       fAuthAttemptsThreshold;
     int32       fAuthAttemptsErrorCooldown;

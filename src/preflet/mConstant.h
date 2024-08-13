@@ -73,12 +73,21 @@
 #define CHECK_USERBUTTON        'wada'
 #define M_ITEM_SELECTED         'isel'
 
+#define M_EVTLOG_BOOL           'cbel'
+#define M_EVTLOG_CLEAR          'lgcl'
+#define M_EVTLOG_LEVEL_1        'lgl1'
+#define M_EVTLOG_LEVEL_2        'lgl2'
+#define M_EVTLOG_LEVEL_3        'lgl3'
+#define M_EVTLOG_POLICY_0       'lgp0'
+#define M_EVTLOG_POLICY_1       'lgp1'
+#define M_EVTLOG_POLICY_2       'lgp2'
+#define M_EVTLOG_POLICY_SIZE    'lgsz'
+#define M_EVTLOG_POLICY_AGE     'lgag'
+
 #define M_BOOL_SESSION          'cbsb'
 #define M_BOOL_INFO             'cbsi'
 #define M_BOOL_KILLER           'cbks'
-#define M_BOOL_EVTLOG           'cbel'
 #define M_BOOL_PWDLESS          'cbpw'
-#define M_EVTLOG_CLEAR          'lgcl'
 
 #define M_UTIL_ADDBOOT          'boot'
 #define M_UTIL_REMBOOT          'woot'

@@ -11,6 +11,7 @@
 #include <Application.h>
 #include <Catalog.h>
 #include <LayoutBuilder.h>
+#include <private/interface/Spinner.h>
 #include <cstdio>
 #include <string>
 //Local
@@ -35,6 +36,7 @@ mWindow::mWindow(const char *mWindowTitle)
     userCardView  = CreateCardView_User();
 	bgCardView    = CreateCardView_Background();
 	clockCardView = CreateCardView_Clock();
+    logCardView   = CreateCardView_Logging();
 	extraCardView = CreateCardView_Options();
 
     //I te yo evythin
@@ -61,6 +63,7 @@ mWindow::mWindow(const char *mWindowTitle)
     fPanelList->AddItem(new BStringItem(B_TRANSLATE("Accounts")));
     fPanelList->AddItem(new BStringItem(B_TRANSLATE("Background")));
     fPanelList->AddItem(new BStringItem(B_TRANSLATE("Clock")));
+    fPanelList->AddItem(new BStringItem(B_TRANSLATE("Event log")));
     fPanelList->AddItem(new BStringItem(B_TRANSLATE("Options")));
     BScrollView *listScrollView = new BScrollView("sc_cont", fPanelList,
         0, false, true, B_FANCY_BORDER);
@@ -73,6 +76,7 @@ mWindow::mWindow(const char *mWindowTitle)
     fCardView->AddChild(userCardView);
     fCardView->AddChild(bgCardView);
     fCardView->AddChild(clockCardView);
+    fCardView->AddChild(logCardView);
     fCardView->AddChild(extraCardView);
 
     BLayoutBuilder::Group<>(this, B_VERTICAL)
@@ -265,7 +269,7 @@ void mWindow::MessageReceived(BMessage* message)
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
-        case M_BOOL_EVTLOG:
+        case M_EVTLOG_BOOL:
         {
             settings->SetEventLogEnabled(mCheckBoxEventLog->Value() == B_CONTROL_ON);
             //Enable and disable buttons
@@ -577,6 +581,78 @@ void mWindow::MessageReceived(BMessage* message)
             mStaticLogClrResponse->SetText(response.String());
             break;
         }
+        case M_EVTLOG_LEVEL_1:
+        {
+            settings->SetEventLogLevel(1);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_EVTLOG_LEVEL_2:
+        {
+            settings->SetEventLogLevel(2);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_EVTLOG_LEVEL_3:
+        {
+            settings->SetEventLogLevel(3);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_EVTLOG_POLICY_0:
+        {
+            settings->SetEventLogRetentionPolicy(EVP_CONTINUE);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_EVTLOG_POLICY_1:
+        {
+            settings->SetEventLogRetentionPolicy(EVP_WIPE_AFTER_SIZE);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_EVTLOG_POLICY_2:
+        {
+            settings->SetEventLogRetentionPolicy(EVP_WIPE_AFTER_AGE);
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_EVTLOG_POLICY_SIZE:
+        {
+            settings->SetEventLogMaxSize(mSpinnerLogMaxSize->Value());
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
+        case M_EVTLOG_POLICY_AGE:
+        {
+            settings->SetEventLogMaxAge(mSpinnerLogMaxAge->Value());
+
+            //Enable and disable buttons
+            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+                "Enable and disable buttons", B_LOW_PRIORITY, this);
+            break;
+        }
         case M_UTIL_ADDBOOT:
         {
             EnableAutoStart(true);
@@ -648,9 +724,12 @@ void mWindow::EnDButtons_Thread()
     bgCardView->UnlockLooper();
 
     clockCardView->LockLooper();
-    mButtonDefaultClockColors->SetEnabled(!UI_IsClockColorDefault(defaults));
-    mButtonDefaultClockPlace->SetEnabled(!UI_IsClockPlaceDefault(defaults));
+    UI_ClockControlsEnable(defaults, mCheckBoxBoolClock->Value() == B_CONTROL_ON);
     clockCardView->UnlockLooper();
+
+    logCardView->LockLooper();
+    UI_LogControlsEnable(mCheckBoxEventLog->Value() == B_CONTROL_ON);
+    logCardView->UnlockLooper();
 
     extraCardView->LockLooper();
     mButtonAddToBoot->SetEnabled(HasAutoStartInstalled() == B_ENTRY_NOT_FOUND);
@@ -792,11 +871,42 @@ void mWindow::InitUIControls()
     mCCClockColor->SetValue(settings->ClockColor());
     mTextControlClockPlaceX->SetText(std::to_string(settings->ClockLocation().x).c_str());
     mTextControlClockPlaceY->SetText(std::to_string(settings->ClockLocation().y).c_str());
+    BMessage msg;
+    LWSettings::DefaultSettings(&msg);
+    UI_ClockControlsEnable(&msg, settings->ClockIsEnabled());
+
+    mCheckBoxEventLog->SetValue(settings->EventLogIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
+    switch(settings->EventLogLevel()) { // EVT_CRITICAL is reserved for the future
+        case EVT_ERROR:
+            mMfLogLevel->Menu()->ItemAt(0)->SetMarked(true);
+            break;
+        case EVT_WARNING:
+            mMfLogLevel->Menu()->ItemAt(1)->SetMarked(true);
+            break;
+        case EVT_INFO:
+        default:
+            mMfLogLevel->Menu()->ItemAt(2)->SetMarked(true);
+            break;
+    }
+    switch(settings->EventLogRetentionPolicy()) {
+        case EVP_WIPE_AFTER_SIZE:
+            mMfLogRetentionPolicy->Menu()->ItemAt(EVP_WIPE_AFTER_SIZE)->SetMarked(true);
+            break;
+        case EVP_WIPE_AFTER_AGE:
+            mMfLogRetentionPolicy->Menu()->ItemAt(EVP_WIPE_AFTER_AGE)->SetMarked(true);
+            break;
+        case EVP_CONTINUE:
+        default:
+            mMfLogRetentionPolicy->Menu()->ItemAt(EVP_CONTINUE)->SetMarked(true);
+            break;
+    }
+    mSpinnerLogMaxSize->SetValue(settings->EventLogMaxSize());
+    mSpinnerLogMaxAge->SetValue(settings->EventLogMaxAge());
+    UI_LogControlsEnable(settings->EventLogIsEnabled());
 
     mCheckBoxSessionBar->SetValue(settings->SessionBarIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mCheckBoxSysInfo->SetValue(settings->SystemInfoPanelIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mCheckBoxKillerShortcut->SetValue(settings->KillerShortcutIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
-    mCheckBoxEventLog->SetValue(settings->EventLogIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mCheckBoxAllowPwdlessLogin->SetValue(settings->PasswordLessAuthEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
 
     mButtonAddToBoot->SetEnabled(HasAutoStartInstalled() == B_ENTRY_NOT_FOUND);
@@ -1198,6 +1308,79 @@ BView* mWindow::CreateCardView_Clock()
     return thisview;
 }
 
+BView* mWindow::CreateCardView_Logging()
+{
+    mCheckBoxEventLog = new BCheckBox("cb_el",
+        B_TRANSLATE("Enable login events logging"), new BMessage(M_EVTLOG_BOOL));
+    mPumLogLevel = new BPopUpMenu("");
+    BLayoutBuilder::Menu<>(mPumLogLevel)
+        .AddItem(B_TRANSLATE("Error"), M_EVTLOG_LEVEL_1)
+        .AddItem(B_TRANSLATE("Warning"), M_EVTLOG_LEVEL_2)
+        .AddItem(B_TRANSLATE("Information"), M_EVTLOG_LEVEL_3)
+    .End();
+    mMfLogLevel = new BMenuField(
+#if(B_HAIKU_VERSION < B_HAIKU_VERSION_1_PRE_BETA_5)
+        "mf_loglev", B_TRANSLATE("Log level"), mPumLogLevel
+#else
+        "mf_loglev", B_TRANSLATE("Log level"), mPumLogLevel, true
+#endif
+    );
+
+    mPumLogRetentionPolicy = new BPopUpMenu("");
+    BLayoutBuilder::Menu<>(mPumLogRetentionPolicy)
+        .AddItem(B_TRANSLATE("Continue logging"), M_EVTLOG_POLICY_0)
+        .AddItem(B_TRANSLATE("Restart log file if it surpasses certain size"), M_EVTLOG_POLICY_1)
+        .AddItem(B_TRANSLATE("Restart log file if it is too old"), M_EVTLOG_POLICY_2)
+    .End();
+
+    mMfLogRetentionPolicy = new BMenuField(
+#if(B_HAIKU_VERSION < B_HAIKU_VERSION_1_PRE_BETA_5)
+        "mf_loglev", B_TRANSLATE("Retention policy"), mPumLogRetentionPolicy
+#else
+        "mf_loglev", B_TRANSLATE("Retention policy"), mPumLogRetentionPolicy, true
+#endif
+    );
+    mSpinnerLogMaxSize = new BSpinner("sp_size", NULL, new BMessage(M_EVTLOG_POLICY_SIZE));
+    mSpinnerLogMaxSize->SetMinValue(1);
+    mSpinnerLogMaxAge = new BSpinner("sp_age", NULL, new BMessage(M_EVTLOG_POLICY_AGE));
+    mSpinnerLogMaxAge->SetMinValue(1);
+    mButtonClearLogs = new BButton("bt_clrlg", B_TRANSLATE("Clear logs"),
+        new BMessage(M_EVTLOG_CLEAR));
+    mStaticLogClrResponse = new BStringView("sv_rsp", "");
+
+    BView* viewLogRetention = new BView(NULL, B_SUPPORTS_LAYOUT, NULL);
+    BLayoutBuilder::Group<>(viewLogRetention, B_VERTICAL)
+        .SetInsets(B_USE_SMALL_INSETS)
+        .AddGrid(B_USE_SMALL_SPACING, B_USE_SMALL_SPACING)
+            .AddMenuField(mMfLogRetentionPolicy, 0, 0)
+            .Add(new BStringView("sv_size", B_TRANSLATE("Max. size (MiB)")), 0, 1)
+            .Add(mSpinnerLogMaxSize, 1, 1)
+            .Add(new BStringView("sv_age", B_TRANSLATE("Max. age (days)")), 0, 2)
+            .Add(mSpinnerLogMaxAge, 1, 2)
+        .End()
+        .AddGroup(B_HORIZONTAL)
+            .Add(mButtonClearLogs)
+            .AddGlue()
+            .Add(mStaticLogClrResponse)
+        .End()
+    .End();
+    BBox* boxLogRetention = new BBox("box_boot",
+        B_WILL_DRAW | B_FRAME_EVENTS | B_NAVIGABLE_JUMP,
+        B_FANCY_BORDER, viewLogRetention);
+    boxLogRetention->SetLabel(B_TRANSLATE("Log retention"));
+
+    BView* thisview = new BView(NULL, B_SUPPORTS_LAYOUT, NULL);
+    BLayoutBuilder::Group<>(thisview, B_VERTICAL)
+        .SetInsets(0)
+        .Add(mCheckBoxEventLog)
+        .Add(mMfLogLevel)
+        .Add(boxLogRetention)
+        .AddGlue()
+    .End();
+
+    return thisview;
+}
+
 BView* mWindow::CreateCardView_Options()
 {
     mCheckBoxSessionBar = new BCheckBox("cb_sb",
@@ -1207,11 +1390,6 @@ BView* mWindow::CreateCardView_Options()
     mCheckBoxKillerShortcut = new BCheckBox("cb_ks",
         B_TRANSLATE("Enable shortcut (Cmd+Ctrl+Space) to bypass password protection"),
         new BMessage(M_BOOL_KILLER));
-    mCheckBoxEventLog = new BCheckBox("cb_el",
-        B_TRANSLATE("Enable login events logging"), new BMessage(M_BOOL_EVTLOG));
-    mButtonClearLogs = new BButton("bt_clrlg", B_TRANSLATE("Clear logs"),
-        new BMessage(M_EVTLOG_CLEAR));
-    mStaticLogClrResponse = new BStringView("sv_rsp", "");
 
     mButtonAddToBoot = new BButton(NULL, B_TRANSLATE("Add to boot"),
         new BMessage(M_UTIL_ADDBOOT));
@@ -1233,12 +1411,6 @@ BView* mWindow::CreateCardView_Options()
         .Add(mCheckBoxSessionBar)
         .Add(mCheckBoxSysInfo)
         .Add(mCheckBoxKillerShortcut)
-        .Add(mCheckBoxEventLog)
-        .AddGroup(B_HORIZONTAL)
-            .Add(mButtonClearLogs)
-            .AddGlue()
-            .Add(mStaticLogClrResponse)
-        .End()
         .Add(box)
         .AddGlue()
     .End();
@@ -1271,17 +1443,24 @@ bool mWindow::UI_IsDefault(BMessage* defaults)
     bool isClockHidden = mCheckBoxBoolClock->Value() == defaults->GetBool(mNameConfigBoolClock);
     bool isClockSizeDefault = mSliderFontSize->Value() == defaults->GetUInt32(mNameConfigClockFontSize, 8);
 
+    /* Event log */
+    bool isLoggingDefault = mCheckBoxEventLog->Value() == defaults->GetBool(mNameConfigEvtLoggingOn);
+    bool isLoggingLevDefault = mMfLogLevel->Menu()->ItemAt(0)->IsMarked();
+    bool isLoggingRetPolDefault = mMfLogRetentionPolicy->Menu()->ItemAt(defaults->GetUInt8(mNameConfigEvtLoggingRetention, EVP_CONTINUE))->IsMarked();
+    bool isLoggingMaxSizeDefault = mSpinnerLogMaxSize->Value() == defaults->GetUInt32(mNameConfigEvtLoggingMaxSize, 1);
+    bool isLoggingMaxAgeDefault = mSpinnerLogMaxAge->Value() == defaults->GetUInt32(mNameConfigEvtLoggingMaxAge, 1);
+
     /* options */
     bool isSessionBarDefault = mCheckBoxSessionBar->Value() == defaults->GetBool(mNameConfigSessionBarOn);
     bool isSysInfoPanelDefault = mCheckBoxSysInfo->Value() == defaults->GetBool(mNameConfigSysInfoPanelOn);
     bool isKillerShctDefault = mCheckBoxKillerShortcut->Value() == defaults->GetBool(mNameConfigKillerShortcutOn);
-    bool isLoggingDefault = mCheckBoxEventLog->Value() == defaults->GetBool(mNameConfigEvtLoggingOn);
 
     return isMethodDefault && isPwdlessAuthDefault && isAttemptsDefault && isWaitTimeDefault &&
            isBgModeDefault && isBgColorDefault && isImgFolderPathDefault && isBgSnoozeDefault &&
            isImgStaticDefault && isImgListFileDefault && isBgImgAdjDefault &&
            isClockColorDefault && isClockPlacementDefault && isClockHidden && isClockSizeDefault &&
            isSessionBarDefault && isSysInfoPanelDefault && isKillerShctDefault && isLoggingDefault &&
+           isLoggingLevDefault && isLoggingRetPolDefault && isLoggingMaxSizeDefault && isLoggingMaxAgeDefault &&
            isPwdlessAuthDefault;
 }
 
@@ -1396,4 +1575,35 @@ status_t mWindow::HasAutoStartInstalled(const char* targetname)
     }
     else // entry does not exist, we are free to create one without issue
         return B_ENTRY_NOT_FOUND;
+}
+
+void mWindow::UI_ClockControlsEnable(BMessage* defaults, bool status)
+{
+    mSliderFontSize->SetEnabled(status);
+    mCCClockColor->SetEnabled(status);
+    mButtonDefaultClockColors->SetEnabled(status ? !UI_IsClockColorDefault(defaults) : false);
+    mTextControlClockPlaceX->SetEnabled(status);
+    mTextControlClockPlaceY->SetEnabled(status);
+    mButtonDefaultClockPlace->SetEnabled(status ? !UI_IsClockPlaceDefault(defaults) : false);
+}
+
+void mWindow::UI_LogControlsEnable(bool status)
+{
+    auto c = [=](bool s, bool p) {
+        if(s && p) return tint_color(ui_color(B_PANEL_TEXT_COLOR), B_NO_TINT);
+        else return tint_color(ui_color(B_PANEL_TEXT_COLOR), (0.590f + 0.385f) * (4.0f / 7));
+    };
+    bool polSize = mMfLogRetentionPolicy->Menu()->ItemAt(EVP_WIPE_AFTER_SIZE)->IsMarked();
+    bool polAge = mMfLogRetentionPolicy->Menu()->ItemAt(EVP_WIPE_AFTER_AGE)->IsMarked();
+
+    mMfLogLevel->SetEnabled(status);
+    mMfLogRetentionPolicy->SetEnabled(status);
+
+    FindView("sv_size")->SetHighColor(c(status, polSize));
+    FindView("sv_age")->SetHighColor(c(status, polAge));
+    FindView("sv_size")->Invalidate();
+    FindView("sv_age")->Invalidate();
+
+    mSpinnerLogMaxSize->SetEnabled(status && polSize);
+    mSpinnerLogMaxAge->SetEnabled(status && polAge);
 }

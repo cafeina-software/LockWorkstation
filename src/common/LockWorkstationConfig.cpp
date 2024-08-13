@@ -111,14 +111,23 @@ void LWSettings::InitData()
     fClockSize = savemessage.GetUInt32(mNameConfigClockFontSize,
         defaults->GetUInt32(mNameConfigClockFontSize, 8));
 
+    fEventLogEnabled = savemessage.GetBool(mNameConfigEvtLoggingOn,
+        defaults->GetBool(mNameConfigEvtLoggingOn));
+    fEventLogLevel = savemessage.GetUInt8(mNameConfigEvtLoggingLevel,
+        defaults->GetUInt8(mNameConfigEvtLoggingLevel, 3));
+    fEventLogRetentionPolicy = savemessage.GetUInt8(mNameConfigEvtLoggingRetention,
+        defaults->GetUInt8(mNameConfigEvtLoggingRetention, 0));
+    fEventLogMaxSize = savemessage.GetUInt32(mNameConfigEvtLoggingMaxSize,
+        defaults->GetUInt32(mNameConfigEvtLoggingMaxSize, 1));
+    fEventLogMaxAge = savemessage.GetUInt32(mNameConfigEvtLoggingMaxAge,
+        defaults->GetUInt32(mNameConfigEvtLoggingMaxAge, 1));
+
     fSessionBarEnabled = savemessage.GetBool(mNameConfigSessionBarOn,
         defaults->GetBool(mNameConfigSessionBarOn));
     fSystemInfoPanelEnabled = savemessage.GetBool(mNameConfigSysInfoPanelOn,
         defaults->GetBool(mNameConfigSysInfoPanelOn));
     fKillerShortcutEnabled = savemessage.GetBool(mNameConfigKillerShortcutOn,
         defaults->GetBool(mNameConfigKillerShortcutOn));
-    fEventLogEnabled = savemessage.GetBool(mNameConfigEvtLoggingOn,
-        defaults->GetBool(mNameConfigEvtLoggingOn));
 
     delete defaults;
 }
@@ -158,10 +167,15 @@ void LWSettings::DefaultSettings(BMessage* archive)
 
     archive->AddString(mNameConfigLanguage, "0");
 
+    archive->AddBool(mNameConfigEvtLoggingOn, true);
+    archive->AddUInt8(mNameConfigEvtLoggingLevel, EVT_INFO);
+    archive->AddUInt8(mNameConfigEvtLoggingRetention, EVP_CONTINUE);
+    archive->AddUInt32(mNameConfigEvtLoggingMaxSize, 1);
+    archive->AddUInt32(mNameConfigEvtLoggingMaxAge, 1);
+
     archive->AddBool(mNameConfigSessionBarOn, false);
     archive->AddBool(mNameConfigSysInfoPanelOn, true);
     archive->AddBool(mNameConfigKillerShortcutOn, false);
-    archive->AddBool(mNameConfigEvtLoggingOn, true);
 }
 
 status_t LWSettings::SaveSettings()
@@ -214,9 +228,15 @@ void LWSettings::Commit()
     savemessage.SetBool(mNameConfigSessionBarOn, fSessionBarEnabled);
     savemessage.SetBool(mNameConfigSysInfoPanelOn, fSystemInfoPanelEnabled);
 
+    /* Event log */
+    savemessage.SetBool(mNameConfigEvtLoggingOn, fEventLogEnabled);
+    savemessage.SetUInt8(mNameConfigEvtLoggingLevel, fEventLogLevel);
+    savemessage.SetUInt8(mNameConfigEvtLoggingRetention, fEventLogRetentionPolicy);
+    savemessage.SetUInt32(mNameConfigEvtLoggingMaxSize, fEventLogMaxSize);
+    savemessage.SetUInt32(mNameConfigEvtLoggingMaxAge, fEventLogMaxAge);
+
     /* Other configs */
     savemessage.SetBool(mNameConfigKillerShortcutOn, fKillerShortcutEnabled);
-    savemessage.SetBool(mNameConfigEvtLoggingOn, fEventLogEnabled);
 }
 
 // #pragma mark -
@@ -309,6 +329,26 @@ bool LWSettings::KillerShortcutIsEnabled()
 bool LWSettings::EventLogIsEnabled()
 {
     return fEventLogEnabled;
+}
+
+uint8 LWSettings::EventLogLevel()
+{
+    return fEventLogLevel;
+}
+
+uint8 LWSettings::EventLogRetentionPolicy()
+{
+    return fEventLogRetentionPolicy;
+}
+
+uint32 LWSettings::EventLogMaxSize()
+{
+    return fEventLogMaxSize;
+}
+
+uint32 LWSettings::EventLogMaxAge()
+{
+    return fEventLogMaxAge;
 }
 
 bool LWSettings::PasswordLessAuthEnabled()
@@ -422,6 +462,26 @@ status_t LWSettings::SetKillerShortcutEnabled(bool status)
 status_t LWSettings::SetEventLogEnabled(bool status)
 {
     return ((fEventLogEnabled = status) == status) ? B_OK : B_ERROR;
+}
+
+status_t LWSettings::SetEventLogLevel(uint8 level)
+{
+    return ((fEventLogLevel = level) == level) ? B_OK : B_ERROR;
+}
+
+status_t LWSettings::SetEventLogRetentionPolicy(uint8 level)
+{
+    return ((fEventLogRetentionPolicy = level) == level) ? B_OK : B_ERROR;
+}
+
+status_t LWSettings::SetEventLogMaxSize(uint32 value)
+{
+    return ((fEventLogMaxSize = value) == value) ? B_OK : B_ERROR;
+}
+
+status_t LWSettings::SetEventLogMaxAge(uint32 value)
+{
+    return ((fEventLogMaxAge = value) == value) ? B_OK : B_ERROR;
 }
 
 status_t LWSettings::SetPasswordLessAuthEnabled(bool status)

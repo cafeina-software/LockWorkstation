@@ -62,11 +62,11 @@ void mClockView::UserThreadChangeImage()
     while(mShowClock) {
         _TimeUpdate();
 
-        mTimer.SetTo("");
+        //mTimer.SetTo("");
         BTimeFormat tfmt;
         tfmt.Format(mTimer, tmptodaytime, B_MEDIUM_TIME_FORMAT, NULL);
 
-        mDater.SetTo("");
+        //mDater.SetTo("");
         BDateFormat fmt;
         fmt.Format(mDater, tmptodaytime, B_LONG_DATE_FORMAT, NULL);
 

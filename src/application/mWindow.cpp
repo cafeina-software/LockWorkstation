@@ -21,15 +21,16 @@ mWindow::mWindow(const char* mWindowTitle)
     B_FLOATING_SUBSET_WINDOW_FEEL | B_NOT_CLOSABLE | B_NOT_ZOOMABLE |
     B_NOT_RESIZABLE, B_ALL_WORKSPACES)
 {
+    // Initialize app data from settings file
+    InitUIData();
+
     BPath path;
     find_directory(B_SYSTEM_LOG_DIRECTORY, &path);
     path.Append("LockWorkstation.log");
-    logger = new mLogger(mNameConfigEvtLoggingOn, path.Path());
+    logger = new mLogger(settings, path.Path());
 
     SetPulseRate(1000000);
 
-    // Initialize app data from settings file
-    InitUIData();
     const rgb_color mWhite = {255, 255, 255};
     const rgb_color mBlack = {0, 0, 0};
 

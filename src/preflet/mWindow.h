@@ -18,6 +18,7 @@
 #include <SupportKit.h>
 #include <TranslationKit.h>
 #include <CardView.h>
+#include <private/interface/Spinner.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,6 +82,7 @@ private:
 	BView*              CreateCardView_User();
 	BView*              CreateCardView_Background();
 	BView*              CreateCardView_Clock();
+    BView*              CreateCardView_Logging();
 	BView*              CreateCardView_Options();
 
 	bool				UI_IsDefault(BMessage* archive);
@@ -88,11 +90,15 @@ private:
 	bool				UI_IsBgFolderDefault(BMessage* archive);
 	bool				UI_IsClockColorDefault(BMessage* archive);
 	bool				UI_IsClockPlaceDefault(BMessage* archive);
+
+    void                UI_ClockControlsEnable(BMessage* defaults, bool status);
+    void                UI_LogControlsEnable(bool status);
 private:
 	BView              *amthdCardView,
                        *userCardView,
 	                   *bgCardView,
                        *clockCardView,
+                       *logCardView,
                        *extraCardView,
                        *mApplyView;
 
@@ -123,15 +129,21 @@ private:
 	BListView          *mListOfUsers,
 	                   *fPanelList;
     BMenuField         *mMfBgImageOption,
-                       *mMfBgImageAdjustment;
+                       *mMfBgImageAdjustment,
+                       *mMfLogLevel,
+                       *mMfLogRetentionPolicy;
     BPopUpMenu         *mPumBgImageOption,
-                       *mPumBgImageAdjustment;
+                       *mPumBgImageAdjustment,
+                       *mPumLogLevel,
+                       *mPumLogRetentionPolicy;
     BRadioButton       *mRadioBtAuthSysaccount,
                        *mRadioBtAuthAppaccount;
     BSlider            *mSliderFontSize,
                        *mSliderAttemptsThrshld,
                        *mSliderErrorWaitTime,
                        *mSliderBgSnooze;
+    BSpinner           *mSpinnerLogMaxSize,
+                       *mSpinnerLogMaxAge;
     BStringView        *mStaticLogClrResponse;
     BTextControl       *mAddUserName,
 	                   *mAddPassWord,
