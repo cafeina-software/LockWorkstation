@@ -11,6 +11,8 @@
 #undef B_TRANSLATION_CONTEXT
 #define B_TRANSLATION_CONTEXT "Login box"
 
+static BString strShutdownRequested = B_TRANSLATE("The system is being shut down" B_UTF8_ELLIPSIS);
+static BString strRestartRequested = B_TRANSLATE("The system is being restarted" B_UTF8_ELLIPSIS);
 static BString strLoginFailed = B_TRANSLATE("Login failed.");
 static BString strLoginNotAllowed = B_TRANSLATE("Account has password login disabled.");
 static BString strAccExpired = B_TRANSLATE("Account is expired.");
@@ -21,11 +23,11 @@ static BString strNoError = "";
 mLoginBox::mLoginBox(BRect frame, LWSettings* settings)
 : BView(frame, "v_loginbox", B_FOLLOW_LEFT, B_WILL_DRAW | B_NAVIGABLE |
     B_NAVIGABLE_JUMP | B_INPUT_METHOD_AWARE | B_DRAW_ON_CHILDREN),
-    loginAttempts(0),
     isPwdLessOn(settings->PasswordLessAuthEnabled()),
+    isInactivityTimerOn(settings->AuthenticationResetFormIfInactive()),
+    loginAttempts(0),
     errorThreshold(settings->AuthenticationAttemptsThreshold()),
     snoozeMultiplier(settings->AuthenticationCooldownAfterThreshold()),
-    isInactivityTimerOn(settings->AuthenticationResetFormIfInactive()),
     inactivityTime(30) // 30 seconds
 {
     SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
@@ -50,7 +52,7 @@ mLoginBox::mLoginBox(BRect frame, LWSettings* settings)
     tcUserName = new BTextControl("tc_username", B_TRANSLATE("User name"), "",
         new BMessage('user'));
     const char blacklist [] = {"\0\a\b\t\n\v\f\r\e\x20"};
-    for(int i = 0; i < sizeof(blacklist)/sizeof(blacklist[0]); i++)
+    for(int i = 0; i < static_cast<int>(sizeof(blacklist)/sizeof(blacklist[0])); i++)
         tcUserName->TextView()->DisallowChar(blacklist[i]);
 
     tcUserName->SetModificationMessage(new BMessage(LBM_USERNAME_CHANGED));
@@ -175,6 +177,25 @@ void mLoginBox::MessageReceived(BMessage* message)
                 ThreadedCall(thUpdateUILockdown, CallUpdateUILockdown,
                     "Update UI after too many errors", B_NORMAL_PRIORITY, this);
             break;
+        case loginBoxMsgs::LBM_NOTIFY_SESSION_EVENT:
+        {
+            fprintf(stderr, "Received msg about event notify!!!\n");
+            uint32 what = 0;
+            if(message->FindUInt32("what", &what) == B_OK) {
+                BString target("");
+                if(what == M_SHUTDOWN_REQUESTED)
+                    target = strShutdownRequested;
+                else if(what == M_RESTART_REQUESTED)
+                    target = strRestartRequested;
+                else
+                    target = strNoError;
+
+                LockLooper();
+                errorView->SetText(target);
+                UnlockLooper();
+            }
+            break;
+        }
         default:
             BView::MessageReceived(message);
             break;

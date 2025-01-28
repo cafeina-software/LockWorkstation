@@ -12,9 +12,11 @@
 class mSessionBar : public BToolBar
 {
 public:
-	mSessionBar(orientation ont = B_HORIZONTAL, BHandler* target = NULL);
+    mSessionBar(orientation ont = B_HORIZONTAL, BHandler* target = NULL);
+    virtual void AttachedToWindow();
+    virtual void MessageReceived(BMessage* msg);
 private:
-	BHandler* fTarget;
+    BHandler* fTarget;
 };
 
 

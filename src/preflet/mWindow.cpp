@@ -89,6 +89,7 @@ mWindow::mWindow(const char *mWindowTitle)
     .End();
 
     InitUIControls(); // Set controls' values to the data values
+	DisplayCard(0);
 
     BMessenger msgr(this);
     be_roster->StartWatching(msgr, B_SOME_APP_ACTIVATED);
@@ -845,9 +846,22 @@ void mWindow::InitUIData()
 {
     BPath path;
     find_directory(B_USER_SETTINGS_DIRECTORY, &path);
-	path.Append(mPathToConfigFile);
+    path.Append(mPathToConfigFile);
 
     settings = new LWSettings(path.Path());
+}
+
+status_t mWindow::DisplayCard(int32 index)
+{
+    if(!fPanelList)
+        return B_ERROR;
+
+    if(index < 0 || index >= fPanelList->CountItems())
+        return B_BAD_INDEX;
+
+    fPanelList->Select(index);
+    fCardView->CardLayout()->SetVisibleItem(index);
+    return B_OK;
 }
 
 // #pragma mark - UI Building

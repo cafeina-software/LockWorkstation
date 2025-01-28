@@ -37,14 +37,14 @@ private:
     LWSettings*     fCurrentSettings;
     rgb_color       fBackgroundColor;
     uint8           fBackgroundMode;
+    uint32          snoozeMultiplier;
+    ImgAdjust       fBackgroundImageAdjust;
     BString         fSrcPath;
     BStringList     imagePaths;
     BObjectList<BBitmap*> imageList;
     static BBitmap* currentimage;
     thread_id       imageLooper;
     static bool     shouldExit;
-    uint32          snoozeMultiplier;
-    ImgAdjust       fBackgroundImageAdjust;
 };
 
 

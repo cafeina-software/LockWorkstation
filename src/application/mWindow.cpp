@@ -31,8 +31,8 @@ mWindow::mWindow(const char* mWindowTitle)
 
     SetPulseRate(1000000);
 
-    const rgb_color mWhite = {255, 255, 255};
-    const rgb_color mBlack = {0, 0, 0};
+    // const rgb_color mWhite = {255, 255, 255};
+    // const rgb_color mBlack = {0, 0, 0};
 
     // Child boxes
     loginbox = new mLoginBox(BRect(0, 0, 0, 0), settings);
@@ -106,7 +106,7 @@ mWindow::~mWindow()
 void mWindow::MessageReceived(BMessage* message)
 {
     switch(message->what)
-	{
+    {
         case LOGIN_CHANGED:
             logger->AddEvent(EVT_WARNING, "User tried to exit the locker application (Cmd+Q).");
             break;
@@ -142,13 +142,23 @@ void mWindow::MessageReceived(BMessage* message)
             break;
         }
         case M_RESTART_REQUESTED:
+        {
             logger->AddEvent("Restart requested.");
+            BMessage request(LBM_NOTIFY_SESSION_EVENT);
+            request.AddUInt32("what", message->what);
+            PostMessage(&request, loginbox);
             SystemShutdown(true, false, false);
             break;
+        }
         case M_SHUTDOWN_REQUESTED:
+        {
             logger->AddEvent("Shut down requested.");
+            BMessage request(LBM_NOTIFY_SESSION_EVENT);
+            request.AddUInt32("what", message->what);
+            PostMessage(&request, loginbox);
             SystemShutdown(false, false, false);
             break;
+        }
         case M_BYPASS_REQUESTED:
             logger->AddEvent(EVT_WARNING, "Shutdown using security-bypass requested.");
             QuitRequested();
@@ -159,7 +169,7 @@ void mWindow::MessageReceived(BMessage* message)
         default:
             BWindow::MessageReceived(message);
             break;
-	}
+    }
 }
 
 /**********************************************************/
@@ -214,7 +224,7 @@ void mWindow::InitUIData()
 {
     BPath path;
     find_directory(B_USER_SETTINGS_DIRECTORY, &path);
-	path.Append(mPathToConfigFile);
+    path.Append(mPathToConfigFile);
 
     settings = new LWSettings(path.Path());
 }

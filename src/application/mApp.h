@@ -14,6 +14,7 @@ public:
 						mApp();
 						~mApp();
 	virtual void		ReadyToRun();
+    virtual void        MessageReceived(BMessage* msg);
 private:
 	mWindow*			MainWindow;
 };

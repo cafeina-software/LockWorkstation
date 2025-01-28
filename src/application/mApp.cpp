@@ -30,3 +30,17 @@ void mApp::ReadyToRun()
 		be_app->PostMessage(B_QUIT_REQUESTED);
     }
 }
+
+void mApp::MessageReceived(BMessage* msg)
+{
+    switch(msg->what)
+    {
+        case M_SHUTDOWN_REQUESTED:
+        case M_RESTART_REQUESTED:
+            BMessenger(MainWindow).SendMessage(msg);
+            break;
+        default:
+            BApplication::MessageReceived(msg);
+            break;
+    }
+}

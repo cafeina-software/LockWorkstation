@@ -13,7 +13,8 @@
 enum loginBoxMsgs {
     LBM_USERNAME_CHANGED = 'usch',
     LBM_PASSWORD_CHANGED = 'pach',
-    LBM_LOGIN_REQUESTED
+    LBM_LOGIN_REQUESTED,
+    LBM_NOTIFY_SESSION_EVENT
 };
 
 class mLoginBox : public BView, public ThreadedClass
@@ -55,10 +56,10 @@ private:
                     thUpdateUIErrorMsg;
 
     bool            isPwdLessOn;
-    int32           loginAttempts;
-    int32           snoozeMultiplier;
-    int32           errorThreshold;
     bool            isInactivityTimerOn;
+    int32           loginAttempts;
+    int32           errorThreshold;
+    int32           snoozeMultiplier;
     const uint32    inactivityTime;
 };
 

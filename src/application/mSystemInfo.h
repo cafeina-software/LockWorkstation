@@ -36,7 +36,6 @@ private:
 
     static int32    UpdateUIThreadCall(void* data);
 private:
-    mClockView*     clock;
     BStringView     *runtime,
                     *memmax,
                     *memused;

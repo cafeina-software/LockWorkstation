@@ -30,7 +30,7 @@ mBackgroundView::mBackgroundView(BRect frame, const char *name, uint32 resizingM
 mBackgroundView::~mBackgroundView()
 {
     shouldExit = true;
-    kill_thread(imageLooper);
+    //kill_thread(imageLooper);
     imageList.MakeEmpty(true);
     if(currentimage)
         delete currentimage;

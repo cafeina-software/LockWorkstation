@@ -69,6 +69,7 @@ private:
 
     void                InitUIControls();
     void                InitUIData();
+	status_t			DisplayCard(int32 index);
     void                CallBgImgFilePanel(uint32 what, uint32 node_flavors,
                             BRefFilter* filter = NULL);
     void                EnableAutoStart(bool status);
@@ -91,15 +92,15 @@ private:
     void                UI_ClockControlsEnable(BMessage* defaults, bool status);
     void                UI_LogControlsEnable(bool status);
 private:
-	BView              *amthdCardView,
+    BView              *amthdCardView,
                        *userCardView,
-	                   *bgCardView,
+                       *bgCardView,
                        *clockCardView,
                        *logCardView,
                        *extraCardView,
                        *mApplyView;
 
-	BButton            *mButtonChangeLogin,
+    BButton            *mButtonChangeLogin,
                        *mButtonUserMod,
                        *mButtonUserRem,
                        *mButtonDefaultColors,
@@ -115,17 +116,17 @@ private:
                        *mButtonRemFromBoot,
                        *mEraserButtonOfDoom;
     BCardView          *fCardView;
-	BCheckBox          *mCheckBoxBoolClock,
+    BCheckBox          *mCheckBoxBoolClock,
                        *mCheckBoxSessionBar,
-	                   *mCheckBoxSysInfo,
-	                   *mCheckBoxKillerShortcut,
+                       *mCheckBoxSysInfo,
+                       *mCheckBoxKillerShortcut,
                        *mCheckBoxEventLog,
                        *mCheckBoxResetLoginForm,
                        *mCheckBoxAllowPwdlessLogin;
     BColorControl      *mCCBgColor,
                        *mCCClockColor;
-	BListView          *mListOfUsers,
-	                   *fPanelList;
+    BListView          *mListOfUsers,
+                       *fPanelList;
     BMenuField         *mMfBgImageOption,
                        *mMfBgImageAdjustment,
                        *mMfLogLevel,
@@ -144,12 +145,12 @@ private:
                        *mSpinnerLogMaxAge;
     BStringView        *mStaticLogClrResponse;
     BTextControl       *mAddUserName,
-	                   *mAddPassWord,
-	                   *mAddPassWordRetype,
+                       *mAddPassWord,
+                       *mAddPassWordRetype,
                        *mTextControlmPathToImage,
-	                   *mTextControlmPathToImageFolder,
+                       *mTextControlmPathToImageFolder,
                        *mTextControlmPathToImageList,
-	                   *mTextControlClockPlaceX,
+                       *mTextControlClockPlaceX,
                        *mTextControlClockPlaceY;
 
     thread_id           EnDButtonsThread,
@@ -158,8 +159,8 @@ private:
 
     LWSettings         *settings;
 
-	BFilePanel*			mFilePanelFolderBrowse;
-	entry_ref 			mEntryRef;
+    BFilePanel*         mFilePanelFolderBrowse;
+    entry_ref           mEntryRef;
     mUserInfo          *fInfoWnd;
 };
 

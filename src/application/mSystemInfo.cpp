@@ -13,7 +13,15 @@
 #define B_TRANSLATION_CONTEXT "System info"
 
 mSystemInfo::mSystemInfo(BRect frame)
-: BView(frame, NULL, B_FOLLOW_NONE, B_WILL_DRAW | B_PULSE_NEEDED)
+: BView(frame, NULL, B_FOLLOW_NONE, B_WILL_DRAW | B_PULSE_NEEDED),
+  fStrNameAndRelease(""),
+  fStrHrev(""),
+  fStrFullCpuName(""),
+  fStrFullCoreInfo(""),
+  fStrMaxMem(""),
+  fStrUsedMem(""),
+  fStrNodeName(""),
+  fStrRunningTime("")
 {
     InitUIData();
 
@@ -209,7 +217,7 @@ const char* mSystemInfo::ParseCPUInfo(cpu_topology_node_info* cputnik, uint32 no
     uint32 model;
     uint64 freq;
 
-    for(int i = 0; i < nodecount; i++) {
+    for(uint32 i = 0; i < nodecount; i++) {
         switch(cputnik[i].type)
         {
             case B_TOPOLOGY_ROOT:
@@ -242,7 +250,7 @@ const char* mSystemInfo::ParseCPUCores(cpu_topology_node_info* cputnik, uint32 n
     BString coreinfo;
     uint32 corecount = 0;
 
-    for(int i = 0; i < nodecount; i++) {
+    for(uint32 i = 0; i < nodecount; i++) {
         if(cputnik[i].type == B_TOPOLOGY_CORE)
             corecount++;
         else
