@@ -1,0 +1,26 @@
+1	Spanish	application/x-vnd.lockworkstation	2766815314
+Memory	System info		Memoria
+Running time: %s%d hours, %d minutes, %d seconds	System info	Example: \"Running time: (2 days, )11 hours, 23 minutes, 12 seconds.\"	Tiempo en ejecución: %s%d horas, %d minutos, %d segundos
+Processor	System info		Procesador
+Session	System info		Sesión
+%s %s @ %.2lf GHz	System info		%s %s @ %.2lf GHz
+Total memory: %.2lf GiB	System info		Memoria máxima: %.2lf GiB
+User name	Login box		Usuario
+Login failed.	Login box		Autenticación fallida.
+The system is being restarted…	Login box		El sistema se está reiniciando…
+%d days, 	System info		%d días, 
+Password	Login box		Contraseña
+Operating system	System info		Sistema operativo
+Account is expired.	Login box		Cuenta expirada.
+Empty password usage is disabled.	Login box		El uso de contraseñas vacías está deshabilitado.
+%u cores	System info		%u núcleos
+Used memory: %.2lf GiB	System info		Memoria usada: %.2lf GiB
+Host name: %s	System info		Nombre de equipo: %s
+Restart	Session bar		Reiniciar
+The system is shutting down…	Login box		El sistema se está apagando…
+Login	Login box		Iniciar sesión
+Session locked	Login box		Sesión bloqueada
+Please write the user name and password to unlock	Login box		Escriba el usuario y la contraseña para desbloquear
+The password is expired.	Login box		Contraseña expirada.
+Account has password login disabled.	Login box		La cuenta tiene el inicio de sesión por contraseña deshabilitado.
+Shut down	Session bar		Apagar

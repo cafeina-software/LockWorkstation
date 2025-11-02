@@ -1,0 +1,114 @@
+1	English	application/x-vnd.LockWorkstation-Pref	2133112217
+Authentication	mWindow		Authentication
+%s: version %s\n	(preflet) main		%s: version %s\n
+Home directory	mUserInfo dialog		Home directory
+Position must be within the screen bounds	mWindow		Position must be within the screen bounds
+Scale and fit to X:Y	mWindow		Scale and fit to X:Y
+Accounts	mWindow		Accounts
+Restart log file if it is too old	mWindow		Restart log file if it is too old
+Allow passwordless accounts to login	mWindow		Allow passwordless accounts to login
+Current password	mUserInfo dialog		Current password
+Background	mWindow		Background
+Enable shortcut (Cmd+Ctrl+Space) to bypass password protection	mWindow		Enable shortcut (Cmd+Ctrl+Space) to bypass password protection
+Count of failed attempts tolerance	mWindow		Count of failed attempts tolerance
+Warning	mWindow		Warning
+Remove from boot	mWindow		Remove from boot
+Path to image folder	mWindow		Path to image folder
+Wait time after too many failed attempts	mWindow		Wait time after too many failed attempts
+New passwords do not match.	mUserInfo dialog		New passwords do not match.
+Add to boot	mWindow		Add to boot
+Resize to screen (allows deformation)	mWindow		Resize to screen (allows deformation)
+Username	mUserInfo dialog		Username
+Keep dimensions and center	mWindow		Keep dimensions and center
+Show Clock?	mWindow		Show Clock?
+%appname%: %appdesc%\nUsage: %binname%\n       %binname% [option]\nThe first mode opens the UI preferences window.\nThe second mode perform an operation and exits. Here, [option] includes:\n\t--help              This message\n\t--version           Shows application version\n\t--create-settings   Creates a new settings file if it does not exist\n\t--restore-settings  Removes the settings file and creates a new one\n	(preflet) main		%appname%: %appdesc%\nUsage: %binname%\n       %binname% [option]\nThe first mode opens the UI preferences window.\nThe second mode perform an operation and exits. Here, [option] includes:\n\t--help              This message\n\t--version           Shows application version\n\t--create-settings   Creates a new settings file if it does not exist\n\t--restore-settings  Removes the settings file and creates a new one\n
+0 (limitless)	mWindow		0 (limitless)
+Default	mWindow		Default
+60	mWindow		60
+Image adjustment	mWindow		Image adjustment
+A simple screen locker for the Haiku operating system.	(preflet) main		A simple screen locker for the Haiku operating system.
+Scale and fit to Y	mWindow		Scale and fit to Y
+Log retention	mWindow		Log retention
+Error: settings file %s already exists.\n	(preflet) main		Error: settings file %s already exists.\n
+Retention policy	mWindow		Retention policy
+Scale and fit to X	mWindow		Scale and fit to X
+User ID	mUserInfo dialog		User ID
+Event log	mWindow		Event log
+Authentication method	mWindow		Authentication method
+Password could not be changed.	mUserInfo dialog		Password could not be changed.
+Color	mWindow		Color
+Placement Y	mWindow		Placement Y
+Load images from a list file	mWindow		Load images from a list file
+Clock	mWindow		Clock
+Placement X	mWindow		Placement X
+Password was changed successfully.	mUserInfo dialog		Password was changed successfully.
+LockWorkstation Preferences	System name		LockWorkstation Preferences
+Haiku accounts	mWindow		Haiku accounts
+User info: %s	mUserInfo dialog		User info: %s
+List of user accounts available in the system.\nA double click shows details of the selected account.	mWindow		List of user accounts available in the system.\nA double click shows details of the selected account.
+Username	mWindow		Username
+Warning	mUserInfo dialog		Warning
+5	mWindow		5
+Change password	mUserInfo dialog		Change password
+Reset login form if remained inactive for too long time	mWindow		Reset login form if remained inactive for too long time
+Show system information panel	mWindow		Show system information panel
+New password	mUserInfo dialog		New password
+Delete file	mWindow		Delete file
+User information	mUserInfo dialog		User information
+Group ID	mUserInfo dialog		Group ID
+Error: user settings directory could not be fetched.\n	(preflet) main		Error: user settings directory could not be fetched.\n
+10	mWindow	The number in your native language	10
+Authentication options	mWindow		Authentication options
+Continue logging	mWindow		Continue logging
+Placement	mWindow		Placement
+This authentication method requires an existing user account\nin the system to work. The user account must not be a \nservice account.	mWindow	Please place the new line charactersaccordingly to accomodate the string, in order to not stretch the window too much	This authentication method requires an existing user account\nin the system to work. The user account must not be a \nservice account.
+—\"Don't say a word!\"\n—\"OK\"	(preflet) About box		—\"Don't say a word!\"\n—\"OK\"
+Apply	mWindow		Apply
+Use a single image file	mWindow		Use a single image file
+Clock Size	mWindow		Clock Size
+There is currently an entry that does not point to the right destination or it is not a symbolic link.\nDo you want to delete it anyways?	mWindow		There is currently an entry that does not point to the right destination or it is not a symbolic link.\nDo you want to delete it anyways?
+Background image	mWindow		Background image
+Startup	mWindow		Startup
+Password	mWindow		Password
+Show session bar (shutdown, restart)	mWindow		Show session bar (shutdown, restart)
+Log level	mWindow		Log level
+Keep existing entry	mWindow		Keep existing entry
+Disabled	mWindow		Disabled
+Background image mode	mWindow		Background image mode
+Repeat	mWindow		Repeat
+30	mWindow	The number in your native language	30
+This authentication method will make use of the username-password\npair saved in this application's settings file. To manage the \napplication account, please make use of this application's view\n\"Accounts\". Please consider that deleting or restoring \nthe default values may delete this application-based account.	mWindow	Please place the new line characters accordingly to accomodate the string, in order to not stretch the window too much	This authentication method will make use of the username-password\npair saved in this application's settings file. To manage the \napplication account, please make use of this application's view\n\"Accounts\". Please consider that deleting or restoring \nthe default values may delete this application-based account.
+Max. age (days)	mWindow		Max. age (days)
+Load images from a folder	mWindow		Load images from a folder
+Image transition delay (in seconds)	mWindow		Image transition delay (in seconds)
+Login shell	mUserInfo dialog		Login shell
+Do not use background image	mWindow		Do not use background image
+Options	mWindow		Options
+Error	mUserInfo dialog		Error
+Browse	mWindow		Browse
+Information	mWindow		Information
+A simple screen locker for the Haiku operating system.	(preflet) About box		A simple screen locker for the Haiku operating system.
+Password	mUserInfo dialog		Password
+Path to image file	mWindow		Path to image file
+Authentication failed.	mUserInfo dialog		Authentication failed.
+Error: settings file %s could not be opened.\n	(preflet) main		Error: settings file %s could not be opened.\n
+Error	mWindow		Error
+Bad data: username cannot be empty.	mUserInfo dialog		Bad data: username cannot be empty.
+Website	(preflet) About box		Website
+Confirm new password	mUserInfo dialog		Confirm new password
+Entry exists	mWindow		Entry exists
+Max. size (MiB)	mWindow		Max. size (MiB)
+Cerrar	mUserInfo dialog		Cerrar
+User info: <invalid user>	mUserInfo dialog		User info: <invalid user>
+Change	mWindow		Change
+10	mWindow		10
+Authenticate using an application based account (default)	mWindow		Authenticate using an application based account (default)
+Application account	mWindow		Application account
+10 seconds	mWindow		10 seconds
+Enable login events logging	mWindow		Enable login events logging
+E-Mail	(preflet) About box		E-Mail
+Good	mUserInfo dialog		Good
+Clear logs	mWindow		Clear logs
+Path to image list	mWindow		Path to image list
+Authenticate using a system account	mWindow		Authenticate using a system account
+Restart log file if it surpasses certain size	mWindow		Restart log file if it surpasses certain size

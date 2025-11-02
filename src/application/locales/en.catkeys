@@ -1,0 +1,26 @@
+1	English	application/x-vnd.lockworkstation	2766815314
+Memory	System info		Memory
+Running time: %s%d hours, %d minutes, %d seconds	System info	Example: \"Running time: (2 days, )11 hours, 23 minutes, 12 seconds.\"	Running time: %s%d hours, %d minutes, %d seconds
+Processor	System info		Processor
+Session	System info		Session
+%s %s @ %.2lf GHz	System info		%s %s @ %.2lf GHz
+Total memory: %.2lf GiB	System info		Total memory: %.2lf GiB
+User name	Login box		User name
+Login failed.	Login box		Login failed.
+The system is being restarted…	Login box		The system is being restarted…
+%d days, 	System info		%d days, 
+Password	Login box		Password
+Operating system	System info		Operating system
+Account is expired.	Login box		Account is expired.
+Empty password usage is disabled.	Login box		Empty password usage is disabled.
+%u cores	System info		%u cores
+Used memory: %.2lf GiB	System info		Used memory: %.2lf GiB
+Host name: %s	System info		Host name: %s
+Restart	Session bar		Restart
+The system is shutting down…	Login box		The system is shutting down…
+Login	Login box		Login
+Session locked	Login box		Session locked
+Please write the user name and password to unlock	Login box		Please write the user name and password to unlock
+The password is expired.	Login box		The password is expired.
+Account has password login disabled.	Login box		Account has password login disabled.
+Shut down	Session bar		Shut down

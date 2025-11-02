@@ -1,0 +1,114 @@
+1	Spanish	application/x-vnd.LockWorkstation-Pref	2133112217
+Authentication	mWindow		Autenticación
+%s: version %s\n	(preflet) main		%s: versión %s\n
+Home directory	mUserInfo dialog		Carpeta personal
+Position must be within the screen bounds	mWindow		La posición debe hallarse dentro del área de la pantalla
+Scale and fit to X:Y	mWindow		Escalar y ajustar a X:Y
+Accounts	mWindow		Cuentas
+Restart log file if it is too old	mWindow		Reiniciar archivo de registro si es muy antiguo
+Allow passwordless accounts to login	mWindow		Permitir identificarse a cuentas sin contraseña
+Current password	mUserInfo dialog		Contraseña actual
+Background	mWindow		Fondo
+Enable shortcut (Cmd+Ctrl+Space) to bypass password protection	mWindow		Habilitar atajo (Cmd+Ctrl+Espacio) para saltarse protección por contraseña
+Count of failed attempts tolerance	mWindow		Tolerancia de intentos fallidos
+Warning	mWindow		Advertencia
+Remove from boot	mWindow		Quitar de inicio rápido
+Path to image folder	mWindow		Ruta a carpeta de imágenes
+Wait time after too many failed attempts	mWindow		Tiempo de espera tras exceso de intentos fallidos
+New passwords do not match.	mUserInfo dialog		Las contraseñas nuevas no coinciden.
+Add to boot	mWindow		Añadir a inicio rápido
+Resize to screen (allows deformation)	mWindow		Estirar a la pantalla (permite deformación)
+Username	mUserInfo dialog		Nombre de usuario
+Keep dimensions and center	mWindow		Mantener dimensiones y centrar
+Show Clock?	mWindow		¿Mostrar reloj?
+%appname%: %appdesc%\nUsage: %binname%\n       %binname% [option]\nThe first mode opens the UI preferences window.\nThe second mode perform an operation and exits. Here, [option] includes:\n\t--help              This message\n\t--version           Shows application version\n\t--create-settings   Creates a new settings file if it does not exist\n\t--restore-settings  Removes the settings file and creates a new one\n	(preflet) main		%appname%: %appdesc%\nModo de uso: %binname%\n       %binname% [opción]\nEl primer modo abre la interfaz gráfica de ajustes.\nEl segundo modo realiza una operación y finaliza. Aquí, [opción] representa:\n\t--help              Este mensaje\n\t--version           Muestra la versión de la aplicación\n\t--create-settings   Crea un nuevo archivo de ajustes si aún no existe\n\t--restore-settings  Quita el archivo de ajustes actual y crea uno nuevo\n
+0 (limitless)	mWindow		0 (sin límite)
+Default	mWindow		Predeterminado
+60	mWindow		60
+Image adjustment	mWindow		Ajuste de imagen
+A simple screen locker for the Haiku operating system.	(preflet) main		Un bloqueador de pantalla sencillo para el sistema operativo Haiku.
+Scale and fit to Y	mWindow		Escalar y ajustar a Y
+Log retention	mWindow		Conservación de registros
+Error: settings file %s already exists.\n	(preflet) main		Error: el archivo de ajustes %s ya existe.\n
+Retention policy	mWindow		Política de conservación
+Scale and fit to X	mWindow		Escalar y ajustar a X
+User ID	mUserInfo dialog		Id. de usuario
+Event log	mWindow		Registro de eventos
+Authentication method	mWindow		Método de autenticación
+Password could not be changed.	mUserInfo dialog		No se pudo cambiar la contraseña.
+Color	mWindow		Color
+Placement Y	mWindow		Ubicación Y
+Load images from a list file	mWindow		Cargar imágenes desde un archivo de lista
+Clock	mWindow		Reloj
+Placement X	mWindow		Ubicación X
+Password was changed successfully.	mUserInfo dialog		La contraseña se ha cambiado con éxito.
+LockWorkstation Preferences	System name		Ajustes de LockWorkstation
+Haiku accounts	mWindow		Cuentas de Haiku
+User info: %s	mUserInfo dialog		Info. de usuario: %s
+List of user accounts available in the system.\nA double click shows details of the selected account.	mWindow		Lista de cuentas de usuario disponibles en el sistema.\nHacer doble clic muestra detalles de la cuenta seleccionada.
+Username	mWindow		Nombre de usuario
+Warning	mUserInfo dialog		Advertencia
+5	mWindow		5
+Change password	mUserInfo dialog		Cambiar contraseña
+Reset login form if remained inactive for too long time	mWindow		Reestablecer formulario si permanece inactivo por mucho tiempo
+Show system information panel	mWindow		Mostrar panel de información del sistema
+New password	mUserInfo dialog		Contraseña nueva
+Delete file	mWindow		Eliminar archivo
+User information	mUserInfo dialog		Información de usuario
+Group ID	mUserInfo dialog		Id. de grupo
+Error: user settings directory could not be fetched.\n	(preflet) main		Error: no se pudo encontrar la carpeta de ajustes del usuario.\n
+10	mWindow	The number in your native language	10
+Authentication options	mWindow		Opciones de autenticación
+Continue logging	mWindow		Continuar el registro
+Placement	mWindow		Ubicación
+This authentication method requires an existing user account\nin the system to work. The user account must not be a \nservice account.	mWindow	Please place the new line charactersaccordingly to accomodate the string, in order to not stretch the window too much	Este método de autenticación requiere una cuenta de usuario\n en el sistema para funcionar. La cuenta no debe ser \nuna de servicio.
+—\"Don't say a word!\"\n—\"OK\"	(preflet) About box		—\"¡No digas ni una palabra!\"\n—\"De acuerdo.\"
+Apply	mWindow		Aplicar
+Use a single image file	mWindow		Usar una única imagen
+Clock Size	mWindow		Tamaño del reloj
+There is currently an entry that does not point to the right destination or it is not a symbolic link.\nDo you want to delete it anyways?	mWindow		Hay actualmente una entrada que no apunta al destino correcto o no es un enlace simbólico.\n¿Desea borrarlo de todas formas?
+Background image	mWindow		Imagen de fondo
+Startup	mWindow		Inicio
+Password	mWindow		Contraseña
+Show session bar (shutdown, restart)	mWindow		Mostrar barra de sesión (apagar, reiniciar)
+Log level	mWindow		Nivel de registro
+Keep existing entry	mWindow		Mantener entrada existente
+Disabled	mWindow		Deshabilitado
+Background image mode	mWindow		Modo de imagen de fondo
+Repeat	mWindow		Repetir
+30	mWindow	The number in your native language	30
+This authentication method will make use of the username-password\npair saved in this application's settings file. To manage the \napplication account, please make use of this application's view\n\"Accounts\". Please consider that deleting or restoring \nthe default values may delete this application-based account.	mWindow	Please place the new line characters accordingly to accomodate the string, in order to not stretch the window too much	Este método de autenticación usa la combinación de usuario-contraseña\nguardada en el archivo de ajustes de esta aplicación. Para editarla,\n debe hacerlo a través de la vista \"Cuentas\". Téngase en cuenta que borrar \no reestablecer los valores predeterminados podrían borrar esta \ncuenta de aplicación.
+Max. age (days)	mWindow		Antigüedad máx. (en días)
+Load images from a folder	mWindow		Cargar imágenes desde carpeta
+Image transition delay (in seconds)	mWindow		Retraso de transición de imágenes (en segundos)
+Login shell	mUserInfo dialog		Intérprete de inicio
+Do not use background image	mWindow		No usar imagen de fondo
+Options	mWindow		Opciones
+Error	mUserInfo dialog		Error
+Browse	mWindow		Explorar
+Information	mWindow		Información
+A simple screen locker for the Haiku operating system.	(preflet) About box		Un bloqueador de pantalla sencillo para el sistema operativo Haiku.
+Password	mUserInfo dialog		Contraseña
+Path to image file	mWindow		Ruta a archivo de imagen
+Authentication failed.	mUserInfo dialog		Autenticación fallida.
+Error: settings file %s could not be opened.\n	(preflet) main		Error: no se pudo abrir el archivo de ajustes %s.\n
+Error	mWindow		Error
+Bad data: username cannot be empty.	mUserInfo dialog		Datos inválidos: el usuario no puede estar vacío.
+Website	(preflet) About box		Sitio web
+Confirm new password	mUserInfo dialog		Confirmar contraseña nueva
+Entry exists	mWindow		La entrada existe
+Max. size (MiB)	mWindow		Tamaño máx. (MiB)
+Cerrar	mUserInfo dialog		Cerrar
+User info: <invalid user>	mUserInfo dialog		Info. de usuario: <usuario inválido>
+Change	mWindow		Cambiar
+10	mWindow		10
+Authenticate using an application based account (default)	mWindow		Autenticar usando una cuenta de aplicación (predeterminado)
+Application account	mWindow		Cuenta de aplicación
+10 seconds	mWindow		10 segundos
+Enable login events logging	mWindow		Habilitar registro de eventos de autenticación
+E-Mail	(preflet) About box		Correo electrónico
+Good	mUserInfo dialog		Éxito
+Clear logs	mWindow		Limpiar registros
+Path to image list	mWindow		Ruta a lista de imágenes
+Authenticate using a system account	mWindow		Autenticar usando una cuenta de sistema
+Restart log file if it surpasses certain size	mWindow		Reiniciar archivo de registro si supera cierto peso
