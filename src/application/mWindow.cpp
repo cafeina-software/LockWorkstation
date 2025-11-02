@@ -31,9 +31,6 @@ mWindow::mWindow(const char* mWindowTitle)
 
     SetPulseRate(1000000);
 
-    // const rgb_color mWhite = {255, 255, 255};
-    // const rgb_color mBlack = {0, 0, 0};
-
     // Child boxes
     loginbox = new mLoginBox(BRect(0, 0, 0, 0), settings);
     infoview = new mSystemInfo(BRect(0, 0, 0, 0));

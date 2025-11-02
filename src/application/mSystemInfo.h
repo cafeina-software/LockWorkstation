@@ -25,14 +25,14 @@ private:
     BStringView*    AddTitle(const char* title);
     BStringView*    AddText(const char* text);
 
-	const char*		ParseSystemName(utsname*);
-	const char*     ParseSystemHrev(utsname*);
-    const char*     ParseTime(bigtime_t posixtime);
-    const char* 	ParseCPUInfo(cpu_topology_node_info*, uint32 nodecount);
-    const char* 	ParseCPUCores(cpu_topology_node_info*, uint32 nodecount);
-    const char*     ParseMaxMem(system_info*);
-    const char* 	ParseUsedMem(system_info*);
-    const char*		ParseNodeName(utsname*);
+	BString         ParseSystemName(utsname*);
+	BString         ParseSystemHrev(utsname*);
+    BString         ParseTime(bigtime_t posixtime);
+    BString         ParseCPUInfo(cpu_topology_node_info*, uint32 nodecount);
+    BString         ParseCPUCores(cpu_topology_node_info*, uint32 nodecount);
+    BString         ParseMaxMem(system_info*);
+    BString         ParseUsedMem(system_info*);
+    BString         ParseNodeName(utsname*);
 
     static int32    UpdateUIThreadCall(void* data);
 private:

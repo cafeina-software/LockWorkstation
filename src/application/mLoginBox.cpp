@@ -11,7 +11,7 @@
 #undef B_TRANSLATION_CONTEXT
 #define B_TRANSLATION_CONTEXT "Login box"
 
-static BString strShutdownRequested = B_TRANSLATE("The system is being shut down" B_UTF8_ELLIPSIS);
+static BString strShutdownRequested = B_TRANSLATE("The system is shutting down" B_UTF8_ELLIPSIS);
 static BString strRestartRequested = B_TRANSLATE("The system is being restarted" B_UTF8_ELLIPSIS);
 static BString strLoginFailed = B_TRANSLATE("Login failed.");
 static BString strLoginNotAllowed = B_TRANSLATE("Account has password login disabled.");

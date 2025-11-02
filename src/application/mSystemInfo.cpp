@@ -99,23 +99,23 @@ void mSystemInfo::InitUIData()
 {
     utsname uts;
     uname(&uts);
-    fStrNameAndRelease = BString(ParseSystemName(&uts));
-    fStrHrev = BString(ParseSystemHrev(&uts));
-    fStrNodeName = BString(ParseNodeName(&uts));
+    fStrNameAndRelease = ParseSystemName(&uts);
+    fStrHrev = ParseSystemHrev(&uts);
+    fStrNodeName = ParseNodeName(&uts);
 
     system_info info;
     get_system_info(&info);
-    fStrMaxMem = BString(ParseMaxMem(&info));
-    fStrUsedMem = BString(ParseUsedMem(&info));
+    fStrMaxMem = ParseMaxMem(&info);
+    fStrUsedMem = ParseUsedMem(&info);
 
     uint32 nodecount = 0;
     get_cpu_topology_info(NULL, &nodecount);
     cpu_topology_node_info *cputnik = new cpu_topology_node_info[nodecount];
     get_cpu_topology_info(cputnik, &nodecount);
-    fStrFullCpuName = BString(ParseCPUInfo(cputnik, nodecount));
-    fStrFullCoreInfo = BString(ParseCPUCores(cputnik, nodecount));
+    fStrFullCpuName = ParseCPUInfo(cputnik, nodecount);
+    fStrFullCoreInfo = ParseCPUCores(cputnik, nodecount);
 
-    fStrRunningTime = BString(ParseTime(system_time()));
+    fStrRunningTime = ParseTime(system_time());
 
     delete[] cputnik;
 }
@@ -125,9 +125,9 @@ void mSystemInfo::Update()
     system_info info;
 
     get_system_info(&info);
-    fStrRunningTime = BString(ParseTime(system_time()));
-    fStrMaxMem = BString(ParseMaxMem(&info));
-    fStrUsedMem = BString(ParseUsedMem(&info));
+    fStrRunningTime = ParseTime(system_time());
+    fStrMaxMem = ParseMaxMem(&info);
+    fStrUsedMem = ParseUsedMem(&info);
 
     LockLooper();
 
@@ -165,22 +165,22 @@ int32 mSystemInfo::UpdateUIThreadCall(void* data)
     return 0;
 }
 
-const char*	mSystemInfo::ParseSystemName(utsname* uts)
+BString mSystemInfo::ParseSystemName(utsname* uts)
 {
     BString systemname("");
     // uname(uts);
     systemname << uts->sysname << " R" << uts->release << " " << uts->machine;
     fprintf(stderr, "Result: %s\n", systemname.String());
-    return systemname.String();
+    return systemname;
 }
 
-const char* mSystemInfo::ParseSystemHrev(utsname* uts)
+BString mSystemInfo::ParseSystemHrev(utsname* uts)
 {
     BString hrev(uts->version);
-    return hrev.String();
+    return hrev;
 }
 
-const char* mSystemInfo::ParseTime(bigtime_t posixtime)
+BString mSystemInfo::ParseTime(bigtime_t posixtime)
 {
     uint32 seconds = round(posixtime / 1000000);
     uint32 minutes = 0, hours = 0, days = 0;
@@ -206,10 +206,10 @@ const char* mSystemInfo::ParseTime(bigtime_t posixtime)
         "Example: \"Running time: (2 days, )11 hours, 23 minutes, 12 seconds.\""),
         days > 0 ? str1.String() : "", hours, minutes, seconds);
 
-    return str2.String();
+    return str2;
 }
 
-const char* mSystemInfo::ParseCPUInfo(cpu_topology_node_info* cputnik, uint32 nodecount)
+BString mSystemInfo::ParseCPUInfo(cpu_topology_node_info* cputnik, uint32 nodecount)
 {
     BString cpuname;
     cpu_platform platform;
@@ -242,10 +242,10 @@ const char* mSystemInfo::ParseCPUInfo(cpu_topology_node_info* cputnik, uint32 no
         get_cpu_model_string(platform, vendor, model),
         freq / pow(1000.0f, 3));
 
-    return cpuname.String();
+    return cpuname;
 }
 
-const char* mSystemInfo::ParseCPUCores(cpu_topology_node_info* cputnik, uint32 nodecount)
+BString mSystemInfo::ParseCPUCores(cpu_topology_node_info* cputnik, uint32 nodecount)
 {
     BString coreinfo;
     uint32 corecount = 0;
@@ -259,10 +259,10 @@ const char* mSystemInfo::ParseCPUCores(cpu_topology_node_info* cputnik, uint32 n
 
     coreinfo.SetToFormat(B_TRANSLATE("%u cores"), corecount);
 
-    return coreinfo.String();
+    return coreinfo;
 }
 
-const char* mSystemInfo::ParseMaxMem(system_info* info)
+BString mSystemInfo::ParseMaxMem(system_info* info)
 {
     BString maxmem;
     uint64 total = 0;
@@ -272,25 +272,25 @@ const char* mSystemInfo::ParseMaxMem(system_info* info)
     maxmem.SetToFormat(B_TRANSLATE("Total memory: %.2lf GiB"),
         (total / pow(1024.0f, 3)));
 
-    return maxmem.String();
+    return maxmem;
 }
 
-const char* mSystemInfo::ParseUsedMem(system_info* info)
+BString mSystemInfo::ParseUsedMem(system_info* info)
 {
     BString usedmem;
 
     usedmem.SetToFormat(B_TRANSLATE("Used memory: %.2lf GiB"),
         ((info->used_pages * B_PAGE_SIZE) / pow(1024.0f, 3)));
 
-    return usedmem.String();
+    return usedmem;
 }
 
-const char*	mSystemInfo::ParseNodeName(utsname* uts)
+BString mSystemInfo::ParseNodeName(utsname* uts)
 {
     BString nodename;
 
     nodename.SetToFormat(B_TRANSLATE("Host name: %s"), uts->nodename);
 
-    return nodename.String();
+    return nodename;
 }
 

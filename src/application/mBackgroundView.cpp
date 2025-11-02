@@ -258,7 +258,8 @@ void mBackgroundView::SetBackgroundImage(void* data)
                 snooze(multiplier * 1000000);
                 releaseimage = currentimage;
                 currentimage = nextimage;
-                delete releaseimage;
+                if(releaseimage)
+                    delete releaseimage;
                 releaseimage = nullptr;
                 nextimage = nullptr;
             }

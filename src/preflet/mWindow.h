@@ -162,6 +162,7 @@ private:
     BFilePanel*         mFilePanelFolderBrowse;
     entry_ref           mEntryRef;
     mUserInfo          *fInfoWnd;
+    bool                fHasSystemAutostart;
 };
 
 #endif

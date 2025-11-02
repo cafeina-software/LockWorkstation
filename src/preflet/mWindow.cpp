@@ -11,6 +11,7 @@
 #include <Application.h>
 #include <Catalog.h>
 #include <LayoutBuilder.h>
+#include <private/app/LaunchRoster.h>
 #include <private/interface/Spinner.h>
 #include <cstdio>
 #include <string>
@@ -28,7 +29,8 @@ const BRect mWindowRect 					(64, 64, 504, 424);
 mWindow::mWindow(const char *mWindowTitle)
 : BWindow(BRect(mWindowRect), mWindowTitle, B_TITLED_WINDOW,
     B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_RESIZABLE),
-    fInfoWnd(nullptr)
+    fInfoWnd(nullptr),
+    fHasSystemAutostart(false)
 {
     InitUIData(); // Load data from config file
 
@@ -680,8 +682,10 @@ void mWindow::EnDButtons_Thread()
     logCardView->UnlockLooper();
 
     extraCardView->LockLooper();
-    mButtonAddToBoot->SetEnabled(HasAutoStartInstalled() == B_ENTRY_NOT_FOUND);
-    mButtonRemFromBoot->SetEnabled(HasAutoStartInstalled() != B_ENTRY_NOT_FOUND);
+    mButtonAddToBoot->SetEnabled(fHasSystemAutostart ? false :
+        HasAutoStartInstalled() == B_ENTRY_NOT_FOUND);
+    mButtonRemFromBoot->SetEnabled(fHasSystemAutostart ? false :
+        HasAutoStartInstalled() != B_ENTRY_NOT_FOUND);
     extraCardView->UnlockLooper();
 
     mApplyView->LockLooper();
@@ -836,8 +840,17 @@ void mWindow::InitUIControls()
     mCheckBoxSysInfo->SetValue(settings->SystemInfoPanelIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
     mCheckBoxKillerShortcut->SetValue(settings->KillerShortcutIsEnabled() ? B_CONTROL_ON : B_CONTROL_OFF);
 
-    mButtonAddToBoot->SetEnabled(HasAutoStartInstalled() == B_ENTRY_NOT_FOUND);
-    mButtonRemFromBoot->SetEnabled(HasAutoStartInstalled() != B_ENTRY_NOT_FOUND);
+    BLaunchRoster lRoster;
+    BMessage jobInfo;
+    if(lRoster.GetJobInfo("x-vnd.lockworkstation", jobInfo) == B_OK &&
+    jobInfo.GetBool("enabled")) {
+        fHasSystemAutostart = true;
+    }
+
+    mButtonAddToBoot->SetEnabled(fHasSystemAutostart ? false :
+        HasAutoStartInstalled() == B_ENTRY_NOT_FOUND);
+    mButtonRemFromBoot->SetEnabled(fHasSystemAutostart ? false :
+        HasAutoStartInstalled() != B_ENTRY_NOT_FOUND);
 
     UnlockLooper();
 }
