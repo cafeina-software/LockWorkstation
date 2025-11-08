@@ -551,7 +551,7 @@ void mWindow::MessageReceived(BMessage* message)
             settings->SetEventLogLevel(1);
 
             //Enable and disable buttons
-            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+            EnDButtonsThread = ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
@@ -596,7 +596,7 @@ void mWindow::MessageReceived(BMessage* message)
             settings->SetEventLogRetentionPolicy(EVP_WIPE_AFTER_AGE);
 
             //Enable and disable buttons
-            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+            EnDButtonsThread = ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
@@ -605,7 +605,7 @@ void mWindow::MessageReceived(BMessage* message)
             settings->SetEventLogMaxSize(mSpinnerLogMaxSize->Value());
 
             //Enable and disable buttons
-            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+            EnDButtonsThread = ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
@@ -614,7 +614,7 @@ void mWindow::MessageReceived(BMessage* message)
             settings->SetEventLogMaxAge(mSpinnerLogMaxAge->Value());
 
             //Enable and disable buttons
-            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+            EnDButtonsThread = ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }
@@ -623,7 +623,7 @@ void mWindow::MessageReceived(BMessage* message)
             EnableAutoStart(true);
 
             //Enable and disable buttons
-            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+            EnDButtonsThread = ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
 
             break;
@@ -633,7 +633,7 @@ void mWindow::MessageReceived(BMessage* message)
             EnableAutoStart(false);
 
             //Enable and disable buttons
-            ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
+            EnDButtonsThread = ThreadedCall(EnDButtonsThread, EnDButtonsThread_static,
                 "Enable and disable buttons", B_LOW_PRIORITY, this);
             break;
         }

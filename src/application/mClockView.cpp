@@ -11,7 +11,7 @@ mClockView::mClockView(BRect rect, const LWSettings* settings)
 : BView(rect, "Mariux", B_FOLLOW_LEFT_TOP, B_WILL_DRAW | B_PULSE_NEEDED),
   mSettings(settings)
 {
-    ThreadedCall(UserThread, UserThreadChange_static, "Change Image Thread",
+    UserThread = ThreadedCall(UserThread, UserThreadChange_static, "Change Image Thread",
         B_URGENT_DISPLAY_PRIORITY, this);
 
     _InitUIData();

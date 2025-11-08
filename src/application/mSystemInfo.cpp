@@ -79,7 +79,7 @@ mSystemInfo::~mSystemInfo()
 
 void mSystemInfo::Pulse()
 {
-    ThreadedCall(thRunningTime, UpdateUIThreadCall, "Update UI",
+    thRunningTime = ThreadedCall(thRunningTime, UpdateUIThreadCall, "Update UI",
         B_DISPLAY_PRIORITY, this);
 }
 

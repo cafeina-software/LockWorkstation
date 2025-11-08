@@ -90,7 +90,7 @@ void mBackgroundView::InitUIData()
                 currentimage = BTranslationUtils::GetBitmap(imagePaths.StringAt(0));
 
                 /* Image loop */
-                ThreadedCall(imageLooper, &mBackgroundView::CallSetBackgroundImage,
+                imageLooper = ThreadedCall(imageLooper, &mBackgroundView::CallSetBackgroundImage,
                     "image loop", B_DISPLAY_PRIORITY, this);
             }
             break;
@@ -105,7 +105,7 @@ void mBackgroundView::InitUIData()
                 currentimage = BTranslationUtils::GetBitmap(imagePaths.StringAt(0));
 
                 /* Image loop */
-                ThreadedCall(imageLooper, &mBackgroundView::CallSetBackgroundImage,
+                imageLooper = ThreadedCall(imageLooper, &mBackgroundView::CallSetBackgroundImage,
                     "image loop", B_DISPLAY_PRIORITY, this);
             }
             break;

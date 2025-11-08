@@ -21,8 +21,8 @@ mSessionBar::mSessionBar(orientation ont, BHandler* target)
     BString strRestart(B_TRANSLATE("Restart"));
     BString strShutdown(B_TRANSLATE("Shut down"));
 
-    AddAction(M_RESTART_REQUESTED, this, NULL, strRestart, strRestart, false);
-    AddAction(M_SHUTDOWN_REQUESTED, this, NULL, strShutdown, strShutdown, false);
+    AddAction(M_RESTART_REQUESTED, this, NULL /* no icon */, strRestart, strRestart, false);
+    AddAction(M_SHUTDOWN_REQUESTED, this, NULL /* no icon */, strShutdown, strShutdown, false);
 }
 
 void mSessionBar::AttachedToWindow()
@@ -30,8 +30,10 @@ void mSessionBar::AttachedToWindow()
     BToolBar::AttachedToWindow();
 
     for(const auto& command : { M_RESTART_REQUESTED, M_SHUTDOWN_REQUESTED }) {
-        FindButton(command)->SetFlat(false); // Improves discoverability
-        FindButton(command)->SetTarget(this);
+        if(FindButton(command)) {
+            FindButton(command)->SetFlat(false); // Improves discoverability
+            FindButton(command)->SetTarget(this);
+        }
     }
 }
 

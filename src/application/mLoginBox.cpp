@@ -171,7 +171,7 @@ void mLoginBox::MessageReceived(BMessage* message)
     {
         case 'user':
         case loginBoxMsgs::LBM_USERNAME_CHANGED:
-            ThreadedCall(thUpdateUIForm, CallUpdateUIForm,
+            thUpdateUIForm = ThreadedCall(thUpdateUIForm, CallUpdateUIForm,
                 "Update error message", B_NORMAL_PRIORITY, this);
             if(isInactivityTimerOn) {
                 kill_thread(thInactivityTimer); // nothing to be worth of saving
@@ -181,7 +181,7 @@ void mLoginBox::MessageReceived(BMessage* message)
             break;
         case 'pass':
         case loginBoxMsgs::LBM_PASSWORD_CHANGED:
-            ThreadedCall(thUpdateUIForm, CallUpdateUIForm,
+            thUpdateUIForm = ThreadedCall(thUpdateUIForm, CallUpdateUIForm,
                 "Update error message", B_NORMAL_PRIORITY, this);
             if(isInactivityTimerOn) {
                 kill_thread(thInactivityTimer); // nothing to be worth of saving
@@ -191,7 +191,7 @@ void mLoginBox::MessageReceived(BMessage* message)
             break;
         case loginBoxMsgs::LBM_LOGIN_REQUESTED:
             if(!isPwdLessOn && tcPassword->TextLength() == 0) {
-                ThreadedCall(thUpdateUIErrorMsg, CallUpdateUIPwdlessOffMsg,
+                thUpdateUIErrorMsg = ThreadedCall(thUpdateUIErrorMsg, CallUpdateUIPwdlessOffMsg,
                     "Update error message", B_NORMAL_PRIORITY, this);
             }
             else {
@@ -220,7 +220,7 @@ void mLoginBox::MessageReceived(BMessage* message)
                     break;
             }
 
-            ThreadedCall(thUpdateUIErrorMsg, fncall,
+            thUpdateUIErrorMsg = ThreadedCall(thUpdateUIErrorMsg, fncall,
                 "Update error message", B_NORMAL_PRIORITY, this);
 
             // Inspired by uber-perfect-cell: use fail count feature to prevent
@@ -230,7 +230,7 @@ void mLoginBox::MessageReceived(BMessage* message)
             ++loginAttempts;
             if(errorThreshold > 0 && snoozeMultiplier > 0 &&
             loginAttempts >= 1 && loginAttempts % errorThreshold == 0)
-                ThreadedCall(thUpdateUILockdown, CallUpdateUILockdown,
+                thUpdateUILockdown = ThreadedCall(thUpdateUILockdown, CallUpdateUILockdown,
                     "Update UI after too many errors", B_NORMAL_PRIORITY, this);
             break;
         case loginBoxMsgs::LBM_NOTIFY_SESSION_EVENT:

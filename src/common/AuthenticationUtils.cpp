@@ -6,7 +6,9 @@
 #include <private/kernel/util/KMessage.h>
 #include <private/libroot/user_group.h>
 #include <private/shared/AutoLocker.h>
+#include <array>
 #include <ctime>
+#include <random>
 #include <string>
 #include <pwd.h>
 #include <shadow.h>
@@ -78,8 +80,17 @@ status_t try_change_pwd(const char* name, const char* oldPassword, const char* n
     const char* encrypted;
     if(strcmp(newPassword, "") == 0)
         encrypted = "";
-    else
-        encrypted = crypt(newPassword, std::to_string(std::rand()).c_str());
+    else {
+        std::random_device rd("default");
+        std::mt19937 mte(rd());
+        std::uniform_int_distribution<> distribution(0, std::numeric_limits<char>::max());
+
+        std::array<char, 32> salt;
+        for(size_t i = 0; i < 32; i++)
+            salt[i] = distribution(mte);
+
+        encrypted = crypt(newPassword, salt.data());
+    }
     kmsg.AddString("shadow password", encrypted);
     long today = static_cast<long>(std::time(nullptr));
     kmsg.AddInt32("last changed", today);
