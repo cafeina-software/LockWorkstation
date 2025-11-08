@@ -5,6 +5,7 @@
 #include <Catalog.h>
 #include <LayoutBuilder.h>
 #include <OS.h>
+#include "mApp.h"
 #include "mLoginBox.h"
 #include "mConstant.h"
 
@@ -20,7 +21,63 @@ static BString strPassExpired = B_TRANSLATE("The password is expired.");
 static BString strPwdlessOff = B_TRANSLATE("Empty password usage is disabled.");
 static BString strNoError = "";
 
-mLoginBox::mLoginBox(BRect frame, LWSettings* settings)
+// #pragma mark - Safe text control
+
+BSafeTextControl::BSafeTextControl(const char* name, const char* label,
+    const char* initialText, BMessage* message, uint32 flags)
+: BTextControl(name, label, initialText, message, flags)
+{
+    TextView()->HideTyping(true);
+}
+
+void BSafeTextControl::MessageReceived(BMessage* message)
+{
+    switch(message->what)
+    {
+        case B_COUNT_PROPERTIES:
+        case B_CREATE_PROPERTY:
+        case B_DELETE_PROPERTY:
+        case B_EXECUTE_PROPERTY:
+        case B_GET_PROPERTY:
+        case B_SET_PROPERTY:
+        {
+            // Reject foreign scripting messages: could be used to sniff
+            //  into the password control of login box.
+            if(message->IsSourceRemote() || message->WasDropped()) {
+                BMessage logRequest(M_LOGGING_REQUESTED);
+                logRequest.AddUInt32("log_level", static_cast<uint32>(EVT_CRITICAL));
+                logRequest.AddString("log_description",
+                    "External attempt to use scripting "
+                    "(this could be used to spy on the password field).");
+                be_app->PostMessage(&logRequest);
+                break;
+            }
+
+            return BTextControl::MessageReceived(message);
+        }
+        default:
+            return BTextControl::MessageReceived(message);
+    }
+}
+
+void BSafeTextControl::ReplaceChars(char c, size_t length)
+{
+    if(length == 0) {
+        SetText("");
+        return;
+    }
+
+    char* text = new char[length + 1];
+    for(size_t i = 0; i < length; i++)
+        text[i] = c;
+    text[length] = '\0';
+    SetText(text);
+    delete[] text;
+}
+
+// #pragma mark - mLoginBox
+
+mLoginBox::mLoginBox(BRect frame, const LWSettings* settings)
 : BView(frame, "v_loginbox", B_FOLLOW_LEFT, B_WILL_DRAW | B_NAVIGABLE |
     B_NAVIGABLE_JUMP | B_INPUT_METHOD_AWARE | B_DRAW_ON_CHILDREN),
     isPwdLessOn(settings->PasswordLessAuthEnabled()),
@@ -58,11 +115,10 @@ mLoginBox::mLoginBox(BRect frame, LWSettings* settings)
     tcUserName->SetModificationMessage(new BMessage(LBM_USERNAME_CHANGED));
     tcUserName->SetFont(&font3);
     tcUserName->MakeFocus(true);
-    tcPassword = new BTextControl("tc_password", B_TRANSLATE("Password"), "",
+    tcPassword = new BSafeTextControl("tc_password", B_TRANSLATE("Password"), "",
         new BMessage('pass'));
     tcPassword->SetModificationMessage(new BMessage(LBM_PASSWORD_CHANGED));
     tcPassword->SetFont(&font3);
-    tcPassword->TextView()->HideTyping(true);
     btLogin = new BButton("bt_login", B_TRANSLATE("Login"),
         new BMessage(LBM_LOGIN_REQUESTED));
     btLogin->SetFont(&font3);
@@ -210,9 +266,22 @@ void mLoginBox::Draw(BRect updateRect)
 
 void mLoginBox::RequestLogin()
 {
+    const char* identifier = tcUserName->Text();
+    const char* key = tcPassword->Text();
+
+    auto requestId = ((mApp*)be_app)->SecretsLooper()->MakeAuthenticationRequest(identifier,
+        key);
+
+    // The password was sent. While we're waiting for the answer,
+    //  let's change it to "*" so it cannot be copied from scripting abuse.
+    // If the password is full of "*", then sorry!
+    tcPassword->ReplaceChars('*', strlen(key));
+    key = NULL;
+
     BMessage message(BUTTON_LOGIN);
-    message.AddString("username", tcUserName->Text());
-    message.AddString("password", tcPassword->Text());
+    message.AddString("username", identifier);
+    message.AddData("request_id", B_RAW_TYPE, requestId.data(), requestId.size());
+    message.AddMessenger("messenger", this);
     Window()->PostMessage(&message, Window(), this);
 }
 

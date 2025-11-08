@@ -7,7 +7,7 @@
 /*************************************************/
 /******************* Start ***********************/
 /*************************************************/
-mClockView::mClockView(BRect rect, LWSettings* settings)
+mClockView::mClockView(BRect rect, const LWSettings* settings)
 : BView(rect, "Mariux", B_FOLLOW_LEFT_TOP, B_WILL_DRAW | B_PULSE_NEEDED),
   mSettings(settings)
 {
@@ -39,7 +39,7 @@ void mClockView::Draw(BRect updateRect)
         (Frame().Height()) * 0.9f);
     DrawString(mDater.String());
 
-    Invalidate();
+    // Invalidate on pulse event
 }
 
 void mClockView::Pulse()

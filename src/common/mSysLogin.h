@@ -6,8 +6,10 @@
 #define _mSysLogin_h_
 
 #include <SupportDefs.h>
+#include "LockWorkstationConfig.h"
 
 status_t try_login(const char* in_username, const char* in_password);
+status_t try_app_login(const LWSettings* in_cfg, const char* in_username, const char* in_password);
 status_t is_password_not_expired(const char* in_username);
 
 

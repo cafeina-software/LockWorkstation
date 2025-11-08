@@ -11,7 +11,7 @@ class mClockView
 		: public BView, ThreadedClass
 {
 public:
-						mClockView(BRect rect, LWSettings* settings);
+						mClockView(BRect rect, const LWSettings* settings);
 	void				Draw(BRect updateRect);
 	 virtual void		Pulse();
 private:
@@ -19,7 +19,7 @@ private:
     void                _TimeUpdate();
 private:
     // From settings
-    LWSettings         *mSettings;
+    const LWSettings   *mSettings;
 	int					mFontSize;
 	bool				mShowClock;
     rgb_color           mColor;

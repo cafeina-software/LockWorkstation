@@ -14,6 +14,8 @@
 #define M_SHUTDOWN_REQUESTED 'shut'
 #define M_PASSWORD_EXPIRED   'pexp'
 #define M_BYPASS_REQUESTED   'breq'
+#define M_LOGGING_REQUESTED  'log '
+#define M_SECURECTX_CLEANUP  'wipe'
 
 #include <StorageKit.h>
 #include <KernelKit.h>

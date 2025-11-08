@@ -18,16 +18,12 @@
 class mWindow : public BWindow
 {
 public:
-    					mWindow(const char* mWindowTitle);
+    					mWindow(const char* mWindowTitle, const LWSettings* appSettings);
     virtual  			~mWindow();
     virtual void 		MessageReceived(BMessage* message);
     virtual bool        QuitRequested();
     virtual void        ScreenChanged(BRect frame, color_space mode);
     void                ResizeToScreen();
-    status_t            Login(AuthMethod mthd, const char* usr, const char* pwd);
-private:
-    void                InitUIData();
-    void                SystemShutdown(bool restart, bool confirm, bool sync);
 private:
     mBackgroundView    *mView;
     mLoginBox          *loginbox;
@@ -35,8 +31,7 @@ private:
     mSessionBar        *sessionbar;
     mClockView         *mClock;
 
-    LWSettings         *settings;
-    mLogger            *logger;
+    const LWSettings   *settings;
 };
 
 #endif

@@ -17,8 +17,10 @@
 class mBackgroundView : public BView, public ThreadedClass
 {
 public:
-                    mBackgroundView(BRect, const char*, uint32, uint32, LWSettings*);
+                    mBackgroundView(BRect, const char*, uint32, uint32,
+                        const LWSettings* settings);
     virtual         ~mBackgroundView();
+
     virtual void    Draw(BRect updateRect);
 private:
     void            InitUIData();
@@ -34,14 +36,13 @@ private:
     void            proportional_view(BRect viewRect, BRect imageRect, BRect* resultRect);
     void            fullscreen_view(BRect viewRect, BRect* resultRect);
 private:
-    LWSettings*     fCurrentSettings;
+    const LWSettings* fCurrentSettings;
     rgb_color       fBackgroundColor;
     uint8           fBackgroundMode;
     uint32          snoozeMultiplier;
     ImgAdjust       fBackgroundImageAdjust;
     BString         fSrcPath;
     BStringList     imagePaths;
-    BObjectList<BBitmap*> imageList;
     static BBitmap* currentimage;
     thread_id       imageLooper;
     static bool     shouldExit;

@@ -1,10 +1,8 @@
 #include <Catalog.h>
 #include <LayoutBuilder.h>
-#include <private/app/RosterPrivate.h>
 #include "mWindow.h"
 #include "mBackgroundView.h"
 #include "mSessionBar.h"
-#include "../common/mSysLogin.h"
 #include "../common/LockWorkstationConfig.h"
 
 const char* mDefaultPathToSelBG =			"/login_gfx";
@@ -15,20 +13,13 @@ const char* mDefaultPathToSelNUI =			"/NoUserImage";
 #define B_TRANSLATION_CONTEXT "Main window"
 
 /**********************************************************/
-mWindow::mWindow(const char* mWindowTitle)
+mWindow::mWindow(const char* mWindowTitle, const LWSettings* appSettings)
 : BWindow(BRect(200, 200, 2000, 2000), mWindowTitle, B_NO_BORDER_WINDOW_LOOK,
     LW_WSCREEN_WINDOW_FEEL, B_WILL_ACCEPT_FIRST_CLICK |
     B_FLOATING_SUBSET_WINDOW_FEEL | B_NOT_CLOSABLE | B_NOT_ZOOMABLE |
-    B_NOT_RESIZABLE, B_ALL_WORKSPACES)
+    B_NOT_RESIZABLE, B_ALL_WORKSPACES),
+  settings(appSettings)
 {
-    // Initialize app data from settings file
-    InitUIData();
-
-    BPath path;
-    find_directory(B_SYSTEM_LOG_DIRECTORY, &path);
-    path.Append("LockWorkstation.log");
-    logger = new mLogger(settings, path.Path());
-
     SetPulseRate(1000000);
 
     // Child boxes
@@ -45,7 +36,7 @@ mWindow::mWindow(const char* mWindowTitle)
         mClock->Hide();
 
     // Background view
-    mView = new mBackgroundView(BRect(0, 0, 2000, 2000), NULL, B_FOLLOW_ALL,
+    mView = new mBackgroundView(BRect(0, 0, 2000, 2000), "bg_view", B_FOLLOW_ALL,
         B_WILL_DRAW | B_FRAME_EVENTS, settings);
 
     // Layout kit
@@ -94,7 +85,6 @@ mWindow::mWindow(const char* mWindowTitle)
 /**********************************************************/
 mWindow::~mWindow()
 {
-    delete logger;
     delete settings;
 }
 
@@ -105,60 +95,47 @@ void mWindow::MessageReceived(BMessage* message)
     switch(message->what)
     {
         case LOGIN_CHANGED:
-            logger->AddEvent(EVT_WARNING, "User tried to exit the locker application (Cmd+Q).");
+            PostEventToLog(EVT_WARNING,
+                "User tried to exit the locker application (Cmd+Q).");
             break;
         case BUTTON_LOGIN:
         {
-            const char* user, *pass;
-            if(message->FindString("username", &user) == B_OK &&
-            message->FindString("password", &pass) == B_OK) {
-                status_t status = B_OK;
-                if((status = Login(settings->AuthenticationMethod(), user, pass)) == B_OK) {
-                    BString desc;
-                    desc.SetToFormat("Login successful for username: %s", user);
-                    logger->AddEvent(desc.String());
-                    be_app->PostMessage(B_QUIT_REQUESTED);
-                }
-                else {
-                    BString desc;
-                    desc.SetToFormat("Login failed for username: %s", user);
-                    logger->AddEvent(EVT_ERROR, desc.String());
-
-                    BMessage reply(M_LOGIN_FAILED);
-                    reply.AddInt32("errorCode", status);
-                    reply.AddString("username", user);
-                    message->SendReply(&reply);
-                }
-            }
-            else {
-                logger->AddEvent(EVT_ERROR, "Login failed: missing user or password.");
-                BMessage reply(M_LOGIN_FAILED);
-                reply.AddBool("errorCode", B_BAD_DATA);
-                message->SendReply(&reply);
-            }
+            be_app->PostMessage(message);
             break;
         }
         case M_RESTART_REQUESTED:
         {
-            logger->AddEvent("Restart requested.");
+            // Notify the login box
             BMessage request(LBM_NOTIFY_SESSION_EVENT);
             request.AddUInt32("what", message->what);
             PostMessage(&request, loginbox);
-            SystemShutdown(true, false, false);
+
+            // Log event
+            PostEventToLog(EVT_INFO, "Restart requested.");
+
+            // Ask be_app to do the actual work
+            be_app->PostMessage(message->what);
             break;
         }
         case M_SHUTDOWN_REQUESTED:
         {
-            logger->AddEvent("Shut down requested.");
+            // Notify the login box
             BMessage request(LBM_NOTIFY_SESSION_EVENT);
             request.AddUInt32("what", message->what);
             PostMessage(&request, loginbox);
-            SystemShutdown(false, false, false);
+
+            // Log event
+            PostEventToLog(EVT_INFO, "Shut down requested.");
+
+            // Ask be_app to do the actual work
+            be_app->PostMessage(message->what);
             break;
         }
         case M_BYPASS_REQUESTED:
-            logger->AddEvent(EVT_WARNING, "Shutdown using security-bypass requested.");
-            QuitRequested();
+            if(settings->KillerShortcutIsEnabled()) {
+                PostEventToLog(EVT_WARNING, "Shutdown using security-bypass requested.");
+                QuitRequested();
+            }
             break;
         case B_QUIT_REQUESTED:
             QuitRequested();
@@ -191,44 +168,4 @@ void mWindow::ResizeToScreen()
 
     mView->MoveTo(0, 0);
     mView->ResizeTo(Frame().Width(), Frame().Height());
-}
-
-status_t mWindow::Login(AuthMethod mthd, const char* usr, const char* pwd)
-{
-    status_t status = B_ERROR;
-
-    switch(mthd)
-    {
-        case AUTH_SYSTEM_ACCOUNT:
-        {
-            status = try_login(usr, pwd);
-            break;
-        }
-        case AUTH_APP_ACCOUNT:
-        default:
-        {
-            bool userMatch = strcmp(usr, settings->DefaultUser()) == 0;
-            bool passMatch = strcmp(pwd, settings->DefaultUserPassword()) == 0;
-            status = userMatch && passMatch ? B_OK : B_ERROR;
-            break;
-        }
-    }
-
-    return status;
-}
-
-void mWindow::InitUIData()
-{
-    BPath path;
-    find_directory(B_USER_SETTINGS_DIRECTORY, &path);
-    path.Append(mPathToConfigFile);
-
-    settings = new LWSettings(path.Path());
-}
-
-void mWindow::SystemShutdown(bool restart, bool confirm, bool sync)
-{
-    BRoster roster;
-    BRoster::Private privroster(roster);
-    privroster.ShutDown(restart, confirm, sync);
 }

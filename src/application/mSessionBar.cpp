@@ -14,6 +14,10 @@ mSessionBar::mSessionBar(orientation ont, BHandler* target)
 {
     SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
 
+    float leftInset = 0.0f;
+    GroupLayout()->GetInsets(&leftInset, NULL, NULL, NULL);
+    GroupLayout()->SetInsets(leftInset, leftInset);
+
     BString strRestart(B_TRANSLATE("Restart"));
     BString strShutdown(B_TRANSLATE("Shut down"));
 
@@ -25,8 +29,10 @@ void mSessionBar::AttachedToWindow()
 {
     BToolBar::AttachedToWindow();
 
-    for(const auto& command : { M_RESTART_REQUESTED, M_SHUTDOWN_REQUESTED })
+    for(const auto& command : { M_RESTART_REQUESTED, M_SHUTDOWN_REQUESTED }) {
+        FindButton(command)->SetFlat(false); // Improves discoverability
         FindButton(command)->SetTarget(this);
+    }
 }
 
 void mSessionBar::MessageReceived(BMessage* msg)

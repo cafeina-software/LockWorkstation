@@ -12,7 +12,7 @@ bool mBackgroundView::shouldExit = false;
 static uint32 multiplier;
 
 mBackgroundView::mBackgroundView(BRect frame, const char *name, uint32 resizingMode,
-    uint32 flags, LWSettings* settings)
+    uint32 flags, const LWSettings* settings)
 : BView(frame, name, resizingMode, flags),
   fCurrentSettings(settings),
   fBackgroundColor(settings->BackgroundColor()),
@@ -31,7 +31,7 @@ mBackgroundView::~mBackgroundView()
 {
     shouldExit = true;
     //kill_thread(imageLooper);
-    imageList.MakeEmpty(true);
+
     if(currentimage)
         delete currentimage;
 }
@@ -172,7 +172,7 @@ status_t mBackgroundView::InitImageFolder(BString imageFolderPath)
     }
 
     /* Remove the file paths of non-images */
-    for(int i = 0; i < imagePaths.CountStrings(); i++) {
+    for(int i = imagePaths.CountStrings() - 1; i >= 0; i--) {
         BEntry entry(imagePaths.StringAt(i));
         entry_ref ref;
         entry.GetRef(&ref);
@@ -206,16 +206,17 @@ status_t mBackgroundView::InitImageListFile(BString imageListPath)
 
     off_t length;
     filelist.GetSize(&length);
-    uint8* buffer = new uint8[length];
+    char* buffer = new char[length + 1];
     filelist.Read(buffer, length);
+    buffer[length] = '\0';
 
     std::string line;
-    std::istringstream iss((char*)buffer);
+    std::istringstream iss(buffer);
     while(std::getline(iss, line))
         imagePaths.Add(BString(line.c_str()));
 
     /* Remove the file paths of non-images */
-    for(int i = 0; i < imagePaths.CountStrings(); i++) {
+    for(int i = imagePaths.CountStrings() - 1; i >= 0; i--) {
         BEntry entry(imagePaths.StringAt(i));
         entry_ref ref;
         entry.GetRef(&ref);

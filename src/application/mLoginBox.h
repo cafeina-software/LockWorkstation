@@ -17,10 +17,21 @@ enum loginBoxMsgs {
     LBM_NOTIFY_SESSION_EVENT
 };
 
+class BSafeTextControl : public BTextControl
+{
+public:
+    BSafeTextControl(const char* name, const char* label,
+        const char* initialText, BMessage* message,
+        uint32 flags = B_WILL_DRAW | B_NAVIGABLE);
+
+    void MessageReceived(BMessage* message) override;
+    void ReplaceChars(char c, size_t length);
+};
+
 class mLoginBox : public BView, public ThreadedClass
 {
 public:
-                    mLoginBox(BRect frame, LWSettings* settings);
+                    mLoginBox(BRect frame, const LWSettings* settings);
     virtual         ~mLoginBox();
     virtual void    AttachedToWindow();
     virtual void    MessageReceived(BMessage* message);
@@ -46,8 +57,8 @@ private:
 
 private:
     BStringView     *errorView;
-    BTextControl    *tcUserName,
-                    *tcPassword;
+    BTextControl    *tcUserName;
+    BSafeTextControl *tcPassword;
     BButton         *btLogin;
 
     thread_id       thUpdateUIForm,

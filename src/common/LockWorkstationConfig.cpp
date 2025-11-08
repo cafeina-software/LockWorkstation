@@ -74,7 +74,7 @@ void LWSettings::InitData()
 	DefaultSettings(defaults); // To be used when only some of the fields are missing
 
     fAuthMethod = static_cast<AuthMethod>(savemessage.GetUInt8(mNameConfigAuthMode,
-        defaults->GetUInt8(mNameConfigAuthMode, 2)));
+        defaults->GetUInt8(mNameConfigAuthMode, AUTH_APP_ACCOUNT)));
     fPasswordLessAuthEnabled = savemessage.GetBool(mNameConfigPwdLessLogonOn,
         defaults->GetBool(mNameConfigPwdLessLogonOn));
     fAuthAttemptsThreshold = savemessage.GetInt32(mNameConfigAuthAttemptsThrshld,
@@ -278,87 +278,87 @@ bool LWSettings::HasPendingData()
 
 // #pragma mark -
 
-AuthMethod LWSettings::AuthenticationMethod()
+AuthMethod LWSettings::AuthenticationMethod() const
 {
     return fAuthMethod;
 }
 
-const char* LWSettings::DefaultUser()
+const char* LWSettings::DefaultUser() const
 {
     return mStringUser1.String();
 }
 
-const char* LWSettings::DefaultUserPassword()
+const char* LWSettings::DefaultUserPassword() const
 {
     return mStringPassword1.String();
 }
 
-BgMode LWSettings::BackgroundMode()
+BgMode LWSettings::BackgroundMode() const
 {
     return fBackgroundMode;
 }
 
-rgb_color LWSettings::BackgroundColor()
+rgb_color LWSettings::BackgroundColor() const
 {
     return fBackgroundColor;
 }
 
-const char* LWSettings::BackgroundImageFolderPath()
+const char* LWSettings::BackgroundImageFolderPath() const
 {
     return fBackgroundImageFolder.String();
 }
 
-const char* LWSettings::BackgroundImageListPath()
+const char* LWSettings::BackgroundImageListPath() const
 {
     return fBackgroundImageListFile.String();
 }
 
-const char* LWSettings::BackgroundImageStaticPath()
+const char* LWSettings::BackgroundImageStaticPath() const
 {
     return fBackgroundImageStatic.String();
 }
 
-uint32 LWSettings::BackgroundImageSnooze()
+uint32 LWSettings::BackgroundImageSnooze() const
 {
     return fBackgroundImageSnooze;
 }
 
-ImgAdjust LWSettings::BackgroundImageAdjustment()
+ImgAdjust LWSettings::BackgroundImageAdjustment() const
 {
     return fBackgroundImageAdjustment;
 }
 
-bool LWSettings::ClockIsEnabled()
+bool LWSettings::ClockIsEnabled() const
 {
     return fClockEnabled;
 }
 
-rgb_color LWSettings::ClockColor()
+rgb_color LWSettings::ClockColor() const
 {
     return fClockColor;
 }
 
-BPoint LWSettings::ClockLocation()
+BPoint LWSettings::ClockLocation() const
 {
     return fClockLocation;
 }
 
-uint32 LWSettings::ClockSize()
+uint32 LWSettings::ClockSize() const
 {
     return fClockSize;
 }
 
-bool LWSettings::SessionBarIsEnabled()
+bool LWSettings::SessionBarIsEnabled() const
 {
     return fSessionBarEnabled;
 }
 
-bool LWSettings::SystemInfoPanelIsEnabled()
+bool LWSettings::SystemInfoPanelIsEnabled() const
 {
     return fSystemInfoPanelEnabled;
 }
 
-bool LWSettings::KillerShortcutIsEnabled()
+bool LWSettings::KillerShortcutIsEnabled() const
 {
     return fKillerShortcutEnabled;
 }
@@ -388,22 +388,22 @@ uint32 LWSettings::EventLogMaxAge()
     return fEventLogMaxAge;
 }
 
-bool LWSettings::PasswordLessAuthEnabled()
+bool LWSettings::PasswordLessAuthEnabled()  const
 {
     return fPasswordLessAuthEnabled;
 }
 
-int32 LWSettings::AuthenticationAttemptsThreshold()
+int32 LWSettings::AuthenticationAttemptsThreshold() const
 {
     return fAuthAttemptsThreshold;
 }
 
-int32 LWSettings::AuthenticationCooldownAfterThreshold()
+int32 LWSettings::AuthenticationCooldownAfterThreshold() const
 {
     return fAuthAttemptsErrorCooldown;
 }
 
-bool LWSettings::AuthenticationResetFormIfInactive()
+bool LWSettings::AuthenticationResetFormIfInactive() const
 {
     return fAuthResetFormIfInactive;
 }

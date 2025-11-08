@@ -100,6 +100,22 @@ status_t try_login(const char* in_username, const char* in_password)
     return B_DONT_DO_THAT;
 }
 
+status_t try_app_login(const LWSettings* in_cfg, const char* in_username, const char* in_password)
+{
+    if(in_username == nullptr || strcmp(in_username, "") == 0) {
+        trace("error: user name must not be empty.\n");
+        return B_BAD_VALUE;
+    }
+
+    if(strcmp(in_username, in_cfg->DefaultUser()) != 0)
+        return B_NAME_NOT_FOUND;
+
+    if(strcmp(in_password, in_cfg->DefaultUserPassword()) == 0)
+        return B_OK;
+
+    return B_ERROR;
+}
+
 status_t is_password_not_expired(const char* in_username)
 /* Precondition: user exists */
 {

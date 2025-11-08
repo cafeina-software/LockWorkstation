@@ -3,6 +3,7 @@
  * All rights reserved. Distributed under the terms of the MIT license.
  */
 #include "mLogger.h"
+#include "mConstant.h"
 #include <Entry.h>
 #include <File.h>
 #include <cstdio>
@@ -10,8 +11,8 @@
 #include <fstream>
 
 mLogger::mLogger(LWSettings* settings, const char* logfile)
-: filename(logfile),
-  fCurrentSettings(settings),
+: BLooper("Logger looper", B_NORMAL_PRIORITY),
+  fLogFilePath(logfile),
   fIsEnabled(settings->EventLogIsEnabled()),
   fLevel(static_cast<EventLevel>(settings->EventLogLevel())),
   fRetentionPolicy(static_cast<LogRetPolicy>(settings->EventLogRetentionPolicy())),
@@ -19,9 +20,9 @@ mLogger::mLogger(LWSettings* settings, const char* logfile)
   fMaxAge(settings->EventLogMaxAge())
 {
     if(fIsEnabled) {
-        BEntry entry(filename);
+        BEntry entry(fLogFilePath.String());
         if(!entry.Exists()) {
-            if(_CreateLogFile(fIsEnabled, filename) != B_OK)
+            if(_CreateLogFile(fIsEnabled, fLogFilePath.String()) != B_OK)
                 fprintf(stderr, "Error creating log\n");
         }
         else {
@@ -29,7 +30,7 @@ mLogger::mLogger(LWSettings* settings, const char* logfile)
                 case EVP_WIPE_AFTER_SIZE:
                 {
                     off_t size;
-                    BFile file(filename, B_READ_ONLY);
+                    BFile file(fLogFilePath.String(), B_READ_ONLY);
                     file.GetSize(&size);
                     if(size > fMaxSize * 1024 * 1024) {
                         Clear();
@@ -82,8 +83,15 @@ status_t mLogger::AddEvent(BDateTime datetime, EventLevel level, const char* des
         << _LevelToString(level) << "] " << desc << "\n";
 
     if(fIsEnabled && level <= fLevel) {
-        std::fstream f(filename, std::ios::app | std::ios::out);
-        f.write(log.String(), log.Length());
+        BFile logFile(fLogFilePath.String(), B_READ_WRITE | B_CREATE_FILE | B_OPEN_AT_END);
+        if(logFile.InitCheck() != B_OK) {
+            return B_ERROR;
+        }
+
+        ssize_t writtenBytes = logFile.Write(log.String(), log.Length());
+        if(writtenBytes < 0) {
+            return B_IO_ERROR;
+        }
     }
 
     return B_OK;
@@ -91,11 +99,11 @@ status_t mLogger::AddEvent(BDateTime datetime, EventLevel level, const char* des
 
 status_t mLogger::Clear()
 {
-    BEntry entry(filename);
+    BEntry entry(fLogFilePath.String());
     if(entry.Remove() != B_OK)
         return B_ERROR;
 
-    return _CreateLogFile(fIsEnabled, filename);
+    return _CreateLogFile(fIsEnabled, fLogFilePath.String());
 }
 
 // #pragma mark -
@@ -103,8 +111,11 @@ status_t mLogger::Clear()
 status_t mLogger::_CreateLogFile(bool enabled, const char* filename)
 {
     if(enabled) {
-        std::fstream file(filename, std::ios::app | std::ios::out);
-        file.write("", 0);
+        BFile logFile(filename, B_WRITE_ONLY | B_CREATE_FILE | B_FAIL_IF_EXISTS);
+        if(logFile.InitCheck() != B_OK)
+            return B_ERROR;
+
+        logFile.SetPermissions(S_IRUSR | S_IWUSR | S_IRGRP);
     }
 
     return B_OK;
@@ -126,4 +137,12 @@ const char* mLogger::_LevelToString(EventLevel level)
         default:
             return "UNKNOWN";
     }
+}
+
+void PostEventToLog(EventLevel level, const char* description)
+{
+    BMessage logRequest(M_LOGGING_REQUESTED);
+    logRequest.AddUInt32("log_level", static_cast<uint32>(level));
+    logRequest.AddString("log_description", description);
+    be_app->PostMessage(&logRequest);
 }

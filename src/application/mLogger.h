@@ -6,11 +6,12 @@
 #define _mLogger_h_
 
 #include <DateTime.h>
+#include <Looper.h>
 #include <SupportDefs.h>
 #include <File.h>
 #include "../common/LockWorkstationConfig.h"
 
-class mLogger
+class mLogger : public BLooper
 {
 public:
                         mLogger(LWSettings* settings, const char* logfile);
@@ -22,8 +23,7 @@ private:
 	status_t            _CreateLogFile(bool enabled, const char* filename);
     const char*         _LevelToString(EventLevel level);
 private:
-    const char         *filename;
-    LWSettings         *fCurrentSettings;
+    const BString       fLogFilePath;
     const bool          fIsEnabled;
     const EventLevel    fLevel;
     const LogRetPolicy  fRetentionPolicy;
@@ -31,5 +31,6 @@ private:
     const uint32        fMaxAge;
 };
 
+void PostEventToLog(EventLevel level, const char* description);
 
 #endif /* _mLogger_h_ */
