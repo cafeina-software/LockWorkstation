@@ -14,7 +14,7 @@ enum AuthMethod {
 /* Background */
 enum BgMode {
     BGM_NONE = 0,
-    BGM_STATIC,
+    BGM_STATIC = 2,
     BGM_FOLDER,
     BGM_LISTFILE
 };

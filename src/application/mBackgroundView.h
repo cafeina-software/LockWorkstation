@@ -21,6 +21,7 @@ public:
                         const LWSettings* settings);
     virtual         ~mBackgroundView();
 
+    virtual void    MessageReceived(BMessage* message);
     virtual void    Draw(BRect updateRect);
 private:
     void            InitUIData();

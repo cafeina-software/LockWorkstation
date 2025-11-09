@@ -15,15 +15,20 @@ class mLogger : public BLooper
 {
 public:
                         mLogger(LWSettings* settings, const char* logfile);
+
+    void                MessageReceived(BMessage* message) override;
+
 	status_t            AddEvent(const char* desc);
     status_t            AddEvent(EventLevel level, const char* desc);
 	status_t            AddEvent(BDateTime datetime, EventLevel level, const char* desc);
 	status_t            Clear();
 private:
-	status_t            _CreateLogFile(bool enabled, const char* filename);
+    status_t            _WriteLogEvent(BDateTime datetime, EventLevel level, const char* desc);
     const char*         _LevelToString(EventLevel level);
 private:
     const BString       fLogFilePath;
+          BEntry        fLogFileEntry;
+          BFile         fLogFile;
     const bool          fIsEnabled;
     const EventLevel    fLevel;
     const LogRetPolicy  fRetentionPolicy;

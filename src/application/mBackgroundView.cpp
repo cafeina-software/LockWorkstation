@@ -4,6 +4,7 @@
  */
 #include "mBackgroundView.h"
 #include "../common/LockWorkstationConfig.h"
+#include "mConstant.h"
 #include <string>
 #include <sstream>
 
@@ -38,6 +39,18 @@ mBackgroundView::~mBackgroundView()
 
 // #pragma mark - Public methods
 
+void mBackgroundView::MessageReceived(BMessage* message)
+{
+    switch(message->what)
+    {
+        case M_BACKGROUND_CHANGED:
+            Invalidate();
+            break;
+        default:
+            return BView::MessageReceived(message);
+    }
+}
+
 void mBackgroundView::Draw(BRect updateRect)
 {
     BView::Draw(updateRect);
@@ -68,8 +81,6 @@ void mBackgroundView::Draw(BRect updateRect)
 
         DrawBitmap(currentimage, resultrect);
     }
-
-    Invalidate();
 }
 
 // #pragma mark - Init
@@ -263,6 +274,9 @@ void mBackgroundView::SetBackgroundImage(void* data)
                     delete releaseimage;
                 releaseimage = nullptr;
                 nextimage = nullptr;
+
+                if(Looper())
+                    Looper()->PostMessage(M_BACKGROUND_CHANGED, this);
             }
 
             // Dirty hack to make a linked list look like a ring

@@ -253,13 +253,13 @@ bool LWSettings::HasPendingData()
            savemessage.GetInt32(mNameConfigAuthAttemptsThrshld, 0) != fAuthAttemptsThreshold ||
            savemessage.GetInt32(mNameConfigAuthSnoozeAfterErrors, 5) != fAuthAttemptsErrorCooldown ||
            savemessage.GetBool(mNameConfigAuthResetForm, false) != fAuthResetFormIfInactive ||
-           !(strcmp(savemessage.GetString(mNameConfigUser, "baron"), mStringUser1.String()) == 0) ||
-           !(strcmp(savemessage.GetString(mNameConfigPass, "haikubox"), mStringPassword1.String()) == 0) ||
+           strcmp(savemessage.GetString(mNameConfigUser, "baron"), mStringUser1.String()) != 0 ||
+           strcmp(savemessage.GetString(mNameConfigPass, "haikubox"), mStringPassword1.String()) != 0 ||
            savemessage.GetColor(mNameConfigBgColor, {0, 0, 0, 255}) != fBackgroundColor ||
            savemessage.GetUInt32(mNameConfigBgMode, BGM_NONE) != fBackgroundMode ||
-           !(strcmp(savemessage.GetString(mNameConfigImageFile, ""), fBackgroundImageStatic.String()) == 0) ||
-           !(strcmp(savemessage.GetString(mNameConfigImagePath, ""), fBackgroundImageFolder.String()) == 0) ||
-           !(strcmp(savemessage.GetString(mNameConfigImageList, ""), fBackgroundImageListFile.String()) == 0) ||
+           strcmp(savemessage.GetString(mNameConfigImageFile, ""), fBackgroundImageStatic.String()) != 0 ||
+           strcmp(savemessage.GetString(mNameConfigImagePath, ""), fBackgroundImageFolder.String()) != 0 ||
+           strcmp(savemessage.GetString(mNameConfigImageList, ""), fBackgroundImageListFile.String()) != 0 ||
            savemessage.GetUInt32(mNameConfigBgSnooze, 10) != fBackgroundImageSnooze ||
            savemessage.GetUInt8(mNameConfigImageAdjustment, BGI_ADJ_SCALE_X_Y) != fBackgroundImageAdjustment ||
            savemessage.GetBool(mNameConfigBoolClock, true) != fClockEnabled ||

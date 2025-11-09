@@ -193,6 +193,10 @@ void mWindow::MessageReceived(BMessage* message)
         /*****************************************************************************/
         case ERASER_FROM_DOOM:
         {
+            if((new BAlert("Reset settings", "Do you want to restore the default settings?",
+            "Reset", "Cancel"))->Go() != 0)
+                break;
+
             settings->Reset();
             settings->SaveSettings();
             InitUIData();
@@ -1380,31 +1384,28 @@ BView* mWindow::CreateCardView_Options()
 
 bool mWindow::UI_IsDefault(BMessage* defaults)
 {
-    return
-           (mRadioBtAuthAppaccount->Value() == B_CONTROL_ON && AUTH_APP_ACCOUNT == defaults->GetUInt8(mNameConfigAuthMode, AUTH_APP_ACCOUNT)) &&
-           (mCheckBoxAllowPwdlessLogin->Value() == B_CONTROL_ON) == defaults->GetBool(mNameConfigPwdLessLogonOn, true) &&
-           (mSliderAttemptsThrshld->Value() == defaults->GetInt32(mNameConfigAuthAttemptsThrshld, 0)) &&
-           (mSliderErrorWaitTime->Value()  == defaults->GetInt32(mNameConfigAuthSnoozeAfterErrors, 5)) &&
-           (mCheckBoxResetLoginForm->Value() == B_CONTROL_ON) == defaults->GetBool(mNameConfigAuthResetForm, false) &&
+    return UI_IsAuthenticationDefault(defaults) &&
            (mMfBgImageOption->Menu()->ItemAt(defaults->GetUInt8(mNameConfigBgMode, BGM_NONE))->IsMarked()) &&
            (UI_IsBgColorDefault(defaults)) &&
-           // (strcmp(mTextControlmPathToImage->Text(), "") == 0) &&
-           // (UI_IsBgFolderDefault(defaults)) &&
-           // (strcmp(mTextControlmPathToImageList->Text(), "") == 0) &&
            (mSliderBgSnooze->Value() == defaults->GetUInt32(mNameConfigBgSnooze, 10)) &&
            (mMfBgImageAdjustment->Menu()->ItemAt(defaults->GetUInt8(mNameConfigImageAdjustment, BGI_ADJ_SCALE_X_Y))->IsMarked()) &&
            (UI_IsClockColorDefault(defaults)) &&
            (UI_IsClockPlaceDefault(defaults)) &&
            (mCheckBoxBoolClock->Value() == B_CONTROL_ON) == defaults->GetBool(mNameConfigBoolClock, true) &&
            (mSliderFontSize->Value() == defaults->GetUInt32(mNameConfigClockFontSize, 8)) &&
-           (mCheckBoxEventLog->Value() == B_CONTROL_ON) == defaults->GetBool(mNameConfigEvtLoggingOn, true) &&
-           (mMfLogLevel->Menu()->ItemAt(EVT_INFO - 1)->IsMarked()) &&
-           (mMfLogRetentionPolicy->Menu()->ItemAt(defaults->GetUInt8(mNameConfigEvtLoggingRetention, EVP_CONTINUE))->IsMarked()) &&
-           (mSpinnerLogMaxSize->Value() == defaults->GetUInt32(mNameConfigEvtLoggingMaxSize, 1)) &&
-           (mSpinnerLogMaxAge->Value() == defaults->GetUInt32(mNameConfigEvtLoggingMaxAge, 1)) &&
-           (mCheckBoxSessionBar->Value() == B_CONTROL_ON) == defaults->GetBool(mNameConfigSessionBarOn, false) &&
-           (mCheckBoxSysInfo->Value() == B_CONTROL_ON) == defaults->GetBool(mNameConfigSysInfoPanelOn, true) &&
-           (mCheckBoxKillerShortcut->Value() == B_CONTROL_ON) == defaults->GetBool(mNameConfigKillerShortcutOn, false);
+           UI_IsEventLogDefault(defaults) &&
+           UI_IsOptionsDefault(defaults);
+}
+
+bool mWindow::UI_IsAuthenticationDefault(BMessage* archive)
+{
+    return (mRadioBtAuthAppaccount->Value() == B_CONTROL_ON &&
+           archive->GetUInt8(mNameConfigAuthMode, AUTH_APP_ACCOUNT) == AUTH_APP_ACCOUNT) &&
+           (mCheckBoxAllowPwdlessLogin->Value() == B_CONTROL_ON &&
+           archive->GetBool(mNameConfigPwdLessLogonOn, true)) &&
+           (mSliderAttemptsThrshld->Value() == archive->GetInt32(mNameConfigAuthAttemptsThrshld, 0)) &&
+           (mCheckBoxResetLoginForm->Value() == B_CONTROL_ON &&
+           archive->GetBool(mNameConfigAuthResetForm, false));
 }
 
 bool mWindow::UI_IsBgColorDefault(BMessage* archive)
@@ -1436,6 +1437,24 @@ bool mWindow::UI_IsClockPlaceDefault(BMessage* archive)
     return
         atoi(mTextControlClockPlaceX->Text()) == archive->GetPoint(mNameConfigClockPlace, {}).x &&
         atoi(mTextControlClockPlaceY->Text()) == archive->GetPoint(mNameConfigClockPlace, {}).y;
+}
+
+bool mWindow::UI_IsEventLogDefault(BMessage* archive)
+{
+    return (mCheckBoxEventLog->Value() == B_CONTROL_ON &&
+           archive->GetBool(mNameConfigEvtLoggingOn, true)) &&
+           (mMfLogLevel->Menu()->ItemAt(EVT_INFO - 1)->IsMarked() &&
+           archive->GetUInt8(mNameConfigEvtLoggingLevel, EVT_INFO)) &&
+           (mMfLogRetentionPolicy->Menu()->ItemAt(archive->GetUInt8(mNameConfigEvtLoggingRetention, EVP_CONTINUE))->IsMarked()) &&
+           (mSpinnerLogMaxSize->Value() == archive->GetUInt32(mNameConfigEvtLoggingMaxSize, 1)) &&
+           (mSpinnerLogMaxAge->Value() == archive->GetUInt32(mNameConfigEvtLoggingMaxAge, 1));
+}
+
+bool mWindow::UI_IsOptionsDefault(BMessage* archive)
+{
+    return (mCheckBoxSessionBar->Value() == B_CONTROL_ON) == archive->GetBool(mNameConfigSessionBarOn, false) &&
+           (mCheckBoxSysInfo->Value() == B_CONTROL_ON) == archive->GetBool(mNameConfigSysInfoPanelOn, true) &&
+           (mCheckBoxKillerShortcut->Value() == B_CONTROL_ON) == archive->GetBool(mNameConfigKillerShortcutOn, false);
 }
 
 void mWindow::CallBgImgFilePanel(uint32 what, uint32 node_flavors, BRefFilter* f)

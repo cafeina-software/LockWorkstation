@@ -117,22 +117,12 @@ void mApp::MessageReceived(BMessage* msg)
         }
         case M_LOGGING_REQUESTED:
         {
-            const void* timeptr = NULL;
-            ssize_t timesize = 0;
             EventLevel level;
             BString description;
             if(msg->FindUInt32("log_level", (uint32*)&level) == B_OK &&
             msg->FindString("log_description", &description) == B_OK) {
                 BDateTime datetime;
-                if(msg->FindData("log_timestamp", B_TIME_TYPE, &timeptr, &timesize) == B_OK) {
-                    uint8* buffer = new uint8[timesize];
-                    memcpy(buffer, timeptr, timesize);
-                    time_t time = *(reinterpret_cast<time_t*>(buffer));
-                    datetime.SetTime_t(time);
-                    delete[] buffer;
-                }
-                else
-                    datetime.SetTime_t(std::time(NULL));
+                datetime.SetTime_t(std::time(NULL));
 
                 Logger()->AddEvent(datetime, level, description.String());
             }

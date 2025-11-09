@@ -84,10 +84,13 @@ private:
 	BView*              CreateCardView_Options();
 
 	bool				UI_IsDefault(BMessage* archive);
+    bool                UI_IsAuthenticationDefault(BMessage* archive);
 	bool				UI_IsBgColorDefault(BMessage* archive);
 	bool				UI_IsBgFolderDefault(BMessage* archive);
 	bool				UI_IsClockColorDefault(BMessage* archive);
 	bool				UI_IsClockPlaceDefault(BMessage* archive);
+    bool                UI_IsEventLogDefault(BMessage* archive);
+    bool                UI_IsOptionsDefault(BMessage* archive);
 
     void                UI_ClockControlsEnable(BMessage* defaults, bool status);
     void                UI_LogControlsEnable(bool status);

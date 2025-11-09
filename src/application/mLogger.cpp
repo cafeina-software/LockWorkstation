@@ -8,7 +8,6 @@
 #include <File.h>
 #include <cstdio>
 #include <ctime>
-#include <fstream>
 
 mLogger::mLogger(LWSettings* settings, const char* logfile)
 : BLooper("Logger looper", B_NORMAL_PRIORITY),
@@ -19,33 +18,34 @@ mLogger::mLogger(LWSettings* settings, const char* logfile)
   fMaxSize(settings->EventLogMaxSize()),
   fMaxAge(settings->EventLogMaxAge())
 {
+    fLogFileEntry.SetTo(fLogFilePath.String(), false);
+
     if(fIsEnabled) {
-        BEntry entry(fLogFilePath.String());
-        if(!entry.Exists()) {
-            if(_CreateLogFile(fIsEnabled, fLogFilePath.String()) != B_OK)
-                fprintf(stderr, "Error creating log\n");
+        if(!fLogFileEntry.Exists()) {
+            fLogFile.SetTo(&fLogFileEntry, B_WRITE_ONLY | B_CREATE_FILE | B_OPEN_AT_END);
+            fLogFile.SetPermissions(S_IRUSR | S_IWUSR | S_IRGRP);
         }
         else {
             switch(fRetentionPolicy) {
                 case EVP_WIPE_AFTER_SIZE:
                 {
+                    fLogFile.SetTo(&fLogFileEntry, B_READ_ONLY);
                     off_t size;
-                    BFile file(fLogFilePath.String(), B_READ_ONLY);
-                    file.GetSize(&size);
+                    fLogFile.GetSize(&size);
                     if(size > fMaxSize * 1024 * 1024) {
-                        Clear();
+                        Clear(); // There reopens in write mode
                     }
                     break;
                 }
                 case EVP_WIPE_AFTER_AGE:
                 {
                     time_t lasttime;
-                    BFile file(&entry, B_READ_ONLY);
-                    file.GetModificationTime(&lasttime);
+                    fLogFile.SetTo(&fLogFileEntry, B_READ_ONLY);
+                    fLogFile.GetModificationTime(&lasttime);
                     time_t now = std::time(nullptr);
 
                     if(now > lasttime + (fMaxAge * 24 * 60 * 60)) {
-                        Clear();
+                        Clear(); // There reopens in write mode
                     }
                     break;
                 }
@@ -53,6 +53,40 @@ mLogger::mLogger(LWSettings* settings, const char* logfile)
                     break;
             }
         }
+    }
+}
+
+void mLogger::MessageReceived(BMessage* message)
+{
+    switch(message->what)
+    {
+        case M_LOGGING_REQUESTED:
+        {
+            BDateTime datetime;
+
+            const void* ptr = NULL;
+            ssize_t length = 0;
+            if(message->FindData("log_timestamp", B_TIME_TYPE, &ptr, &length) == B_OK) {
+                uint8* buffer = new uint8[length];
+                memcpy(buffer, ptr, length);
+                time_t time = *(reinterpret_cast<time_t*>(buffer));
+                datetime.SetTime_t(time);
+                delete[] buffer;
+            }
+            else
+                datetime.SetTime_t(std::time(NULL));
+
+            _WriteLogEvent(datetime,
+                static_cast<EventLevel>(message->GetInt32("log_level", EVT_INFO)),
+                message->GetString("log_description"));
+
+            break;
+        }
+        case M_LOGGING_CLEANUP:
+            Clear();
+            break;
+        default:
+            return BLooper::MessageReceived(message);
     }
 }
 
@@ -70,52 +104,60 @@ status_t mLogger::AddEvent(EventLevel level, const char* desc)
 
 status_t mLogger::AddEvent(BDateTime datetime, EventLevel level, const char* desc)
 {
-    BString month, day, hour, minute, second;
-    month << (datetime.Date().Month() < 10 ? "0" : "") << datetime.Date().Month();
-    day << (datetime.Date().Day() < 10 ? "0" : "") << datetime.Date().Day();
-    hour << (datetime.Time().Hour() < 10 ? "0" : "") << datetime.Time().Hour();
-    minute << (datetime.Time().Minute() < 10 ? "0" : "") << datetime.Time().Minute();
-    second << (datetime.Time().Second() < 10 ? "0" : "") << datetime.Time().Second();
+    if(!fIsEnabled || level > fLevel)
+        return B_OK;
 
-    BString log;
-    log << datetime.Date().Year() << "-" << month << "-" << day << " "
-        << hour << ":" << minute << ":" << second << " ["
-        << _LevelToString(level) << "] " << desc << "\n";
+    BMessage request(M_LOGGING_REQUESTED);
+    time_t time = datetime.Time_t();
+    request.AddData("log_timestamp", B_TIME_TYPE, &time, sizeof(time));
+    request.AddInt32("log_level", level);
+    request.AddString("log_description", desc);
 
-    if(fIsEnabled && level <= fLevel) {
-        BFile logFile(fLogFilePath.String(), B_READ_WRITE | B_CREATE_FILE | B_OPEN_AT_END);
-        if(logFile.InitCheck() != B_OK) {
+    return PostMessage(&request);
+}
+
+status_t mLogger::Clear()
+{
+    if(fLogFileEntry.Exists())
+        if(fLogFileEntry.Remove() != B_OK)
             return B_ERROR;
-        }
 
-        ssize_t writtenBytes = logFile.Write(log.String(), log.Length());
-        if(writtenBytes < 0) {
-            return B_IO_ERROR;
-        }
+    if(fIsEnabled) {
+        fLogFile.SetTo(&fLogFileEntry, B_WRITE_ONLY | B_CREATE_FILE | B_OPEN_AT_END);
+        fLogFile.SetPermissions(S_IRUSR | S_IWUSR | S_IRGRP);
     }
 
     return B_OK;
 }
 
-status_t mLogger::Clear()
-{
-    BEntry entry(fLogFilePath.String());
-    if(entry.Remove() != B_OK)
-        return B_ERROR;
-
-    return _CreateLogFile(fIsEnabled, fLogFilePath.String());
-}
-
 // #pragma mark -
 
-status_t mLogger::_CreateLogFile(bool enabled, const char* filename)
+status_t mLogger::_WriteLogEvent(BDateTime datetime, EventLevel level, const char* desc)
 {
-    if(enabled) {
-        BFile logFile(filename, B_WRITE_ONLY | B_CREATE_FILE | B_FAIL_IF_EXISTS);
-        if(logFile.InitCheck() != B_OK)
-            return B_ERROR;
+    if(fIsEnabled && level <= fLevel) {
+        BString month, day, hour, minute, second;
+        month << (datetime.Date().Month() < 10 ? "0" : "") << datetime.Date().Month();
+        day << (datetime.Date().Day() < 10 ? "0" : "") << datetime.Date().Day();
+        hour << (datetime.Time().Hour() < 10 ? "0" : "") << datetime.Time().Hour();
+        minute << (datetime.Time().Minute() < 10 ? "0" : "") << datetime.Time().Minute();
+        second << (datetime.Time().Second() < 10 ? "0" : "") << datetime.Time().Second();
 
-        logFile.SetPermissions(S_IRUSR | S_IWUSR | S_IRGRP);
+        BString log;
+        log << datetime.Date().Year() << "-" << month << "-" << day << " "
+            << hour << ":" << minute << ":" << second << " ["
+            << _LevelToString(level) << "] " << desc << "\n";
+
+        if(!fLogFile.IsWritable()) {
+            fLogFile.SetTo(&fLogFileEntry, B_WRITE_ONLY | B_CREATE_FILE | B_OPEN_AT_END);
+            if(fLogFile.InitCheck() != B_OK) {
+                return B_ERROR;
+            }
+        }
+
+        ssize_t writtenBytes = fLogFile.Write(log.String(), log.Length());
+        if(writtenBytes < 0) {
+            return B_IO_ERROR;
+        }
     }
 
     return B_OK;
